@@ -65,9 +65,21 @@ app.get("/token", async (req, res) => {
 // Incoming call webhook
 app.post("/incoming-call", async (req, res) => {
     const twiml = new twilio.twiml.VoiceResponse();
-    const { To } = req.body;
+    const { To, From, CallSid } = req.body;
 
     console.log("Webhook hit. To:", To);
+
+    // Log incoming call to Supabase
+    try {
+        await supabase.from('calls').insert({
+            from: From,
+            to: To,
+            direction: 'inbound',
+            status: 'ringing'
+        });
+    } catch (e) {
+        console.error("Error logging incoming call:", e);
+    }
 
     // Si el número de destino es el mismo que el de Twilio, es una llamada entrante -> Conectar al navegador
     if (To === process.env.TWILIO_PHONE_NUMBER) {
@@ -99,6 +111,14 @@ app.post("/call", async (req, res) => {
             from: process.env.TWILIO_PHONE_NUMBER
         });
 
+        // Log outbound call to Supabase
+        await supabase.from('calls').insert({
+            from: process.env.TWILIO_PHONE_NUMBER,
+            to: to,
+            direction: 'outbound',
+            status: 'initiated'
+        });
+
         res.json(call);
     } catch (e) {
         res.status(500).json({ error: e.message });
@@ -124,6 +144,15 @@ app.post("/messages", async (req, res) => {
             from: process.env.TWILIO_PHONE_NUMBER,
             to: to
         });
+
+        // Log outbound message to Supabase
+        await supabase.from('messages').insert({
+            from: process.env.TWILIO_PHONE_NUMBER,
+            to: to,
+            body: body,
+            direction: 'outbound'
+        });
+
         res.json(message);
     } catch (e) {
         console.error("Error sending SMS:", e);
@@ -132,16 +161,55 @@ app.post("/messages", async (req, res) => {
 });
 
 // Incoming SMS Webhook
-app.post("/incoming-message", (req, res) => {
+app.post("/incoming-message", async (req, res) => {
     const twiml = new twilio.twiml.MessagingResponse();
-    const { Body, From } = req.body;
+    const { Body, From, To } = req.body;
 
     console.log(`New message from ${From}: ${Body}`);
 
-    // Here we will eventually save to Supabase
+    // Log incoming message to Supabase
+    try {
+        await supabase.from('messages').insert({
+            from: From,
+            to: To,
+            body: Body,
+            direction: 'inbound'
+        });
+    } catch (e) {
+        console.error("Error logging incoming message:", e);
+    }
 
     res.type("text/xml");
     res.send(twiml.toString());
+});
+
+// History Endpoints
+app.get("/history/calls", async (req, res) => {
+    try {
+        const { data, error } = await supabase
+            .from('calls')
+            .select('*')
+            .order('created_at', { ascending: false });
+
+        if (error) throw error;
+        res.json(data);
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+app.get("/history/messages", async (req, res) => {
+    try {
+        const { data, error } = await supabase
+            .from('messages')
+            .select('*')
+            .order('created_at', { ascending: true }); // Chat order
+
+        if (error) throw error;
+        res.json(data);
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
 });
 
 // Health check

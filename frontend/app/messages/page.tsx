@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Sidebar from '@/components/Sidebar';
 import { Send, MessageSquare } from 'lucide-react';
 
@@ -9,6 +9,25 @@ export default function Messages() {
     const [body, setBody] = useState('');
     const [status, setStatus] = useState('');
     const [messages, setMessages] = useState<any[]>([]);
+
+    // Fetch messages on mount
+    useEffect(() => {
+        const fetchMessages = async () => {
+            try {
+                const response = await fetch('https://gibbor-voice-production.up.railway.app/history/messages');
+                const data = await response.json();
+                setMessages(data);
+            } catch (error) {
+                console.error('Error fetching messages:', error);
+            }
+        };
+
+        fetchMessages();
+
+        // Poll every 5 seconds for new messages (simple real-time)
+        const interval = setInterval(fetchMessages, 5000);
+        return () => clearInterval(interval);
+    }, []);
 
     const handleSend = async () => {
         if (!to || !body) return;
@@ -27,7 +46,8 @@ export default function Messages() {
 
             if (response.ok) {
                 setStatus('Sent!');
-                setMessages([...messages, { type: 'outbound', to, body, sid: data.sid, date: new Date() }]);
+                // Optimistic update
+                setMessages([...messages, { direction: 'outbound', to, body, created_at: new Date() }]);
                 setBody('');
             } else {
                 setStatus('Error: ' + data.error);
@@ -81,12 +101,18 @@ export default function Messages() {
                         {status && <p className="mt-2 text-sm text-gray-500">{status}</p>}
                     </div>
 
-                    {/* History (Local Session) */}
-                    <div className="space-y-4">
+                    {/* History */}
+                    <div className="space-y-4 overflow-y-auto max-h-[500px] pr-2">
                         {messages.map((msg, idx) => (
-                            <div key={idx} className="flex justify-end">
-                                <div className="bg-green-100 text-gray-800 p-4 rounded-2xl rounded-tr-none max-w-md shadow-sm">
-                                    <p className="font-medium text-xs text-green-800 mb-1">To: {msg.to}</p>
+                            <div key={idx} className={`flex ${msg.direction === 'outbound' ? 'justify-end' : 'justify-start'}`}>
+                                <div className={`p-4 rounded-2xl max-w-md shadow-sm ${msg.direction === 'outbound'
+                                        ? 'bg-green-100 text-gray-800 rounded-tr-none'
+                                        : 'bg-white text-gray-800 rounded-tl-none border border-gray-200'
+                                    }`}>
+                                    <p className={`font-medium text-xs mb-1 ${msg.direction === 'outbound' ? 'text-green-800' : 'text-gray-500'
+                                        }`}>
+                                        {msg.direction === 'outbound' ? `To: ${msg.to}` : `From: ${msg.from}`}
+                                    </p>
                                     <p>{msg.body}</p>
                                 </div>
                             </div>
