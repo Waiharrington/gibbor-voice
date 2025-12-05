@@ -81,23 +81,65 @@ app.post("/incoming-call", async (req, res) => {
     } catch (e) {
         console.error("Error logging incoming call:", e);
     }
-    const { CallSid, RecordingUrl, RecordingStatus } = req.body;
-    console.log(`Recording ${RecordingStatus}: ${RecordingUrl} for Call ${CallSid}`);
 
-    if (RecordingStatus === 'completed') {
+    const baseUrl = process.env.BASE_URL || 'https://gibbor-voice-production.up.railway.app';
+
+    if (To === process.env.TWILIO_PHONE_NUMBER) {
+        twiml.say("Conectando con el agente.");
+        const dial = twiml.dial({
+            record: 'record-from-ringing',
+            recordingStatusCallback: `${baseUrl}/recording-status`,
+            recordingStatusCallbackEvent: ['completed'],
+            action: `${baseUrl}/call-status`,
+            method: 'POST'
+        });
+        dial.client("agent");
+    }
+    else if (To) {
+        // Outbound calls from browser (TwiML App default URL)
+        const dial = twiml.dial({
+            callerId: process.env.TWILIO_PHONE_NUMBER,
+            record: 'record-from-ringing',
+            recordingStatusCallback: `${baseUrl}/recording-status`,
+            recordingStatusCallbackEvent: ['completed'],
+            action: `${baseUrl}/call-status`,
+            method: 'POST'
+        });
+        dial.number(To);
+    }
+    else {
+        twiml.say("Bienvenido a Gibbor Voice.");
+    }
+
+    res.type("text/xml");
+    res.send(twiml.toString());
+});
+
+// Generic Call Status Handler
+app.post("/call-status", async (req, res) => {
+    const { CallSid, CallStatus, CallDuration, DialCallStatus, DialCallDuration } = req.body;
+    console.log(`Call Status Update: ${CallSid} -> ${CallStatus}/${DialCallStatus}`);
+
+    const finalStatus = DialCallStatus || CallStatus;
+    const finalDuration = DialCallDuration || CallDuration;
+
+    if (finalStatus && ['completed', 'answered', 'busy', 'no-answer', 'failed', 'canceled'].includes(finalStatus)) {
         try {
-            const { error } = await supabase
-                .from('calls')
-                .update({ recording_url: RecordingUrl })
-                .eq('sid', CallSid);
+            const updateData = { status: finalStatus };
+            if (finalDuration) updateData.duration = parseInt(finalDuration);
 
-            if (error) console.error("Error updating recording URL:", error);
+            await supabase
+                .from('calls')
+                .update(updateData)
+                .eq('sid', CallSid);
         } catch (e) {
-            console.error("Error in recording callback:", e);
+            console.error("Error updating call status:", e);
         }
     }
 
-    res.sendStatus(200);
+    const twiml = new twilio.twiml.VoiceResponse();
+    res.type("text/xml");
+    res.send(twiml.toString());
 });
 
 // Send SMS/MMS
