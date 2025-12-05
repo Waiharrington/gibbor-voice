@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import Sidebar from '@/components/Sidebar';
 import Dialpad from '@/components/Dialpad';
 import { Device } from '@twilio/voice-sdk';
-import { PhoneOff, Mic, MicOff } from 'lucide-react';
+import { Phone, PhoneOff, Mic, MicOff } from 'lucide-react';
 
 export default function Home() {
   const [device, setDevice] = useState<Device | null>(null);
@@ -144,27 +144,53 @@ export default function Home() {
                 #
               </div>
               <h2 className="text-2xl font-bold text-gray-800 mb-2">
-                {activeCall.parameters?.To || 'Unknown'}
+                {activeCall.parameters?.From || activeCall.parameters?.To || 'Unknown'}
               </h2>
               <p className="text-green-600 font-medium mb-8 animate-pulse">
                 {callStatus}
               </p>
 
               <div className="flex items-center justify-center space-x-6">
-                <button
-                  onClick={toggleMute}
-                  className={`p-4 rounded-full transition-colors ${isMuted ? 'bg-gray-800 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                    }`}
-                >
-                  {isMuted ? <MicOff className="w-6 h-6" /> : <Mic className="w-6 h-6" />}
-                </button>
+                {callStatus === 'Incoming Call...' ? (
+                  <>
+                    <button
+                      onClick={() => {
+                        activeCall.accept();
+                        setCallStatus('In Call');
+                      }}
+                      className="p-4 rounded-full bg-green-500 text-white hover:bg-green-600 transition-colors shadow-lg hover:shadow-xl transform hover:scale-105"
+                    >
+                      <Phone className="w-8 h-8" />
+                    </button>
+                    <button
+                      onClick={() => {
+                        activeCall.reject();
+                        setActiveCall(null);
+                        setCallStatus('Ready');
+                      }}
+                      className="p-4 rounded-full bg-red-500 text-white hover:bg-red-600 transition-colors shadow-lg hover:shadow-xl transform hover:scale-105"
+                    >
+                      <PhoneOff className="w-8 h-8" />
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <button
+                      onClick={toggleMute}
+                      className={`p-4 rounded-full transition-colors ${isMuted ? 'bg-gray-800 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                        }`}
+                    >
+                      {isMuted ? <MicOff className="w-6 h-6" /> : <Mic className="w-6 h-6" />}
+                    </button>
 
-                <button
-                  onClick={handleHangup}
-                  className="p-4 rounded-full bg-red-600 text-white hover:bg-red-700 transition-colors shadow-lg hover:shadow-xl transform hover:scale-105"
-                >
-                  <PhoneOff className="w-8 h-8" />
-                </button>
+                    <button
+                      onClick={handleHangup}
+                      className="p-4 rounded-full bg-red-600 text-white hover:bg-red-700 transition-colors shadow-lg hover:shadow-xl transform hover:scale-105"
+                    >
+                      <PhoneOff className="w-8 h-8" />
+                    </button>
+                  </>
+                )}
               </div>
             </div>
           ) : (
