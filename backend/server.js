@@ -115,6 +115,35 @@ app.post("/outbound-twiml", (req, res) => {
     res.send(twiml.toString());
 });
 
+// Send SMS
+app.post("/messages", async (req, res) => {
+    try {
+        const { to, body } = req.body;
+        const message = await twilioClient.messages.create({
+            body: body,
+            from: process.env.TWILIO_PHONE_NUMBER,
+            to: to
+        });
+        res.json(message);
+    } catch (e) {
+        console.error("Error sending SMS:", e);
+        res.status(500).json({ error: e.message });
+    }
+});
+
+// Incoming SMS Webhook
+app.post("/incoming-message", (req, res) => {
+    const twiml = new twilio.twiml.MessagingResponse();
+    const { Body, From } = req.body;
+
+    console.log(`New message from ${From}: ${Body}`);
+
+    // Here we will eventually save to Supabase
+
+    res.type("text/xml");
+    res.send(twiml.toString());
+});
+
 // Health check
 app.get("/", (req, res) => {
     console.log("Health check hit!");
