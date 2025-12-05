@@ -81,6 +81,10 @@ export default function Home() {
           setActiveCall(null);
           setCallStatus('Ready');
         });
+        call.on('cancel', () => {
+          setActiveCall(null);
+          setCallStatus('Ready');
+        });
       });
 
       newDevice.register();
