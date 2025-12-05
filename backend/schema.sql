@@ -18,6 +18,7 @@ create table public.messages (
   "from" text,
   "to" text,
   body text,
+  media_url text, -- Store URL of the image/media
   direction text check (direction in ('inbound', 'outbound')),
   created_at timestamp with time zone default timezone('utc'::text, now()) not null
 );

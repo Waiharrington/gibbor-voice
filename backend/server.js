@@ -135,21 +135,29 @@ app.post("/outbound-twiml", (req, res) => {
     res.send(twiml.toString());
 });
 
-// Send SMS
+// Send SMS/MMS
 app.post("/messages", async (req, res) => {
     try {
-        const { to, body } = req.body;
-        const message = await twilioClient.messages.create({
+        const { to, body, mediaUrl } = req.body;
+
+        const messageOptions = {
             body: body,
             from: process.env.TWILIO_PHONE_NUMBER,
             to: to
-        });
+        };
+
+        if (mediaUrl) {
+            messageOptions.mediaUrl = [mediaUrl];
+        }
+
+        const message = await twilioClient.messages.create(messageOptions);
 
         // Log outbound message to Supabase
         await supabase.from('messages').insert({
             from: process.env.TWILIO_PHONE_NUMBER,
             to: to,
             body: body,
+            media_url: mediaUrl || null,
             direction: 'outbound'
         });
 
@@ -160,12 +168,15 @@ app.post("/messages", async (req, res) => {
     }
 });
 
-// Incoming SMS Webhook
+// Incoming SMS/MMS Webhook
 app.post("/incoming-message", async (req, res) => {
     const twiml = new twilio.twiml.MessagingResponse();
-    const { Body, From, To } = req.body;
+    const { Body, From, To, NumMedia, MediaUrl0 } = req.body;
 
     console.log(`New message from ${From}: ${Body}`);
+    if (NumMedia > 0) {
+        console.log(`Media received: ${MediaUrl0}`);
+    }
 
     // Log incoming message to Supabase
     try {
@@ -173,6 +184,7 @@ app.post("/incoming-message", async (req, res) => {
             from: From,
             to: To,
             body: Body,
+            media_url: MediaUrl0 || null, // Store first media attachment if exists
             direction: 'inbound'
         });
     } catch (e) {
