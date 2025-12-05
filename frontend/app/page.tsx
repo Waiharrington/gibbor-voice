@@ -18,7 +18,7 @@ export default function Home() {
   useEffect(() => {
     const fetchToken = async () => {
       try {
-        const response = await fetch('http://localhost:3001/token');
+        const response = await fetch('https://gibbor-voice-production.up.railway.app/token');
         const data = await response.json();
         setToken(data.token);
         setIdentity(data.identity);
@@ -124,8 +124,8 @@ export default function Home() {
           <div className="flex items-center space-x-4">
             <h1 className="text-xl font-semibold text-gray-800">Calls</h1>
             <span className={`px-2 py-1 rounded-full text-xs font-medium ${callStatus === 'Ready' ? 'bg-green-100 text-green-700' :
-                callStatus.startsWith('Error') ? 'bg-red-100 text-red-700' :
-                  'bg-gray-100 text-gray-700'
+              callStatus.startsWith('Error') ? 'bg-red-100 text-red-700' :
+                'bg-gray-100 text-gray-700'
               }`}>
               {callStatus}
             </span>
