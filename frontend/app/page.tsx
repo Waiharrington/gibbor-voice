@@ -6,6 +6,7 @@ import Dialpad from '@/components/Dialpad';
 import { Device } from '@twilio/voice-sdk';
 import { Phone, PhoneOff, Mic, MicOff, Search, Clock, ArrowUpRight, ArrowDownLeft, MoreVertical } from 'lucide-react';
 import { format } from 'date-fns';
+import { supabase } from '@/utils/supabaseClient';
 
 export default function Home() {
   const [device, setDevice] = useState<Device | null>(null);
@@ -38,6 +39,24 @@ export default function Home() {
       }
     };
     init();
+
+    // 3. Realtime Subscription
+    const channel = supabase
+      .channel('calls_realtime')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'calls' }, (payload) => {
+        console.log('New call logged:', payload.new);
+        setCalls((prev) => [payload.new, ...prev]);
+      })
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'calls' }, (payload) => {
+        // Handle updates (e.g. recording_url added)
+        console.log('Call updated:', payload.new);
+        setCalls((prev) => prev.map(call => call.id === payload.new.id ? payload.new : call));
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   // Initialize Twilio Device
@@ -134,8 +153,8 @@ export default function Home() {
               key={call.id}
               onClick={() => setSelectedCall(call)}
               className={`p-4 flex items-center cursor-pointer transition-colors border-l-4 ${selectedCall?.id === call.id
-                  ? 'bg-cyan-50 border-cyan-500'
-                  : 'hover:bg-gray-50 border-transparent'
+                ? 'bg-cyan-50 border-cyan-500'
+                : 'hover:bg-gray-50 border-transparent'
                 }`}
             >
               {/* Avatar */}
