@@ -31,7 +31,8 @@ console.log("-------------------------");
 // WebRTC Access Token endpoint
 app.get("/token", async (req, res) => {
     try {
-        const identity = `agent_${Math.floor(Math.random() * 9999)}`;
+        // Usamos una identidad fija para que las llamadas entrantes encuentren al usuario
+        const identity = "agent";
 
         const AccessToken = twilio.jwt.AccessToken;
         const VoiceGrant = AccessToken.VoiceGrant;
