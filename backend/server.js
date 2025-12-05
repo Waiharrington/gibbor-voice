@@ -116,10 +116,13 @@ app.post("/outbound-twiml", (req, res) => {
 
 // Health check
 app.get("/", (req, res) => {
+    console.log("Health check hit!");
     res.send("Gibbor Voice Backend is running!");
 });
 
 const PORT = process.env.PORT || 3001;
-app.listen(PORT, '0.0.0.0', () => {
+const server = app.listen(PORT, '0.0.0.0', () => {
+    const address = server.address();
     console.log("Backend running on port", PORT);
+    console.log("Server address info:", address);
 });
