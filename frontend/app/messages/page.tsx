@@ -39,17 +39,14 @@ export default function Messages() {
 
         fetchHistory();
 
-        // Realtime Subscription with Debugging
+        // Realtime Subscription
         const channel = supabase
             .channel('messages-realtime')
             .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, (payload) => {
-                console.log('Realtime Event Received:', payload);
                 const newMsg = payload.new;
                 setMessages((prev) => [...prev, newMsg]);
             })
-            .subscribe((status) => {
-                console.log('Realtime Subscription Status:', status);
-            });
+            .subscribe();
 
         return () => {
             supabase.removeChannel(channel);
@@ -132,8 +129,8 @@ export default function Messages() {
                             key={conv.id}
                             onClick={() => setSelectedConversationId(conv.id)}
                             className={`p-4 flex items-start cursor-pointer transition-colors border-l-4 ${selectedConversationId === conv.id
-                                    ? 'bg-cyan-50 border-cyan-500'
-                                    : 'hover:bg-gray-50 border-transparent'
+                                ? 'bg-cyan-50 border-cyan-500'
+                                : 'hover:bg-gray-50 border-transparent'
                                 }`}
                         >
                             <div className="h-10 w-10 rounded-full bg-cyan-500 flex items-center justify-center text-white font-medium text-sm shrink-0 mr-3">
@@ -200,8 +197,8 @@ export default function Messages() {
                                     {/* Text Bubble */}
                                     {msg.body && (
                                         <div className={`px-4 py-2 rounded-2xl text-sm leading-relaxed shadow-sm ${msg.direction === 'outbound'
-                                                ? 'bg-cyan-500 text-white rounded-tr-sm'
-                                                : 'bg-gray-100 text-gray-800 rounded-tl-sm'
+                                            ? 'bg-cyan-500 text-white rounded-tr-sm'
+                                            : 'bg-gray-100 text-gray-800 rounded-tl-sm'
                                             }`}>
                                             {msg.body}
                                         </div>
@@ -237,8 +234,8 @@ export default function Messages() {
                                 onClick={handleSend}
                                 disabled={!body.trim() || isSending}
                                 className={`p-2 rounded-full transition-colors ${body.trim()
-                                        ? 'bg-cyan-500 text-white hover:bg-cyan-600 shadow-md'
-                                        : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                                    ? 'bg-cyan-500 text-white hover:bg-cyan-600 shadow-md'
+                                    : 'bg-gray-200 text-gray-400 cursor-not-allowed'
                                     }`}
                             >
                                 <Send className="w-4 h-4 ml-0.5" />
