@@ -106,13 +106,25 @@ export default function Messages() {
                         {messages.map((msg, idx) => (
                             <div key={idx} className={`flex ${msg.direction === 'outbound' ? 'justify-end' : 'justify-start'}`}>
                                 <div className={`p-4 rounded-2xl max-w-md shadow-sm ${msg.direction === 'outbound'
-                                        ? 'bg-green-100 text-gray-800 rounded-tr-none'
-                                        : 'bg-white text-gray-800 rounded-tl-none border border-gray-200'
+                                    ? 'bg-green-100 text-gray-800 rounded-tr-none'
+                                    : 'bg-white text-gray-800 rounded-tl-none border border-gray-200'
                                     }`}>
                                     <p className={`font-medium text-xs mb-1 ${msg.direction === 'outbound' ? 'text-green-800' : 'text-gray-500'
                                         }`}>
                                         {msg.direction === 'outbound' ? `To: ${msg.to}` : `From: ${msg.from}`}
                                     </p>
+
+                                    {/* Display Image if present */}
+                                    {msg.media_url && (
+                                        <div className="mb-2">
+                                            <img
+                                                src={msg.media_url}
+                                                alt="MMS attachment"
+                                                className="rounded-lg max-w-full h-auto max-h-64 object-cover border border-gray-200"
+                                            />
+                                        </div>
+                                    )}
+
                                     <p>{msg.body}</p>
                                 </div>
                             </div>
