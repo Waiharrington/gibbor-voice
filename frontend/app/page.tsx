@@ -1,10 +1,11 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import Sidebar from '@/components/Sidebar';
 import Dialpad from '@/components/Dialpad';
 import { Device } from '@twilio/voice-sdk';
-import { Phone, PhoneOff, Mic, MicOff } from 'lucide-react';
+import { Phone, PhoneOff, Mic, MicOff, Search, Clock, ArrowUpRight, ArrowDownLeft, MoreVertical } from 'lucide-react';
+import { format } from 'date-fns';
 
 export default function Home() {
   const [device, setDevice] = useState<Device | null>(null);
@@ -14,29 +15,35 @@ export default function Home() {
   const [callStatus, setCallStatus] = useState<string>('Idle');
   const [identity, setIdentity] = useState<string>('');
 
-  // Fetch token on mount
+  // History State
+  const [calls, setCalls] = useState<any[]>([]);
+  const [selectedCall, setSelectedCall] = useState<any | null>(null);
+
+  // Fetch token & History
   useEffect(() => {
-    const fetchToken = async () => {
+    const init = async () => {
       try {
-        const response = await fetch('https://gibbor-voice-production.up.railway.app/token');
-        const data = await response.json();
-        setToken(data.token);
-        setIdentity(data.identity);
-        console.log('Token fetched for identity:', data.identity);
+        // 1. Get Token
+        const tokenRes = await fetch('https://gibbor-voice-production.up.railway.app/token');
+        const tokenData = await tokenRes.json();
+        setToken(tokenData.token);
+        setIdentity(tokenData.identity);
+
+        // 2. Get History
+        const historyRes = await fetch('https://gibbor-voice-production.up.railway.app/history/calls');
+        const historyData = await historyRes.json();
+        setCalls(historyData);
       } catch (error) {
-        console.error('Error fetching token:', error);
+        console.error('Error initializing:', error);
       }
     };
-
-    fetchToken();
+    init();
   }, []);
 
-  // Initialize Device when token is available
+  // Initialize Twilio Device
   useEffect(() => {
     if (token && !device) {
-      const newDevice = new Device(token, {
-        logLevel: 1,
-      });
+      const newDevice = new Device(token, { logLevel: 1 });
 
       newDevice.on('registered', () => {
         console.log('Twilio Device Registered');
@@ -51,7 +58,6 @@ export default function Home() {
       newDevice.on('incoming', (call) => {
         setCallStatus('Incoming Call...');
         setActiveCall(call);
-
         call.on('disconnect', () => {
           setActiveCall(null);
           setCallStatus('Ready');
@@ -61,17 +67,11 @@ export default function Home() {
       newDevice.register();
       setDevice(newDevice);
     }
-
-    return () => {
-      if (device) {
-        device.destroy();
-      }
-    };
+    return () => device?.destroy();
   }, [token, device]);
 
   const handleCall = async (number: string) => {
     if (!device) return;
-
     try {
       setCallStatus('Calling ' + number + '...');
       const call = await device.connect({ params: { To: number } });
@@ -99,12 +99,7 @@ export default function Home() {
     }
   };
 
-  const handleHangup = () => {
-    if (activeCall) {
-      activeCall.disconnect();
-    }
-  };
-
+  const handleHangup = () => activeCall?.disconnect();
   const toggleMute = () => {
     if (activeCall) {
       const newMuted = !isMuted;
@@ -114,97 +109,155 @@ export default function Home() {
   };
 
   return (
-    <div className="flex h-screen bg-white">
+    <div className="flex h-screen bg-white overflow-hidden">
+      {/* 1. Sidebar */}
       <Sidebar />
 
-      <main className="flex-1 flex flex-col">
-        {/* Header */}
-        <header className="h-16 border-b border-gray-200 flex items-center justify-between px-8 bg-white">
-          <div className="flex items-center space-x-4">
-            <h1 className="text-xl font-semibold text-gray-800">Calls</h1>
-            <span className={`px-2 py-1 rounded-full text-xs font-medium ${callStatus === 'Ready' ? 'bg-green-100 text-green-700' :
-              callStatus.startsWith('Error') ? 'bg-red-100 text-red-700' :
-                'bg-gray-100 text-gray-700'
-              }`}>
-              {callStatus}
-            </span>
+      {/* 2. Call List (Left) */}
+      <div className="w-80 border-r border-gray-200 flex flex-col bg-white">
+        {/* Search Header */}
+        <div className="p-4 border-b border-gray-100">
+          <div className="relative">
+            <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
+            <input
+              type="text"
+              placeholder="Search"
+              className="w-full bg-gray-100 pl-9 pr-4 py-2 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-gray-300 transition-shadow"
+            />
           </div>
-          <div className="text-sm text-gray-500">
-            Logged in as: <span className="font-medium text-gray-700">{identity || 'Loading...'}</span>
-          </div>
-        </header>
+        </div>
 
-        {/* Content */}
-        <div className="flex-1 flex items-center justify-center bg-gray-50 p-8">
-
-          {activeCall ? (
-            // Active Call Interface
-            <div className="bg-white rounded-2xl shadow-lg p-8 w-96 text-center animate-in fade-in zoom-in duration-300">
-              <div className="w-24 h-24 bg-gray-200 rounded-full mx-auto mb-6 flex items-center justify-center text-3xl font-bold text-gray-500">
-                #
+        {/* List */}
+        <div className="flex-1 overflow-y-auto">
+          {calls.map((call) => (
+            <div
+              key={call.id}
+              onClick={() => setSelectedCall(call)}
+              className={`p-4 flex items-center cursor-pointer transition-colors border-l-4 ${selectedCall?.id === call.id
+                  ? 'bg-cyan-50 border-cyan-500'
+                  : 'hover:bg-gray-50 border-transparent'
+                }`}
+            >
+              {/* Avatar */}
+              <div className={`h-10 w-10 rounded-full flex items-center justify-center text-white font-medium text-sm shrink-0 mr-3 ${call.direction === 'inbound' ? 'bg-purple-500' : 'bg-gray-500' // Different color for distinction
+                }`}>
+                <Phone className="w-4 h-4" />
               </div>
-              <h2 className="text-2xl font-bold text-gray-800 mb-2">
+
+              {/* Info */}
+              <div className="flex-1 min-w-0">
+                <div className="flex justify-between items-baseline mb-1">
+                  <h3 className={`text-sm font-semibold truncate ${selectedCall?.id === call.id ? 'text-gray-900' : 'text-gray-700'}`}>
+                    {call.direction === 'outbound' ? call.to : call.from}
+                  </h3>
+                  <span className="text-xs text-gray-400 shrink-0 ml-2">
+                    {call.created_at && format(new Date(call.created_at), 'HH:mm')}
+                  </span>
+                </div>
+                <div className="flex items-center text-xs text-gray-500">
+                  {call.direction === 'outbound' ? (
+                    <ArrowUpRight className="w-3 h-3 mr-1 text-green-500" />
+                  ) : (
+                    <ArrowDownLeft className="w-3 h-3 mr-1 text-cyan-500" />
+                  )}
+                  {call.status || 'unknown'}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* 3. Center Panel (Details) */}
+      <div className="flex-1 flex flex-col bg-white border-r border-gray-200">
+        {selectedCall ? (
+          <div className="flex-1 flex flex-col">
+            {/* Header */}
+            <header className="h-16 border-b border-gray-200 flex justify-between items-center px-6">
+              <h2 className="text-lg font-medium text-gray-800">
+                {selectedCall.direction === 'outbound' ? selectedCall.to : selectedCall.from}
+              </h2>
+              <div className="flex space-x-2">
+                <button className="p-2 hover:bg-gray-100 rounded-full text-gray-500">
+                  <Phone className="w-5 h-5" />
+                </button>
+                <button className="p-2 hover:bg-gray-100 rounded-full text-gray-500">
+                  <MoreVertical className="w-5 h-5" />
+                </button>
+              </div>
+            </header>
+
+            {/* Content */}
+            <div className="flex-1 p-8 bg-gray-50">
+              <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100 max-w-2xl">
+                <div className="flex items-start space-x-4">
+                  <div className="p-2 bg-blue-50 text-blue-500 rounded-lg">
+                    <ArrowUpRight className="w-5 h-5" />
+                  </div>
+                  <div className="flex-1">
+                    <h4 className="text-sm font-medium text-gray-900">
+                      {selectedCall.direction === 'outbound' ? 'Outbound Call' : 'Inbound Call'}
+                    </h4>
+                    <p className="text-xs text-gray-500 mt-1">
+                      {selectedCall.created_at && format(new Date(selectedCall.created_at), 'PPP p')}
+                    </p>
+                    <p className="text-sm text-gray-600 mt-4">
+                      {selectedCall.duration ? `${selectedCall.duration} seconds` : 'Duration not logged'}
+                    </p>
+
+                    {/* Recording Player (Placeholder logic until backend is ready) */}
+                    {selectedCall.recording_url && (
+                      <div className="mt-4 bg-gray-100 rounded-full p-2 flex items-center">
+                        <audio controls src={selectedCall.recording_url} className="w-full h-8" />
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="flex-1 flex items-center justify-center bg-gray-50 text-gray-400">
+            Select a call to view details
+          </div>
+        )}
+      </div>
+
+      {/* 4. Right Panel (Dialpad/Active Call) */}
+      <div className="w-96 bg-white flex flex-col p-8">
+        {activeCall ? (
+          <div className="flex-1 flex flex-col items-center justify-center text-center space-y-8 animate-in fade-in zoom-in duration-300">
+            <div className="w-24 h-24 bg-cyan-100 text-cyan-600 rounded-full flex items-center justify-center text-3xl font-bold shadow-sm">
+              {/* Initials or Icon */}
+              <Phone className="w-10 h-10" />
+            </div>
+            <div>
+              <h2 className="text-2xl font-bold text-gray-800">
                 {activeCall.parameters?.From || activeCall.parameters?.To || 'Unknown'}
               </h2>
-              <p className="text-green-600 font-medium mb-8 animate-pulse">
-                {callStatus}
-              </p>
-
-              <div className="flex items-center justify-center space-x-6">
-                {callStatus === 'Incoming Call...' ? (
-                  <>
-                    <button
-                      onClick={() => {
-                        activeCall.accept();
-                        setCallStatus('In Call');
-                      }}
-                      className="p-4 rounded-full bg-green-500 text-white hover:bg-green-600 transition-colors shadow-lg hover:shadow-xl transform hover:scale-105"
-                    >
-                      <Phone className="w-8 h-8" />
-                    </button>
-                    <button
-                      onClick={() => {
-                        activeCall.reject();
-                        setActiveCall(null);
-                        setCallStatus('Ready');
-                      }}
-                      className="p-4 rounded-full bg-red-500 text-white hover:bg-red-600 transition-colors shadow-lg hover:shadow-xl transform hover:scale-105"
-                    >
-                      <PhoneOff className="w-8 h-8" />
-                    </button>
-                  </>
-                ) : (
-                  <>
-                    <button
-                      onClick={toggleMute}
-                      className={`p-4 rounded-full transition-colors ${isMuted ? 'bg-gray-800 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                        }`}
-                    >
-                      {isMuted ? <MicOff className="w-6 h-6" /> : <Mic className="w-6 h-6" />}
-                    </button>
-
-                    <button
-                      onClick={handleHangup}
-                      className="p-4 rounded-full bg-red-600 text-white hover:bg-red-700 transition-colors shadow-lg hover:shadow-xl transform hover:scale-105"
-                    >
-                      <PhoneOff className="w-8 h-8" />
-                    </button>
-                  </>
-                )}
-              </div>
+              <p className="text-green-600 font-medium mt-2 animate-pulse">{callStatus}</p>
             </div>
-          ) : (
-            // Dialpad View
-            <div className="flex flex-col items-center space-y-8">
-              <Dialpad onCall={handleCall} />
-              <p className="text-sm text-gray-400">
-                Make sure your microphone is allowed.
-              </p>
-            </div>
-          )}
 
-        </div>
-      </main>
+            <div className="grid grid-cols-3 gap-6 w-full max-w-xs">
+              <button onClick={toggleMute} className={`flex flex-col items-center justify-center w-16 h-16 rounded-full transition-all ${isMuted ? 'bg-gray-800 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}>
+                {isMuted ? <MicOff className="w-6 h-6" /> : <Mic className="w-6 h-6" />}
+              </button>
+
+              <button onClick={handleHangup} className="col-start-2 flex flex-col items-center justify-center w-16 h-16 rounded-full bg-red-500 text-white hover:bg-red-600 shadow-lg hover:shadow-xl transform hover:scale-105 transition-all">
+                <PhoneOff className="w-8 h-8" />
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div className="flex-1 flex flex-col">
+            <div className="text-center mb-8">
+              <p className="text-xs font-medium text-gray-400 uppercase tracking-wider mb-1">Make a Call</p>
+              <p className="text-sm text-gray-500">Calling as {identity || '...'}</p>
+            </div>
+            <Dialpad onCall={handleCall} />
+          </div>
+        )}
+      </div>
     </div>
   );
 }
