@@ -5,7 +5,7 @@ export default function Sidebar() {
     return (
         <aside className="w-64 bg-gray-50 border-r border-gray-200 h-screen flex flex-col">
             <div className="p-4 flex items-center space-x-2 border-b border-gray-100">
-                <div className="w-8 h-8 bg-green-600 rounded-full flex items-center justify-center text-white font-bold">
+                <div className="w-8 h-8 bg-cyan-500 rounded-full flex items-center justify-center text-white font-bold">
                     G
                 </div>
                 <span className="text-xl font-semibold text-gray-700">Gibbor Voice</span>
