@@ -1,0 +1,72 @@
+'use client';
+
+import { useState } from 'react';
+import { Phone, Delete } from 'lucide-react';
+
+export default function Dialpad({ onCall }: { onCall: (number: string) => void }) {
+    const [number, setNumber] = useState('');
+
+    const handlePress = (digit: string) => {
+        setNumber((prev) => prev + digit);
+    };
+
+    const handleDelete = () => {
+        setNumber((prev) => prev.slice(0, -1));
+    };
+
+    const handleCall = () => {
+        if (number) {
+            onCall(number);
+        }
+    };
+
+    const digits = [
+        '1', '2', '3',
+        '4', '5', '6',
+        '7', '8', '9',
+        '*', '0', '#'
+    ];
+
+    return (
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 w-80 p-6 flex flex-col items-center">
+            <div className="w-full mb-6">
+                <input
+                    type="text"
+                    value={number}
+                    onChange={(e) => setNumber(e.target.value)}
+                    className="w-full text-3xl text-center font-light text-gray-800 outline-none border-b border-transparent focus:border-green-500 transition-colors pb-2"
+                    placeholder="Enter a name or number"
+                />
+            </div>
+
+            <div className="grid grid-cols-3 gap-4 mb-6">
+                {digits.map((digit) => (
+                    <button
+                        key={digit}
+                        onClick={() => handlePress(digit)}
+                        className="w-16 h-16 rounded-full hover:bg-gray-100 flex items-center justify-center text-2xl font-medium text-gray-700 transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50"
+                    >
+                        {digit}
+                    </button>
+                ))}
+            </div>
+
+            <div className="flex items-center justify-center space-x-8 w-full">
+                <div className="w-12" /> {/* Spacer */}
+                <button
+                    onClick={handleCall}
+                    disabled={!number}
+                    className="w-16 h-16 rounded-full bg-green-600 hover:bg-green-700 text-white flex items-center justify-center shadow-md transition-transform active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                    <Phone className="w-8 h-8 fill-current" />
+                </button>
+                <button
+                    onClick={handleDelete}
+                    className="w-12 h-12 rounded-full hover:bg-gray-100 text-gray-500 flex items-center justify-center transition-colors"
+                >
+                    <Delete className="w-6 h-6" />
+                </button>
+            </div>
+        </div>
+    );
+}
