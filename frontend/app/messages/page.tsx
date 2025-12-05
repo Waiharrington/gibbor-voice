@@ -30,9 +30,7 @@ export default function Messages() {
 
                 // Select first conversation by default if none selected
                 if (data.length > 0 && !selectedConversationId) {
-                    const firstId = data[0].direction === 'outbound' ? data[0].to : data[0].from;
-                    // Dont auto-select for now, let user choose? Or maybe yes like GV.
-                    // Let's not auto-select to keep it clean.
+                    // Optional: auto-select logic
                 }
             } catch (error) {
                 console.error('Error fetching messages:', error);
@@ -41,14 +39,17 @@ export default function Messages() {
 
         fetchHistory();
 
-        // Realtime Subscription
+        // Realtime Subscription with Debugging
         const channel = supabase
             .channel('messages-realtime')
             .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, (payload) => {
+                console.log('Realtime Event Received:', payload);
                 const newMsg = payload.new;
                 setMessages((prev) => [...prev, newMsg]);
             })
-            .subscribe();
+            .subscribe((status) => {
+                console.log('Realtime Subscription Status:', status);
+            });
 
         return () => {
             supabase.removeChannel(channel);
@@ -102,7 +103,6 @@ export default function Messages() {
             setBody('');
         } catch (error) {
             console.error('Error sending:', error);
-            // Error handling UI (toast?)
         } finally {
             setIsSending(false);
         }
@@ -132,11 +132,11 @@ export default function Messages() {
                             key={conv.id}
                             onClick={() => setSelectedConversationId(conv.id)}
                             className={`p-4 flex items-start cursor-pointer transition-colors border-l-4 ${selectedConversationId === conv.id
-                                    ? 'bg-blue-50 border-blue-600'
+                                    ? 'bg-cyan-50 border-cyan-500'
                                     : 'hover:bg-gray-50 border-transparent'
                                 }`}
                         >
-                            <div className="h-10 w-10 rounded-full bg-purple-600 flex items-center justify-center text-white font-medium text-sm shrink-0 mr-3">
+                            <div className="h-10 w-10 rounded-full bg-cyan-500 flex items-center justify-center text-white font-medium text-sm shrink-0 mr-3">
                                 {conv.id.slice(-2)}
                             </div>
                             <div className="flex-1 min-w-0">
@@ -200,7 +200,7 @@ export default function Messages() {
                                     {/* Text Bubble */}
                                     {msg.body && (
                                         <div className={`px-4 py-2 rounded-2xl text-sm leading-relaxed shadow-sm ${msg.direction === 'outbound'
-                                                ? 'bg-blue-600 text-white rounded-tr-sm'
+                                                ? 'bg-cyan-500 text-white rounded-tr-sm'
                                                 : 'bg-gray-100 text-gray-800 rounded-tl-sm'
                                             }`}>
                                             {msg.body}
@@ -217,7 +217,7 @@ export default function Messages() {
 
                     {/* Input Area */}
                     <div className="p-4 border-t border-gray-200">
-                        <div className="flex items-end bg-gray-50 rounded-xl border border-gray-200 p-2 focus-within:ring-1 focus-within:ring-green-500 transition-all">
+                        <div className="flex items-end bg-gray-50 rounded-xl border border-gray-200 p-2 focus-within:ring-1 focus-within:ring-cyan-500 transition-all">
                             <button className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-200 rounded-full transition-colors">
                                 <ImageIcon className="w-5 h-5" />
                             </button>
@@ -231,13 +231,13 @@ export default function Messages() {
                                     }
                                 }}
                                 placeholder="Type a message"
-                                className="flex-1 bg-transparent border-none focus:ring-0 resize-none max-h-32 text-sm text-gray-700 placeholder-gray-400 py-3 mx-2 h-11" // h-11 for vertical centering
+                                className="flex-1 bg-transparent border-none focus:ring-0 resize-none max-h-32 text-sm text-gray-700 placeholder-gray-400 py-3 mx-2 h-11"
                             />
                             <button
                                 onClick={handleSend}
                                 disabled={!body.trim() || isSending}
                                 className={`p-2 rounded-full transition-colors ${body.trim()
-                                        ? 'bg-blue-600 text-white hover:bg-blue-700 shadow-md'
+                                        ? 'bg-cyan-500 text-white hover:bg-cyan-600 shadow-md'
                                         : 'bg-gray-200 text-gray-400 cursor-not-allowed'
                                     }`}
                             >
@@ -247,7 +247,7 @@ export default function Messages() {
                     </div>
                 </div>
             ) : (
-                // Empty State (No conversation selected)
+                // Empty State
                 <div className="flex-1 flex flex-col items-center justify-center bg-white text-gray-500">
                     <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mb-4">
                         <ImageIcon className="w-10 h-10 text-gray-300" />
@@ -257,11 +257,11 @@ export default function Messages() {
                 </div>
             )}
 
-            {/* 4. Details Panel (Right - Placeholder) */}
+            {/* 4. Details Panel (Right) */}
             {selectedConversationId && (
                 <div className="hidden xl:flex w-72 border-l border-gray-200 flex-col bg-white p-6">
                     <div className="flex flex-col items-center">
-                        <div className="w-20 h-20 bg-purple-600 rounded-full flex items-center justify-center text-white text-2xl font-semibold mb-4 shadow-sm">
+                        <div className="w-20 h-20 bg-cyan-500 rounded-full flex items-center justify-center text-white text-2xl font-semibold mb-4 shadow-sm">
                             {selectedConversationId.slice(-2)}
                         </div>
                         <h2 className="text-lg font-semibold text-gray-800 mb-1">{selectedConversationId}</h2>
@@ -272,7 +272,6 @@ export default function Messages() {
                                 <Info className="w-4 h-4 mr-2" />
                                 People info
                             </button>
-                            {/* Add more options like "Block", "Archive" later */}
                         </div>
                     </div>
                 </div>
