@@ -36,7 +36,6 @@ export default function Home() {
     if (token && !device) {
       const newDevice = new Device(token, {
         logLevel: 1,
-        codecPreferences: ['opus', 'pcmu'],
       });
 
       newDevice.on('registered', () => {
