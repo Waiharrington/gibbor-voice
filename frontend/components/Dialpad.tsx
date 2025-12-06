@@ -25,23 +25,53 @@ export default function Dialpad({ onCall }: { onCall: (number: string, callerId?
         fetchNumbers();
     }, []);
 
-    // ... (rest of code) ...
+    const handlePress = (digit: string) => {
+        setNumber((prev) => prev + digit);
+    };
 
-    {
-        availableNumbers.map((n) => (
-            <option key={n.phoneNumber} value={n.phoneNumber}>
-                {n.friendlyName || n.phoneNumber} {n.type === 'Verified' ? '(Verified)' : ''}
-            </option>
-        ))
-    }
-                        </select >
-        <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-500">
-            <ChevronDown className="h-4 w-4" />
-        </div>
-                    </div >
-                </div >
-            )
-}
+    const handleDelete = () => {
+        setNumber((prev) => prev.slice(0, -1));
+    };
+
+    const handleCall = () => {
+        if (number) {
+            onCall(number, selectedFrom);
+        }
+    };
+
+    const digits = [
+        '1', '2', '3',
+        '4', '5', '6',
+        '7', '8', '9',
+        '*', '0', '#'
+    ];
+
+    return (
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 w-80 p-6 flex flex-col items-center">
+            {/* From Selector */}
+            {availableNumbers.length > 0 && (
+                <div className="w-full mb-4">
+                    <label className="block text-xs font-medium text-gray-500 mb-1 ml-1">Call From:</label>
+                    <div className="relative">
+                        <select
+                            value={selectedFrom}
+                            onChange={(e) => setSelectedFrom(e.target.value)}
+                            className="w-full appearance-none bg-gray-50 border border-gray-200 text-gray-700 py-2 px-3 pr-8 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-green-500"
+                            title="Select Caller ID"
+                            aria-label="Select Caller ID"
+                        >
+                            {availableNumbers.map((n) => (
+                                <option key={n.phoneNumber} value={n.phoneNumber}>
+                                    {n.friendlyName || n.phoneNumber} {n.type === 'Verified' ? '(Verified)' : ''}
+                                </option>
+                            ))}
+                        </select>
+                        <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-500">
+                            <ChevronDown className="h-4 w-4" />
+                        </div>
+                    </div>
+                </div>
+            )}
 
             <div className="w-full mb-6 relative">
                 <input
