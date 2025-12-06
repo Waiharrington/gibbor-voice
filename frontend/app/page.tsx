@@ -116,8 +116,13 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Campaigns & Dialer State
+  const [activeCampaignId, setActiveCampaignId] = useState<string | null>(null);
+  const [currentLead, setCurrentLead] = useState<any | null>(null);
+  const [dialerMode, setDialerMode] = useState(false);
+
   // View Navigation State (Persistent Call)
-  const [currentView, setCurrentView] = useState<'calls' | 'messages'>('calls');
+  const [currentView, setCurrentView] = useState<'calls' | 'messages' | 'campaigns'>('calls');
   const [initialConvId, setInitialConvId] = useState<string | null>(null);
 
   const handleViewChange = (view: string) => {
