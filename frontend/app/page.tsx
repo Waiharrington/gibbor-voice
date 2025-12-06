@@ -3,8 +3,9 @@
 import { useState, useEffect, useMemo } from 'react';
 import Sidebar from '@/components/Sidebar';
 import Dialpad from '@/components/Dialpad';
+import MessagesPanel from '@/components/MessagesPanel';
 import { Device } from '@twilio/voice-sdk';
-import { Phone, PhoneOff, Mic, MicOff, Search, Clock, ArrowUpRight, ArrowDownLeft, MoreVertical, Download } from 'lucide-react';
+import { Phone, PhoneOff, Mic, MicOff, Search, Clock, ArrowUpRight, ArrowDownLeft, MoreVertical, Download, MessageSquare } from 'lucide-react';
 import { format } from 'date-fns';
 import { supabase } from '@/utils/supabaseClient';
 
@@ -107,6 +108,21 @@ export default function Home() {
   const [calls, setCalls] = useState<any[]>([]);
   const [selectedCall, setSelectedCall] = useState<any | null>(null);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+
+  // View Navigation State (Persistent Call)
+  const [currentView, setCurrentView] = useState<'calls' | 'messages'>('calls');
+  const [initialConvId, setInitialConvId] = useState<string | null>(null);
+
+  const handleViewChange = (view: string) => {
+    setCurrentView(view as 'calls' | 'messages');
+    if (view === 'calls') setInitialConvId(null);
+  };
+
+  const handleGoToMessage = (number: string | null) => {
+    if (!number) return;
+    setInitialConvId(number);
+    setCurrentView('messages');
+  };
 
   // Fetch token & History
   useEffect(() => {
