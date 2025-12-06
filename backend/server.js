@@ -69,12 +69,17 @@ app.post("/incoming-call", async (req, res) => {
 
     console.log("Webhook hit. To:", To, "CallSid:", CallSid);
 
+    // Determine direction based on caller
+    // If From starts with 'client:', it's an outbound call FROM the browser.
+    const isClientOutbound = From.startsWith('client:');
+    const direction = isClientOutbound ? 'outbound' : 'inbound';
+
     // Log incoming call to Supabase
     try {
         await supabase.from('calls').insert({
             from: From,
             to: To,
-            direction: 'inbound',
+            direction: direction,
             status: 'ringing',
             sid: CallSid
         });
