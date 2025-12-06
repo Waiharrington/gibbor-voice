@@ -261,7 +261,7 @@ app.get("/history/messages", async (req, res) => {
 
 // Health check
 app.get("/", (req, res) => {
-    console.log("Health check hit!");
+    console.log("Health check hit! - Force Update");
     res.send("Gibbor Voice Backend is running!");
 });
 
