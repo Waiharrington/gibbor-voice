@@ -93,6 +93,27 @@ export default function Home() {
     return () => device?.destroy();
   }, [token, device]);
 
+  const [duration, setDuration] = useState(0);
+
+  // Timer logic
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    if (activeCall && callStatus.startsWith('In Call')) {
+      interval = setInterval(() => {
+        setDuration(prev => prev + 1);
+      }, 1000);
+    } else {
+      setDuration(0);
+    }
+    return () => clearInterval(interval);
+  }, [activeCall, callStatus]);
+
+  const formatDuration = (sec: number) => {
+    const min = Math.floor(sec / 60);
+    const s = sec % 60;
+    return `${min}:${s < 10 ? '0' : ''}${s}`;
+  };
+
   const handleCall = async (number: string) => {
     if (!device) return;
     try {
@@ -100,7 +121,7 @@ export default function Home() {
       const call = await device.connect({ params: { To: number } });
 
       call.on('accept', () => {
-        setCallStatus('In Call: ' + number);
+        setCallStatus('In Call');
         setActiveCall(call);
       });
 
@@ -108,6 +129,11 @@ export default function Home() {
         setCallStatus('Ready');
         setActiveCall(null);
         setIsMuted(false);
+      });
+
+      call.on('cancel', () => {
+        setCallStatus('Ready');
+        setActiveCall(null);
       });
 
       call.on('error', (error: any) => {
@@ -274,6 +300,9 @@ export default function Home() {
                 {activeCall.parameters?.From || activeCall.parameters?.To || 'Unknown'}
               </h2>
               <p className="text-green-600 font-medium mt-2 animate-pulse">{callStatus}</p>
+              {callStatus.startsWith('In Call') && (
+                <p className="text-3xl font-mono text-gray-600 mt-2">{formatDuration(duration)}</p>
+              )}
             </div>
 
             <div className="grid grid-cols-3 gap-6 w-full max-w-xs">
