@@ -32,3 +32,30 @@ alter table public.messages enable row level security;
 -- Let's create a policy that allows everything for now to avoid permission issues during dev.
 create policy "Enable all access for all users" on public.calls for all using (true) with check (true);
 create policy "Enable all access for all users" on public.messages for all using (true) with check (true);
+
+-- Campaigns Table
+create table campaigns (
+  id uuid default uuid_generate_v4() primary key,
+  name text not null,
+  status text default 'active', -- active, paused, completed
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null
+);
+
+-- Leads Table
+create table leads (
+  id uuid default uuid_generate_v4() primary key,
+  campaign_id uuid references campaigns(id) on delete cascade,
+  phone text not null,
+  name text,
+  status text default 'pending', -- pending, called, voicemail, connected, not_interested, sale
+  last_call_at timestamp with time zone,
+  notes text,
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null
+);
+
+-- RLS Policies for Campaigns and Leads
+alter table campaigns enable row level security;
+alter table leads enable row level security;
+
+create policy "Enable all access for anon" on campaigns for all using (true) with check (true);
+create policy "Enable all access for anon" on leads for all using (true) with check (true);
