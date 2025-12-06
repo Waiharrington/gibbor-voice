@@ -228,12 +228,15 @@ export default function Home() {
 
   const [dialedNumber, setDialedNumber] = useState<string>('');
 
-  const handleCall = async (number: string) => {
+  const handleCall = async (number: string, callerId?: string) => {
     if (!device) return;
     setDialedNumber(number); // Store for display
     try {
       setCallStatus('Calling ' + number + '...');
-      const call = await device.connect({ params: { To: number } });
+      const params: any = { To: number };
+      if (callerId) params.callerId = callerId;
+
+      const call = await device.connect({ params });
 
       call.on('accept', () => {
         setCallStatus('In Call');

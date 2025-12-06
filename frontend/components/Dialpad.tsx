@@ -1,10 +1,29 @@
 'use client';
 
-import { useState } from 'react';
-import { Phone, Delete } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Phone, Delete, ChevronDown } from 'lucide-react';
 
-export default function Dialpad({ onCall }: { onCall: (number: string) => void }) {
+export default function Dialpad({ onCall }: { onCall: (number: string, callerId?: string) => void }) {
     const [number, setNumber] = useState('');
+    const [availableNumbers, setAvailableNumbers] = useState<{ phoneNumber: string, friendlyName: string }[]>([]);
+    const [selectedFrom, setSelectedFrom] = useState<string>('');
+
+    // Fetch available numbers
+    useEffect(() => {
+        const fetchNumbers = async () => {
+            try {
+                const res = await fetch('https://gibbor-voice-production.up.railway.app/phone-numbers');
+                if (res.ok) {
+                    const data = await res.json();
+                    setAvailableNumbers(data);
+                    if (data.length > 0) setSelectedFrom(data[0].phoneNumber);
+                }
+            } catch (e) {
+                console.error("Failed to fetch numbers", e);
+            }
+        };
+        fetchNumbers();
+    }, []);
 
     const handlePress = (digit: string) => {
         setNumber((prev) => prev + digit);
@@ -16,7 +35,7 @@ export default function Dialpad({ onCall }: { onCall: (number: string) => void }
 
     const handleCall = () => {
         if (number) {
-            onCall(number);
+            onCall(number, selectedFrom);
         }
     };
 
@@ -29,13 +48,36 @@ export default function Dialpad({ onCall }: { onCall: (number: string) => void }
 
     return (
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 w-80 p-6 flex flex-col items-center">
-            <div className="w-full mb-6">
+            {/* From Selector */}
+            {availableNumbers.length > 0 && (
+                <div className="w-full mb-4">
+                    <label className="block text-xs font-medium text-gray-500 mb-1 ml-1">Call From:</label>
+                    <div className="relative">
+                        <select
+                            value={selectedFrom}
+                            onChange={(e) => setSelectedFrom(e.target.value)}
+                            className="w-full appearance-none bg-gray-50 border border-gray-200 text-gray-700 py-2 px-3 pr-8 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-green-500"
+                        >
+                            {availableNumbers.map((n) => (
+                                <option key={n.phoneNumber} value={n.phoneNumber}>
+                                    {n.friendlyName || n.phoneNumber}
+                                </option>
+                            ))}
+                        </select>
+                        <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-500">
+                            <ChevronDown className="h-4 w-4" />
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            <div className="w-full mb-6 relative">
                 <input
                     type="text"
                     value={number}
                     onChange={(e) => setNumber(e.target.value)}
                     className="w-full text-3xl text-center font-light text-gray-800 outline-none border-b border-transparent focus:border-green-500 transition-colors pb-2"
-                    placeholder="Enter a name or number"
+                    placeholder="Enter number"
                 />
             </div>
 
