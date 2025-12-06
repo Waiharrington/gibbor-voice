@@ -151,7 +151,7 @@ app.post("/call-status", async (req, res) => {
 // Recording Status Callback
 app.post("/recording-status", async (req, res) => {
     const { CallSid, RecordingUrl, RecordingStatus } = req.body;
-    console.log(`Recording ${RecordingStatus}: ${url} for Call ${CallSid}`);
+    console.log(`Recording ${RecordingStatus}: ${RecordingUrl} for Call ${CallSid}`);
     // Extract .mp3 from .json if needed, or usually RecordingUrl is base. Appending .mp3 makes it playable in browser.
     const audioUrl = RecordingUrl ? `${RecordingUrl}.mp3` : null;
 
