@@ -126,9 +126,7 @@ export default function Home() {
   const [currentView, setCurrentView] = useState<'calls' | 'messages' | 'campaigns'>('calls');
   const [initialConvId, setInitialConvId] = useState<string | null>(null);
 
-  // ... (imports)
 
-  // ... inside Home component ...
 
   const handleViewChange = (view: string) => {
     setCurrentView(view as 'calls' | 'messages' | 'campaigns');
