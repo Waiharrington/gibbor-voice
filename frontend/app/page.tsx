@@ -105,7 +105,6 @@ export default function Home() {
 
   // History State
   const [calls, setCalls] = useState<any[]>([]);
-  const [calls, setCalls] = useState<any[]>([]);
   const [selectedCall, setSelectedCall] = useState<any | null>(null);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
