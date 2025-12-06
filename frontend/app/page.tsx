@@ -112,6 +112,7 @@ export default function Home() {
   const [calls, setCalls] = useState<any[]>([]);
   const [selectedCall, setSelectedCall] = useState<any | null>(null);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isKeypadOpen, setIsKeypadOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -519,38 +520,62 @@ export default function Home() {
                     <PhoneOff className="w-8 h-8" />
                   </button>
                 </>
-              ) : (
-                <>
-                  <button onClick={toggleMute} aria-label={isMuted ? "Unmute" : "Mute"} title={isMuted ? "Unmute" : "Mute"} className={`flex flex-col items-center justify-center w-16 h-16 rounded-full transition-all ${isMuted ? 'bg-gray-800 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}>
-                    {isMuted ? <MicOff className="w-6 h-6" /> : <Mic className="w-6 h-6" />}
-                  </button>
-
-                  <button
-                    onClick={() => handleGoToMessage(dialedNumber || activeCall.parameters?.From || activeCall.parameters?.To)}
-                    className="flex flex-col items-center justify-center w-16 h-16 rounded-full bg-gray-600 text-white hover:bg-gray-700 shadow-lg hover:shadow-xl transform hover:scale-105 transition-all"
-                    title="Message"
-                    aria-label="Message"
-                  >
-                    <MessageSquare className="w-6 h-6" />
-                  </button>
-
-                  <button onClick={handleHangup} aria-label="Hangup" title="Hangup" className="col-start-3 flex flex-col items-center justify-center w-16 h-16 rounded-full bg-red-500 text-white hover:bg-red-600 shadow-lg hover:shadow-xl transform hover:scale-105 transition-all">
-                    <PhoneOff className="w-8 h-8" />
-                  </button>
                 </>
+            ) : (
+            <>
+              <button onClick={toggleMute} aria-label={isMuted ? "Unmute" : "Mute"} title={isMuted ? "Unmute" : "Mute"} className={`flex flex-col items-center justify-center w-16 h-16 rounded-full transition-all ${isMuted ? 'bg-gray-800 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}>
+                {isMuted ? <MicOff className="w-6 h-6" /> : <Mic className="w-6 h-6" />}
+              </button>
+
+              <button
+                onClick={() => setIsKeypadOpen(!isKeypadOpen)}
+                className={`flex flex-col items-center justify-center w-16 h-16 rounded-full transition-all ${isKeypadOpen ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
+                title="Keypad"
+                aria-label="Keypad"
+              >
+                <div className="grid grid-cols-3 gap-0.5 w-6 h-6">
+                  {[...Array(9)].map((_, i) => <div key={i} className={`w-1 h-1 rounded-full ${isKeypadOpen ? 'bg-white' : 'bg-gray-500'}`} />)}
+                </div>
+              </button>
+
+              <button onClick={handleHangup} aria-label="Hangup" title="Hangup" className="col-start-3 flex flex-col items-center justify-center w-16 h-16 rounded-full bg-red-500 text-white hover:bg-red-600 shadow-lg hover:shadow-xl transform hover:scale-105 transition-all">
+                <PhoneOff className="w-8 h-8" />
+              </button>
+            </>
               )}
-            </div>
           </div>
-        ) : (
-          <div className="flex-1 flex flex-col">
-            <div className="text-center mb-8">
-              <p className="text-xs font-medium text-gray-400 uppercase tracking-wider mb-1">Make a Call</p>
-              <p className="text-sm text-gray-500">Calling as {identity || '...'}</p>
-            </div>
-            <Dialpad onCall={handleCall} />
+
+            {/* In-Call Keypad Overlay */}
+        {isKeypadOpen && (
+          <div className="mt-8 grid grid-cols-3 gap-4 animate-in slide-in-from-bottom-5 fade-in duration-300">
+            {['1', '2', '3', '4', '5', '6', '7', '8', '9', '*', '0', '#'].map((digit) => (
+              <button
+                key={digit}
+                onClick={() => {
+                  if (activeCall) {
+                    activeCall.sendDigits(digit);
+                    setDuration((prev) => prev); // Force re-render if needed? No, just visual feedback
+                  }
+                }}
+                className="w-14 h-14 rounded-full bg-gray-50 hover:bg-gray-100 flex items-center justify-center text-xl font-medium text-gray-700 transition-colors active:bg-gray-200"
+              >
+                {digit}
+              </button>
+            ))}
           </div>
         )}
+
       </div>
+      ) : (
+      <div className="flex-1 flex flex-col">
+        <div className="text-center mb-8">
+          <p className="text-xs font-medium text-gray-400 uppercase tracking-wider mb-1">Make a Call</p>
+          <p className="text-sm text-gray-500">Calling as {identity || '...'}</p>
+        </div>
+        <Dialpad onCall={handleCall} />
+      </div>
+        )}
+    </div>
     </div >
   );
 }
