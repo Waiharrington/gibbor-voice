@@ -117,7 +117,7 @@ app.post("/incoming-call", async (req, res) => {
 
 // Generic Call Status Handler
 app.post("/call-status", async (req, res) => {
-    const { CallSid, CallStatus, CallDuration, DialCallStatus, DialCallDuration } = req.body;
+    const { CallSid, CallStatus, CallDuration, DialCallStatus, DialCallDuration, DialCallSid } = req.body;
     console.log(`Call Status Update: ${CallSid} -> ${CallStatus}/${DialCallStatus}`);
 
     const finalStatus = DialCallStatus || CallStatus;
@@ -127,6 +127,7 @@ app.post("/call-status", async (req, res) => {
         try {
             const updateData = { status: finalStatus };
             if (finalDuration) updateData.duration = parseInt(finalDuration);
+            if (DialCallSid) updateData.child_sid = DialCallSid; // Link Child SID
 
             await supabase
                 .from('calls')
@@ -140,6 +141,30 @@ app.post("/call-status", async (req, res) => {
     const twiml = new twilio.twiml.VoiceResponse();
     res.type("text/xml");
     res.send(twiml.toString());
+});
+
+// Recording Status Callback
+app.post("/recording-status", async (req, res) => {
+    const { CallSid, RecordingUrl, RecordingStatus } = req.body;
+    console.log(`Recording ${RecordingStatus}: ${url} for Call ${CallSid}`);
+    // Extract .mp3 from .json if needed, or usually RecordingUrl is base. Appending .mp3 makes it playable in browser.
+    const audioUrl = RecordingUrl ? `${RecordingUrl}.mp3` : null;
+
+    if (RecordingStatus === 'completed' && audioUrl) {
+        try {
+            // Match SID OR Child SID
+            const { error } = await supabase
+                .from('calls')
+                .update({ recording_url: audioUrl })
+                .or(`sid.eq.${CallSid},child_sid.eq.${CallSid}`);
+
+            if (error) console.error("Error updating recording URL:", error);
+        } catch (e) {
+            console.error("Error in recording callback:", e);
+        }
+    }
+
+    res.sendStatus(200);
 });
 
 // Send SMS/MMS

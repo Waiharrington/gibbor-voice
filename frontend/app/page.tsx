@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo } from 'react';
 import Sidebar from '@/components/Sidebar';
 import Dialpad from '@/components/Dialpad';
 import { Device } from '@twilio/voice-sdk';
-import { Phone, PhoneOff, Mic, MicOff, Search, Clock, ArrowUpRight, ArrowDownLeft, MoreVertical } from 'lucide-react';
+import { Phone, PhoneOff, Mic, MicOff, Search, Clock, ArrowUpRight, ArrowDownLeft, MoreVertical, Download } from 'lucide-react';
 import { format } from 'date-fns';
 import { supabase } from '@/utils/supabaseClient';
 
@@ -233,8 +233,20 @@ export default function Home() {
 
                     {/* Recording Player (Placeholder logic until backend is ready) */}
                     {selectedCall.recording_url && (
-                      <div className="mt-4 bg-gray-100 rounded-full p-2 flex items-center">
-                        <audio controls src={selectedCall.recording_url} className="w-full h-8" />
+                      <div className="mt-4 flex items-center space-x-2">
+                        <div className="bg-gray-100 rounded-full p-2 flex-1 items-center">
+                          <audio controls src={selectedCall.recording_url} className="w-full h-8" />
+                        </div>
+                        <a
+                          href={selectedCall.recording_url}
+                          download
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="p-3 bg-gray-100 rounded-full text-gray-600 hover:bg-gray-200 hover:text-cyan-600 transition-colors"
+                          title="Download Recording"
+                        >
+                          <Download className="w-5 h-5" />
+                        </a>
                       </div>
                     )}
                   </div>
