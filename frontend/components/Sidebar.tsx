@@ -23,6 +23,7 @@ export default function Sidebar({ currentView, onViewChange }: SidebarProps) {
                 <span className="text-xl font-semibold text-gray-700">Gibbor Voice</span>
             </div>
 
+            <nav className="flex-1 overflow-y-auto py-4">
                 <ul className="space-y-1">
                     <li>
                         <button
@@ -42,7 +43,7 @@ export default function Sidebar({ currentView, onViewChange }: SidebarProps) {
                             Messages
                         </button>
                     </li>
-                     <li>
+                    <li>
                         <button
                             onClick={(e) => handleNav('campaigns', e)}
                             className={`w-full flex items-center px-4 py-3 cursor-pointer transition-colors ${currentView === 'campaigns' ? 'bg-gray-200 text-gray-900 font-medium' : 'text-gray-600 hover:bg-gray-100'}`}
