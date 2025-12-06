@@ -5,7 +5,7 @@ import Sidebar from '@/components/Sidebar';
 import Dialpad from '@/components/Dialpad';
 import MessagesPanel from '@/components/MessagesPanel';
 import { Device } from '@twilio/voice-sdk';
-import { Phone, PhoneOff, Mic, MicOff, Search, Clock, ArrowUpRight, ArrowDownLeft, MoreVertical, Download, MessageSquare } from 'lucide-react';
+import { Phone, PhoneOff, Mic, MicOff, Search, ArrowUpRight, ArrowDownLeft, MoreVertical, Download, MessageSquare } from 'lucide-react';
 import { format } from 'date-fns';
 import { supabase } from '@/utils/supabaseClient';
 
@@ -89,6 +89,7 @@ function AudioPlayer({ src }: { src: string }) {
           value={progress}
           onChange={handleSeek}
           className="w-full h-1 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-gray-800"
+          aria-label="Seek"
         />
       </div>
 
