@@ -183,7 +183,10 @@ export default function Home() {
                   ) : (
                     <ArrowDownLeft className="w-3 h-3 mr-1 text-cyan-500" />
                   )}
-                  {call.status || 'unknown'}
+                  <span>{call.status || 'unknown'}</span>
+                  {call.duration && (
+                    <span className="ml-1 text-gray-400">• {call.duration}s</span>
+                  )}
                 </div>
               </div>
             </div>
