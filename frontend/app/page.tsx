@@ -299,7 +299,7 @@ export default function Home() {
       {/* 1. Sidebar */}
       <Sidebar currentView={currentView} onViewChange={handleViewChange} />
 
-      {currentView === 'calls' ? (
+      {currentView === 'calls' && (
         <>
           {/* 2. Call List (Left) */}
           <div className="w-80 border-r border-gray-200 flex flex-col bg-white">
@@ -478,8 +478,14 @@ export default function Home() {
             )}
           </div>
         </>
-      ) : (
+      )}
+
+      {currentView === 'messages' && (
         <MessagesPanel key={initialConvId || 'messages'} initialConversationId={initialConvId} />
+      )}
+
+      {currentView === 'campaigns' && !dialerMode && (
+        <CampaignManager onStartDialer={handleStartDialer} />
       )}
 
       {/* 4. Right Panel (Dialpad/Active Call) */}
