@@ -1,7 +1,19 @@
 import Link from 'next/link';
 import { Phone, Clock, MessageSquare, Settings, User } from 'lucide-react';
 
-export default function Sidebar() {
+interface SidebarProps {
+    currentView?: string;
+    onViewChange?: (view: string) => void;
+}
+
+export default function Sidebar({ currentView, onViewChange }: SidebarProps) {
+    const handleNav = (view: string, e: React.MouseEvent) => {
+        if (onViewChange) {
+            e.preventDefault();
+            onViewChange(view);
+        }
+    };
+
     return (
         <aside className="w-64 bg-gray-50 border-r border-gray-200 h-screen flex flex-col">
             <div className="p-4 flex items-center space-x-2 border-b border-gray-100">
@@ -14,16 +26,24 @@ export default function Sidebar() {
             <nav className="flex-1 overflow-y-auto py-4">
                 <ul className="space-y-1">
                     <li>
-                        <Link href="/" className="flex items-center px-4 py-3 text-gray-700 hover:bg-gray-200 transition-colors bg-gray-200 font-medium">
-                            <Phone className="w-5 h-5 mr-3 text-gray-600" />
+                        <a
+                            href="/"
+                            onClick={(e) => handleNav('calls', e)}
+                            className={`flex items-center px-4 py-3 cursor-pointer transition-colors ${currentView === 'calls' ? 'bg-gray-200 text-gray-900 font-medium' : 'text-gray-600 hover:bg-gray-100'}`}
+                        >
+                            <Phone className="w-5 h-5 mr-3 text-gray-500" />
                             Calls
-                        </Link>
+                        </a>
                     </li>
                     <li>
-                        <Link href="/messages" className="flex items-center px-4 py-3 text-gray-600 hover:bg-gray-100 transition-colors">
+                        <a
+                            href="/messages"
+                            onClick={(e) => handleNav('messages', e)}
+                            className={`flex items-center px-4 py-3 cursor-pointer transition-colors ${currentView === 'messages' ? 'bg-gray-200 text-gray-900 font-medium' : 'text-gray-600 hover:bg-gray-100'}`}
+                        >
                             <MessageSquare className="w-5 h-5 mr-3 text-gray-500" />
                             Messages
-                        </Link>
+                        </a>
                     </li>
                     <li>
                         <Link href="/history" className="flex items-center px-4 py-3 text-gray-600 hover:bg-gray-100 transition-colors">
