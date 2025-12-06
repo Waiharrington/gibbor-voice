@@ -126,8 +126,6 @@ export default function Home() {
   const [currentView, setCurrentView] = useState<'calls' | 'messages' | 'campaigns'>('calls');
   const [initialConvId, setInitialConvId] = useState<string | null>(null);
 
-  import CampaignManager from '@/components/CampaignManager';
-
   // ... (imports)
 
   // ... inside Home component ...
@@ -636,6 +634,51 @@ export default function Home() {
               </div>
             )}
 
+          </div>
+        ) : dialerMode && currentLead ? (
+          <div className="flex-1 flex flex-col animate-in fade-in slide-in-from-right-10 duration-500">
+            <div className="text-center mb-8">
+              <div className="w-20 h-20 bg-purple-100 text-purple-600 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl font-bold">
+                {currentLead.name ? currentLead.name.charAt(0) : '#'}
+              </div>
+              <h2 className="text-xl font-bold text-gray-900">{currentLead.name || 'Unknown'}</h2>
+              <p className="text-lg text-gray-600 font-mono mt-1">{currentLead.phone}</p>
+              <div className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-purple-50 text-purple-700 mt-2">
+                Power Dialer Active
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <button
+                onClick={() => handleCall(currentLead.phone)}
+                className="w-full py-4 bg-green-500 text-white rounded-xl font-semibold shadow-lg hover:bg-green-600 hover:shadow-xl hover:-translate-y-0.5 transition-all flex items-center justify-center text-lg"
+              >
+                <Phone className="w-6 h-6 mr-2" />
+                Call Lead
+              </button>
+
+              <div className="grid grid-cols-2 gap-3 pt-4 border-t border-gray-100">
+                <button onClick={() => handleLeadDisposition('sale')} className="p-3 bg-green-50 text-green-700 rounded-lg hover:bg-green-100 font-medium text-sm transition-colors border border-green-200">
+                  Sale 💰
+                </button>
+                <button onClick={() => handleLeadDisposition('not_interested')} className="p-3 bg-red-50 text-red-700 rounded-lg hover:bg-red-100 font-medium text-sm transition-colors border border-red-200">
+                  Not Interested 🚫
+                </button>
+                <button onClick={() => handleLeadDisposition('voicemail')} className="p-3 bg-gray-50 text-gray-700 rounded-lg hover:bg-gray-100 font-medium text-sm transition-colors border border-gray-200">
+                  Voicemail 📼
+                </button>
+                <button onClick={() => handleLeadDisposition('callback')} className="p-3 bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 font-medium text-sm transition-colors border border-blue-200">
+                  Callback 📅
+                </button>
+              </div>
+
+              <button onClick={() => fetchNextLead(activeCampaignId!)} className="w-full py-2 text-gray-400 hover:text-gray-600 text-sm mt-2">
+                Skip Lead
+              </button>
+              <button onClick={() => setDialerMode(false)} className="w-full py-2 text-red-400 hover:text-red-600 text-sm">
+                Exit Dialer
+              </button>
+            </div>
           </div>
         ) : (
           <div className="flex-1 flex flex-col">
