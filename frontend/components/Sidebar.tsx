@@ -23,37 +23,33 @@ export default function Sidebar({ currentView, onViewChange }: SidebarProps) {
                 <span className="text-xl font-semibold text-gray-700">Gibbor Voice</span>
             </div>
 
-            <nav className="flex-1 overflow-y-auto py-4">
                 <ul className="space-y-1">
                     <li>
-                        <a
-                            href="/"
+                        <button
                             onClick={(e) => handleNav('calls', e)}
-                            className={`flex items-center px-4 py-3 cursor-pointer transition-colors ${currentView === 'calls' ? 'bg-gray-200 text-gray-900 font-medium' : 'text-gray-600 hover:bg-gray-100'}`}
+                            className={`w-full flex items-center px-4 py-3 cursor-pointer transition-colors ${currentView === 'calls' ? 'bg-gray-200 text-gray-900 font-medium' : 'text-gray-600 hover:bg-gray-100'}`}
                         >
                             <Phone className="w-5 h-5 mr-3 text-gray-500" />
                             Calls
-                        </a>
+                        </button>
                     </li>
                     <li>
-                        <a
-                            href="/messages"
+                        <button
                             onClick={(e) => handleNav('messages', e)}
-                            className={`flex items-center px-4 py-3 cursor-pointer transition-colors ${currentView === 'messages' ? 'bg-gray-200 text-gray-900 font-medium' : 'text-gray-600 hover:bg-gray-100'}`}
+                            className={`w-full flex items-center px-4 py-3 cursor-pointer transition-colors ${currentView === 'messages' ? 'bg-gray-200 text-gray-900 font-medium' : 'text-gray-600 hover:bg-gray-100'}`}
                         >
                             <MessageSquare className="w-5 h-5 mr-3 text-gray-500" />
                             Messages
-                        </a>
+                        </button>
                     </li>
-                    <li>
-                        <a
-                            href="/campaigns"
+                     <li>
+                        <button
                             onClick={(e) => handleNav('campaigns', e)}
-                            className={`flex items-center px-4 py-3 cursor-pointer transition-colors ${currentView === 'campaigns' ? 'bg-gray-200 text-gray-900 font-medium' : 'text-gray-600 hover:bg-gray-100'}`}
+                            className={`w-full flex items-center px-4 py-3 cursor-pointer transition-colors ${currentView === 'campaigns' ? 'bg-gray-200 text-gray-900 font-medium' : 'text-gray-600 hover:bg-gray-100'}`}
                         >
                             <BarChart3 className="w-5 h-5 mr-3 text-gray-500" />
                             Campaigns
-                        </a>
+                        </button>
                     </li>
                     <li>
                         <Link href="/history" className="flex items-center px-4 py-3 text-gray-600 hover:bg-gray-100 transition-colors">
@@ -76,6 +72,6 @@ export default function Sidebar({ currentView, onViewChange }: SidebarProps) {
                     Settings
                 </Link>
             </div>
-        </aside>
+        </aside >
     );
 }
