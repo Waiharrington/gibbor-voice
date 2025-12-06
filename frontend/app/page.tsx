@@ -114,8 +114,11 @@ export default function Home() {
     return `${min}:${s < 10 ? '0' : ''}${s}`;
   };
 
+  const [dialedNumber, setDialedNumber] = useState<string>('');
+
   const handleCall = async (number: string) => {
     if (!device) return;
+    setDialedNumber(number); // Store for display
     try {
       setCallStatus('Calling ' + number + '...');
       const call = await device.connect({ params: { To: number } });
@@ -124,22 +127,26 @@ export default function Home() {
         setCallStatus('In Call');
         setActiveCall(call);
       });
+      // ... (rest of listeners)
 
       call.on('disconnect', () => {
         setCallStatus('Ready');
         setActiveCall(null);
         setIsMuted(false);
+        setDialedNumber('');
       });
 
       call.on('cancel', () => {
         setCallStatus('Ready');
         setActiveCall(null);
+        setDialedNumber('');
       });
 
       call.on('error', (error: any) => {
         console.error('Call Error:', error);
         setCallStatus('Call Error');
         setActiveCall(null);
+        setDialedNumber('');
       });
 
     } catch (error) {
@@ -297,7 +304,8 @@ export default function Home() {
             </div>
             <div>
               <h2 className="text-2xl font-bold text-gray-800">
-                {activeCall.parameters?.From || activeCall.parameters?.To || 'Unknown'}
+                {/* Prioritize dialedNumber for outbound, otherwise use call parameters */}
+                {dialedNumber || activeCall.parameters?.From || activeCall.parameters?.To || 'Unknown'}
               </h2>
               <p className="text-green-600 font-medium mt-2 animate-pulse">{callStatus}</p>
               {callStatus.startsWith('In Call') && (
