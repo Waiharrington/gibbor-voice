@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import Sidebar from '@/components/Sidebar';
 import Dialpad from '@/components/Dialpad';
 import MessagesPanel from '@/components/MessagesPanel';
+import CampaignManager from '@/components/CampaignManager';
 import { Device } from '@twilio/voice-sdk';
 import { Phone, PhoneOff, Mic, MicOff, Search, ArrowUpRight, ArrowDownLeft, MoreVertical, Download, MessageSquare } from 'lucide-react';
 import { format } from 'date-fns';
@@ -125,8 +126,14 @@ export default function Home() {
   const [currentView, setCurrentView] = useState<'calls' | 'messages' | 'campaigns'>('calls');
   const [initialConvId, setInitialConvId] = useState<string | null>(null);
 
+  import CampaignManager from '@/components/CampaignManager';
+
+  // ... (imports)
+
+  // ... inside Home component ...
+
   const handleViewChange = (view: string) => {
-    setCurrentView(view as 'calls' | 'messages');
+    setCurrentView(view as 'calls' | 'messages' | 'campaigns');
     if (view === 'calls') setInitialConvId(null);
   };
 
@@ -134,6 +141,57 @@ export default function Home() {
     if (!number) return;
     setInitialConvId(number);
     setCurrentView('messages');
+  };
+
+  // --- Campaign & Dialer Logic ---
+
+  const fetchNextLead = async (campaignId: string) => {
+    try {
+      const res = await fetch(`https://gibbor-voice-production.up.railway.app/campaigns/${campaignId}/next-lead`);
+      if (!res.ok) throw new Error('Failed to fetch next lead');
+      const lead = await res.json();
+
+      if (lead) {
+        setCurrentLead(lead);
+        if (lead.phone) setDialedNumber(lead.phone);
+      } else {
+        // No more leads
+        setCurrentLead(null);
+        alert("No more pending leads in this campaign.");
+        setDialerMode(false);
+      }
+    } catch (err) {
+      console.error("Error fetching lead:", err);
+      alert("Error fetching next lead. See console.");
+    }
+  };
+
+  const handleStartDialer = (campaignId: string) => {
+    setActiveCampaignId(campaignId);
+    setDialerMode(true);
+    // Fetch first lead
+    fetchNextLead(campaignId);
+  };
+
+  const handleLeadDisposition = async (status: string, notes?: string) => {
+    if (!currentLead) return;
+
+    // Optimistic update / Log disposition
+    try {
+      await fetch(`https://gibbor-voice-production.up.railway.app/leads/${currentLead.id}/update`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status, notes })
+      });
+
+      // Auto-fetch next lead
+      if (activeCampaignId) {
+        fetchNextLead(activeCampaignId);
+      }
+    } catch (err) {
+      console.error("Error updating lead:", err);
+      alert("Failed to update lead status.");
+    }
   };
 
   // Fetch token & History
