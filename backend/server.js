@@ -62,12 +62,28 @@ app.get("/token", async (req, res) => {
     }
 });
 
+// Fetch available Twilio numbers
+app.get("/phone-numbers", async (req, res) => {
+    try {
+        const numbers = await twilioClient.incomingPhoneNumbers.list({ limit: 20 });
+        const mapped = numbers.map(n => ({
+            phoneNumber: n.phoneNumber,
+            friendlyName: n.friendlyName
+        }));
+        res.json(mapped);
+    } catch (e) {
+        console.error("Error fetching numbers:", e);
+        res.status(500).json({ error: e.message });
+    }
+});
+
 // Incoming call webhook
 app.post("/incoming-call", async (req, res) => {
     const twiml = new twilio.twiml.VoiceResponse();
-    const { To, From, CallSid } = req.body;
+    // callerId is passed from frontend device.connect params
+    const { To, From, CallSid, callerId } = req.body;
 
-    console.log("Webhook hit. To:", To, "CallSid:", CallSid);
+    console.log("Webhook hit. To:", To, "CallSid:", CallSid, "Custom CallerId:", callerId);
 
     // Determine direction based on caller
     // If From starts with 'client:', it's an outbound call FROM the browser.
@@ -88,6 +104,7 @@ app.post("/incoming-call", async (req, res) => {
     }
 
     const baseUrl = process.env.BASE_URL || 'https://gibbor-voice-production.up.railway.app';
+    const outboundCallerId = callerId || process.env.TWILIO_PHONE_NUMBER;
 
     if (To === process.env.TWILIO_PHONE_NUMBER) {
         twiml.say("Conectando con el agente.");
@@ -103,7 +120,7 @@ app.post("/incoming-call", async (req, res) => {
     else if (To) {
         // Outbound calls from browser (TwiML App default URL)
         const dial = twiml.dial({
-            callerId: process.env.TWILIO_PHONE_NUMBER,
+            callerId: outboundCallerId,
             record: 'record-from-ringing',
             recordingStatusCallback: `${baseUrl}/recording-status`,
             recordingStatusCallbackEvent: ['completed'],
