@@ -288,6 +288,103 @@ app.get("/history/messages", async (req, res) => {
     }
 });
 
+// Campaign Endpoints
+const multer = require('multer');
+const csv = require('csv-parser');
+const fs = require('fs');
+const upload = multer({ dest: 'uploads/' });
+
+app.get("/campaigns", async (req, res) => {
+    try {
+        const { data, error } = await supabase
+            .from('campaigns')
+            .select('*')
+            .order('created_at', { ascending: false });
+        if (error) throw error;
+        res.json(data);
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+app.post("/campaigns", async (req, res) => {
+    try {
+        const { name } = req.body;
+        const { data, error } = await supabase
+            .from('campaigns')
+            .insert({ name })
+            .select()
+            .single();
+        if (error) throw error;
+        res.json(data);
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+app.post("/campaigns/:id/upload", upload.single('file'), async (req, res) => {
+    const campaignId = req.params.id;
+    const results = [];
+
+    fs.createReadStream(req.file.path)
+        .pipe(csv())
+        .on('data', (data) => results.push(data))
+        .on('end', async () => {
+            const leads = results.map(row => {
+                const phoneKey = Object.keys(row).find(k => k.toLowerCase().includes('phone') || k.toLowerCase().includes('tel') || k.toLowerCase().includes('cel'));
+                const nameKey = Object.keys(row).find(k => k.toLowerCase().includes('name') || k.toLowerCase().includes('nombre'));
+                return {
+                    campaign_id: campaignId,
+                    phone: phoneKey ? row[phoneKey] : null,
+                    name: nameKey ? row[nameKey] : 'Unknown',
+                    status: 'pending'
+                };
+            }).filter(l => l.phone);
+
+            if (leads.length > 0) {
+                const { error } = await supabase.from('leads').insert(leads);
+                if (error) console.error("Error inserting leads", error);
+            }
+            fs.unlinkSync(req.file.path);
+            res.json({ message: `Uploaded ${leads.length} leads` });
+        });
+});
+
+app.get("/campaigns/:id/next-lead", async (req, res) => {
+    try {
+        const { data, error } = await supabase
+            .from('leads')
+            .select('*')
+            .eq('campaign_id', req.params.id)
+            .eq('status', 'pending')
+            .limit(1)
+            .maybeSingle();
+
+        if (!data) return res.json(null);
+        res.json(data);
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+app.post("/leads/:id/update", async (req, res) => {
+    try {
+        const { status, notes } = req.body;
+        const updateData = { status, last_call_at: new Date() };
+        if (notes) updateData.notes = notes;
+
+        const { error } = await supabase
+            .from('leads')
+            .update(updateData)
+            .eq('id', req.params.id);
+
+        if (error) throw error;
+        res.json({ success: true });
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
 // Health check
 app.get("/", (req, res) => {
     console.log("Health check hit! - Force Update");
