@@ -8,6 +8,93 @@ import { Phone, PhoneOff, Mic, MicOff, Search, Clock, ArrowUpRight, ArrowDownLef
 import { format } from 'date-fns';
 import { supabase } from '@/utils/supabaseClient';
 
+// Simple Custom Audio Player Component
+function AudioPlayer({ src }: { src: string }) {
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [duration, setDuration] = useState(0);
+  const audioRef = useMemo(() => new Audio(src), [src]);
+
+  useEffect(() => {
+    // Reset state on new source
+    setIsPlaying(false);
+    setProgress(0);
+    setDuration(0);
+
+    // Load metadata
+    audioRef.addEventListener('loadedmetadata', () => {
+      setDuration(audioRef.duration);
+    });
+
+    audioRef.addEventListener('timeupdate', () => {
+      setProgress(audioRef.currentTime);
+    });
+
+    audioRef.addEventListener('ended', () => {
+      setIsPlaying(false);
+      setProgress(0);
+      audioRef.currentTime = 0;
+    });
+
+    return () => {
+      audioRef.pause();
+      audioRef.src = '';
+    }
+  }, [audioRef]);
+
+  const togglePlay = () => {
+    if (isPlaying) {
+      audioRef.pause();
+    } else {
+      audioRef.play();
+    }
+    setIsPlaying(!isPlaying);
+  };
+
+  const handleSeek = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newTime = Number(e.target.value);
+    audioRef.currentTime = newTime;
+    setProgress(newTime);
+  };
+
+  const formatTime = (time: number) => {
+    if (!time || isNaN(time)) return "0:00";
+    const minutes = Math.floor(time / 60);
+    const seconds = Math.floor(time % 60);
+    return `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+  };
+
+  return (
+    <div className="mt-4 bg-gray-50 rounded-xl p-3 flex items-center space-x-3 border border-gray-100">
+      <button
+        onClick={togglePlay}
+        className="w-8 h-8 flex items-center justify-center bg-gray-800 text-white rounded-full hover:bg-gray-700 transition-colors shrink-0"
+      >
+        {isPlaying ? (
+          <div className="h-3 w-3 bg-white rounded-sm" /> // Stop/Pause icon substitute
+        ) : (
+          <div className="w-0 h-0 border-t-4 border-t-transparent border-l-8 border-l-white border-b-4 border-b-transparent ml-1" /> // Play icon
+        )}
+      </button>
+
+      <div className="flex-1 flex flex-col justify-center">
+        <input
+          type="range"
+          min="0"
+          max={duration || 100}
+          value={progress}
+          onChange={handleSeek}
+          className="w-full h-1 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-gray-800"
+        />
+      </div>
+
+      <span className="text-xs text-gray-500 font-medium tabular-nums min-w-[32px]">
+        {formatTime(duration)}
+      </span>
+    </div>
+  );
+}
+
 export default function Home() {
   const [device, setDevice] = useState<Device | null>(null);
   const [token, setToken] = useState<string | null>(null);
@@ -18,7 +105,9 @@ export default function Home() {
 
   // History State
   const [calls, setCalls] = useState<any[]>([]);
+  const [calls, setCalls] = useState<any[]>([]);
   const [selectedCall, setSelectedCall] = useState<any | null>(null);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   // Fetch token & History
   useEffect(() => {
@@ -236,13 +325,39 @@ export default function Home() {
               <h2 className="text-lg font-medium text-gray-800">
                 {selectedCall.direction === 'outbound' ? selectedCall.to : selectedCall.from}
               </h2>
-              <div className="flex space-x-2">
-                <button className="p-2 hover:bg-gray-100 rounded-full text-gray-500">
+              <div className="flex space-x-2 relative">
+                <button
+                  onClick={() => handleCall(selectedCall.direction === 'outbound' ? selectedCall.to : selectedCall.from)}
+                  className="p-2 hover:bg-gray-100 rounded-full text-gray-500 hover:text-green-600 transition-colors"
+                >
                   <Phone className="w-5 h-5" />
                 </button>
-                <button className="p-2 hover:bg-gray-100 rounded-full text-gray-500">
-                  <MoreVertical className="w-5 h-5" />
-                </button>
+                <div className="relative">
+                  <button
+                    onClick={() => setIsMenuOpen(!isMenuOpen)}
+                    className="p-2 hover:bg-gray-100 rounded-full text-gray-500"
+                  >
+                    <MoreVertical className="w-5 h-5" />
+                  </button>
+                  {isMenuOpen && (
+                    <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-10 border border-gray-100">
+                      {selectedCall.recording_url ? (
+                        <a
+                          href={selectedCall.recording_url}
+                          download
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
+                          onClick={() => setIsMenuOpen(false)}
+                        >
+                          <Download className="w-4 h-4 mr-2" /> Download Recording
+                        </a>
+                      ) : (
+                        <span className="block px-4 py-2 text-sm text-gray-400 italic">No recording available</span>
+                      )}
+                    </div>
+                  )}
+                </div>
               </div>
             </header>
 
