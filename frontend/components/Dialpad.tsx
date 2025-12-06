@@ -57,6 +57,8 @@ export default function Dialpad({ onCall }: { onCall: (number: string, callerId?
                             value={selectedFrom}
                             onChange={(e) => setSelectedFrom(e.target.value)}
                             className="w-full appearance-none bg-gray-50 border border-gray-200 text-gray-700 py-2 px-3 pr-8 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-green-500"
+                            title="Select Caller ID"
+                            aria-label="Select Caller ID"
                         >
                             {availableNumbers.map((n) => (
                                 <option key={n.phoneNumber} value={n.phoneNumber}>
@@ -99,12 +101,16 @@ export default function Dialpad({ onCall }: { onCall: (number: string, callerId?
                     onClick={handleCall}
                     disabled={!number}
                     className="w-16 h-16 rounded-full bg-green-600 hover:bg-green-700 text-white flex items-center justify-center shadow-md transition-transform active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+                    title="Call"
+                    aria-label="Call"
                 >
                     <Phone className="w-8 h-8 fill-current" />
                 </button>
                 <button
                     onClick={handleDelete}
                     className="w-12 h-12 rounded-full hover:bg-gray-100 text-gray-500 flex items-center justify-center transition-colors"
+                    title="Delete"
+                    aria-label="Delete"
                 >
                     <Delete className="w-6 h-6" />
                 </button>
