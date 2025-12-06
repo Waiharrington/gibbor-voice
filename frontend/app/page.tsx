@@ -108,6 +108,8 @@ export default function Home() {
   const [calls, setCalls] = useState<any[]>([]);
   const [selectedCall, setSelectedCall] = useState<any | null>(null);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   // View Navigation State (Persistent Call)
   const [currentView, setCurrentView] = useState<'calls' | 'messages'>('calls');
@@ -128,18 +130,24 @@ export default function Home() {
   useEffect(() => {
     const init = async () => {
       try {
+        setIsLoading(true);
         // 1. Get Token
         const tokenRes = await fetch('https://gibbor-voice-production.up.railway.app/token');
+        if (!tokenRes.ok) throw new Error('Failed to fetch token');
         const tokenData = await tokenRes.json();
         setToken(tokenData.token);
         setIdentity(tokenData.identity);
 
         // 2. Get History
         const historyRes = await fetch('https://gibbor-voice-production.up.railway.app/history/calls');
+        if (!historyRes.ok) throw new Error('Failed to fetch history');
         const historyData = await historyRes.json();
         setCalls(historyData);
-      } catch (error) {
+      } catch (error: any) {
         console.error('Error initializing:', error);
+        setError(error.message || 'Failed to connect to server');
+      } finally {
+        setIsLoading(false);
       }
     };
     init();
@@ -291,45 +299,58 @@ export default function Home() {
 
             {/* List */}
             <div className="flex-1 overflow-y-auto">
-              {calls.map((call) => (
-                <div
-                  key={call.id}
-                  onClick={() => setSelectedCall(call)}
-                  className={`p-4 flex items-center cursor-pointer transition-colors border-l-4 ${selectedCall?.id === call.id
-                    ? 'bg-cyan-50 border-cyan-500'
-                    : 'hover:bg-gray-50 border-transparent'
-                    }`}
-                >
-                  {/* Avatar */}
-                  <div className={`h-10 w-10 rounded-full flex items-center justify-center text-white font-medium text-sm shrink-0 mr-3 ${call.direction === 'inbound' ? 'bg-purple-500' : 'bg-gray-500' // Different color for distinction
-                    }`}>
-                    <Phone className="w-4 h-4" />
-                  </div>
-
-                  {/* Info */}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex justify-between items-baseline mb-1">
-                      <h3 className={`text-sm font-semibold truncate ${selectedCall?.id === call.id ? 'text-gray-900' : 'text-gray-700'}`}>
-                        {call.direction === 'outbound' ? call.to : call.from}
-                      </h3>
-                      <span className="text-xs text-gray-400 shrink-0 ml-2">
-                        {call.created_at && format(new Date(call.created_at), 'HH:mm')}
-                      </span>
-                    </div>
-                    <div className="flex items-center text-xs text-gray-500">
-                      {call.direction === 'outbound' ? (
-                        <ArrowUpRight className="w-3 h-3 mr-1 text-green-500" />
-                      ) : (
-                        <ArrowDownLeft className="w-3 h-3 mr-1 text-cyan-500" />
-                      )}
-                      <span>{call.status || 'unknown'}</span>
-                      {call.duration && (
-                        <span className="ml-1 text-gray-400">• {call.duration}s</span>
-                      )}
-                    </div>
-                  </div>
+              {isLoading ? (
+                <div className="flex items-center justify-center h-48 text-gray-400">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-cyan-500 mr-2"></div>
+                  Loading...
                 </div>
-              ))}
+              ) : error ? (
+                <div className="p-6 text-center text-red-500 bg-red-50 m-4 rounded-lg text-sm">
+                  <p className="font-semibold">Connection Error</p>
+                  <p>{error}</p>
+                  <button onClick={() => window.location.reload()} className="mt-2 text-red-700 underline">Retry</button>
+                </div>
+              ) : (
+                calls.map((call) => (
+                  <div
+                    key={call.id}
+                    onClick={() => setSelectedCall(call)}
+                    className={`p-4 flex items-center cursor-pointer transition-colors border-l-4 ${selectedCall?.id === call.id
+                      ? 'bg-cyan-50 border-cyan-500'
+                      : 'hover:bg-gray-50 border-transparent'
+                      }`}
+                  >
+                    {/* Avatar */}
+                    <div className={`h-10 w-10 rounded-full flex items-center justify-center text-white font-medium text-sm shrink-0 mr-3 ${call.direction === 'inbound' ? 'bg-purple-500' : 'bg-gray-500' // Different color for distinction
+                      }`}>
+                      <Phone className="w-4 h-4" />
+                    </div>
+
+                    {/* Info */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex justify-between items-baseline mb-1">
+                        <h3 className={`text-sm font-semibold truncate ${selectedCall?.id === call.id ? 'text-gray-900' : 'text-gray-700'}`}>
+                          {call.direction === 'outbound' ? call.to : call.from}
+                        </h3>
+                        <span className="text-xs text-gray-400 shrink-0 ml-2">
+                          {call.created_at && format(new Date(call.created_at), 'HH:mm')}
+                        </span>
+                      </div>
+                      <div className="flex items-center text-xs text-gray-500">
+                        {call.direction === 'outbound' ? (
+                          <ArrowUpRight className="w-3 h-3 mr-1 text-green-500" />
+                        ) : (
+                          <ArrowDownLeft className="w-3 h-3 mr-1 text-cyan-500" />
+                        )}
+                        <span>{call.status || 'unknown'}</span>
+                        {call.duration && (
+                          <span className="ml-1 text-gray-400">• {call.duration}s</span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              )}
             </div>
           </div>
 
