@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Sidebar from '@/components/Sidebar';
 import Dialpad from '@/components/Dialpad';
 import MessagesPanel from '@/components/MessagesPanel';
@@ -14,47 +14,48 @@ function AudioPlayer({ src }: { src: string }) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [progress, setProgress] = useState(0);
   const [duration, setDuration] = useState(0);
-  const audioRef = useMemo(() => new Audio(src), [src]);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
-    // Reset state on new source
-    setIsPlaying(false);
-    setProgress(0);
-    setDuration(0);
+    audioRef.current = new Audio(src);
 
     // Load metadata
-    audioRef.addEventListener('loadedmetadata', () => {
-      setDuration(audioRef.duration);
+    audioRef.current.addEventListener('loadedmetadata', () => {
+      setDuration(audioRef.current?.duration || 0);
     });
 
-    audioRef.addEventListener('timeupdate', () => {
-      setProgress(audioRef.currentTime);
+    audioRef.current.addEventListener('timeupdate', () => {
+      setProgress(audioRef.current?.currentTime || 0);
     });
 
-    audioRef.addEventListener('ended', () => {
+    audioRef.current.addEventListener('ended', () => {
       setIsPlaying(false);
       setProgress(0);
-      audioRef.currentTime = 0;
+      if (audioRef.current) audioRef.current.currentTime = 0;
     });
 
     return () => {
-      audioRef.pause();
-      audioRef.src = '';
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current = null;
+      }
     }
-  }, [audioRef]);
+  }, [src]);
 
   const togglePlay = () => {
-    if (isPlaying) {
-      audioRef.pause();
-    } else {
-      audioRef.play();
+    if (audioRef.current) {
+      if (isPlaying) {
+        audioRef.current.pause();
+      } else {
+        audioRef.current.play();
+      }
+      setIsPlaying(!isPlaying);
     }
-    setIsPlaying(!isPlaying);
   };
 
   const handleSeek = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newTime = Number(e.target.value);
-    audioRef.currentTime = newTime;
+    if (audioRef.current) audioRef.current.currentTime = newTime;
     setProgress(newTime);
   };
 
@@ -70,6 +71,8 @@ function AudioPlayer({ src }: { src: string }) {
       <button
         onClick={togglePlay}
         className="w-8 h-8 flex items-center justify-center bg-gray-800 text-white rounded-full hover:bg-gray-700 transition-colors shrink-0"
+        aria-label={isPlaying ? "Pause" : "Play"}
+        title={isPlaying ? "Pause" : "Play"}
       >
         {isPlaying ? (
           <div className="h-3 w-3 bg-white rounded-sm" /> // Stop/Pause icon substitute
@@ -371,12 +374,15 @@ export default function Home() {
                       onClick={() => handleGoToMessage(selectedCall.direction === 'outbound' ? selectedCall.to : selectedCall.from)}
                       className="p-2 hover:bg-gray-100 rounded-full text-gray-500 hover:text-cyan-600 transition-colors"
                       title="Message"
+                      aria-label="Message"
                     >
                       <MessageSquare className="w-5 h-5" />
                     </button>
                     <button
                       onClick={() => handleCall(selectedCall.direction === 'outbound' ? selectedCall.to : selectedCall.from)}
                       className="p-2 hover:bg-gray-100 rounded-full text-gray-500 hover:text-green-600 transition-colors"
+                      title="Call"
+                      aria-label="Call"
                     >
                       <Phone className="w-5 h-5" />
                     </button>
@@ -384,6 +390,8 @@ export default function Home() {
                       <button
                         onClick={() => setIsMenuOpen(!isMenuOpen)}
                         className="p-2 hover:bg-gray-100 rounded-full text-gray-500"
+                        title="More options"
+                        aria-label="More options"
                       >
                         <MoreVertical className="w-5 h-5" />
                       </button>
@@ -430,8 +438,8 @@ export default function Home() {
                         {/* Recording Player (Placeholder logic until backend is ready) */}
                         {selectedCall.recording_url && (
                           <div className="mt-4 flex items-center space-x-2">
-                            <div className="bg-gray-100 rounded-full p-2 flex-1 items-center">
-                              <audio controls src={selectedCall.recording_url} className="w-full h-8" />
+                            <div className="flex-1">
+                              <AudioPlayer src={selectedCall.recording_url} />
                             </div>
                             <a
                               href={selectedCall.recording_url}
@@ -440,6 +448,7 @@ export default function Home() {
                               rel="noopener noreferrer"
                               className="p-3 bg-gray-100 rounded-full text-gray-600 hover:bg-gray-200 hover:text-cyan-600 transition-colors"
                               title="Download Recording"
+                              aria-label="Download Recording"
                             >
                               <Download className="w-5 h-5" />
                             </a>
@@ -489,6 +498,8 @@ export default function Home() {
                       setCallStatus('In Call');
                     }}
                     className="flex flex-col items-center justify-center w-16 h-16 rounded-full bg-green-500 text-white hover:bg-green-600 shadow-lg hover:shadow-xl transform hover:scale-105 transition-all"
+                    aria-label="Answer"
+                    title="Answer"
                   >
                     <Phone className="w-8 h-8" />
                   </button>
@@ -499,13 +510,15 @@ export default function Home() {
                       setCallStatus('Ready');
                     }}
                     className="col-start-3 flex flex-col items-center justify-center w-16 h-16 rounded-full bg-red-500 text-white hover:bg-red-600 shadow-lg hover:shadow-xl transform hover:scale-105 transition-all"
+                    aria-label="Reject"
+                    title="Reject"
                   >
                     <PhoneOff className="w-8 h-8" />
                   </button>
                 </>
               ) : (
                 <>
-                  <button onClick={toggleMute} className={`flex flex-col items-center justify-center w-16 h-16 rounded-full transition-all ${isMuted ? 'bg-gray-800 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}>
+                  <button onClick={toggleMute} aria-label={isMuted ? "Unmute" : "Mute"} title={isMuted ? "Unmute" : "Mute"} className={`flex flex-col items-center justify-center w-16 h-16 rounded-full transition-all ${isMuted ? 'bg-gray-800 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}>
                     {isMuted ? <MicOff className="w-6 h-6" /> : <Mic className="w-6 h-6" />}
                   </button>
 
@@ -513,11 +526,12 @@ export default function Home() {
                     onClick={() => handleGoToMessage(dialedNumber || activeCall.parameters?.From || activeCall.parameters?.To)}
                     className="flex flex-col items-center justify-center w-16 h-16 rounded-full bg-gray-600 text-white hover:bg-gray-700 shadow-lg hover:shadow-xl transform hover:scale-105 transition-all"
                     title="Message"
+                    aria-label="Message"
                   >
                     <MessageSquare className="w-6 h-6" />
                   </button>
 
-                  <button onClick={handleHangup} className="col-start-3 flex flex-col items-center justify-center w-16 h-16 rounded-full bg-red-500 text-white hover:bg-red-600 shadow-lg hover:shadow-xl transform hover:scale-105 transition-all">
+                  <button onClick={handleHangup} aria-label="Hangup" title="Hangup" className="col-start-3 flex flex-col items-center justify-center w-16 h-16 rounded-full bg-red-500 text-white hover:bg-red-600 shadow-lg hover:shadow-xl transform hover:scale-105 transition-all">
                     <PhoneOff className="w-8 h-8" />
                   </button>
                 </>
