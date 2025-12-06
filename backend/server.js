@@ -80,10 +80,10 @@ app.get("/phone-numbers", async (req, res) => {
 // Incoming call webhook
 app.post("/incoming-call", async (req, res) => {
     const twiml = new twilio.twiml.VoiceResponse();
-    // callerId is passed from frontend device.connect params
-    const { To, From, CallSid, callerId } = req.body;
+    // callerId is passed from frontend device.connect params (renamed to appCallerId to avoid conflict)
+    const { To, From, CallSid, appCallerId } = req.body;
 
-    console.log("Webhook hit. To:", To, "CallSid:", CallSid, "Custom CallerId:", callerId);
+    console.log("Webhook hit. To:", To, "CallSid:", CallSid, "Custom CallerId:", appCallerId);
 
     // Determine direction based on caller
     // If From starts with 'client:', it's an outbound call FROM the browser.
@@ -104,7 +104,7 @@ app.post("/incoming-call", async (req, res) => {
     }
 
     const baseUrl = process.env.BASE_URL || 'https://gibbor-voice-production.up.railway.app';
-    const outboundCallerId = callerId || process.env.TWILIO_PHONE_NUMBER;
+    const outboundCallerId = appCallerId || process.env.TWILIO_PHONE_NUMBER;
 
     if (To === process.env.TWILIO_PHONE_NUMBER) {
         twiml.say("Conectando con el agente.");

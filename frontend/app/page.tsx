@@ -238,7 +238,9 @@ export default function Home() {
     try {
       setCallStatus('Calling ' + number + '...');
       const params: any = { To: number };
-      if (callerId) params.callerId = callerId;
+      // Use appCallerId to avoid potential Twilio param conflicts
+      if (callerId) params.appCallerId = callerId;
+      console.log("[Client] Connecting with params:", params);
 
       const call = await device.connect({ params });
 
