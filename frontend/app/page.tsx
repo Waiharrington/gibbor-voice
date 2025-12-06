@@ -432,87 +432,84 @@ export default function Home() {
               </div>
             )}
           </div>
+        </>
+      ) : (
+        <MessagesPanel key={initialConvId || 'messages'} initialConversationId={initialConvId} />
+      )}
 
-        </div>
-    </>
-  ) : (
-    <MessagesPanel key={initialConvId || 'messages'} initialConversationId={initialConvId} />
-  )
-}
+      {/* 4. Right Panel (Dialpad/Active Call) */}
+      <div className="w-96 bg-white flex flex-col p-8">
+        {activeCall ? (
+          <div className="flex-1 flex flex-col items-center justify-center text-center space-y-8 animate-in fade-in zoom-in duration-300">
+            <div className="w-24 h-24 bg-cyan-100 text-cyan-600 rounded-full flex items-center justify-center text-3xl font-bold shadow-sm">
+              {/* Initials or Icon */}
+              <Phone className="w-10 h-10" />
+            </div>
+            <div>
+              <h2 className="text-2xl font-bold text-gray-800">
+                {/* Prioritize dialedNumber for outbound, otherwise use call parameters */}
+                {dialedNumber || activeCall.parameters?.From || activeCall.parameters?.To || 'Unknown'}
+              </h2>
+              <p className="text-green-600 font-medium mt-2 animate-pulse">{callStatus}</p>
+              {callStatus.startsWith('In Call') && (
+                <p className="text-3xl font-mono text-gray-600 mt-2">{formatDuration(duration)}</p>
+              )}
+            </div>
 
-{/* 4. Right Panel (Dialpad/Active Call) */ }
-<div className="w-96 bg-white flex flex-col p-8">
-  {activeCall ? (
-    <div className="flex-1 flex flex-col items-center justify-center text-center space-y-8 animate-in fade-in zoom-in duration-300">
-      <div className="w-24 h-24 bg-cyan-100 text-cyan-600 rounded-full flex items-center justify-center text-3xl font-bold shadow-sm">
-        {/* Initials or Icon */}
-        <Phone className="w-10 h-10" />
-      </div>
-      <div>
-        <h2 className="text-2xl font-bold text-gray-800">
-          {/* Prioritize dialedNumber for outbound, otherwise use call parameters */}
-          {dialedNumber || activeCall.parameters?.From || activeCall.parameters?.To || 'Unknown'}
-        </h2>
-        <p className="text-green-600 font-medium mt-2 animate-pulse">{callStatus}</p>
-        {callStatus.startsWith('In Call') && (
-          <p className="text-3xl font-mono text-gray-600 mt-2">{formatDuration(duration)}</p>
-        )}
-      </div>
+            <div className="grid grid-cols-3 gap-6 w-full max-w-xs">
+              {callStatus === 'Incoming Call...' ? (
+                <>
+                  <button
+                    onClick={() => {
+                      activeCall.accept();
+                      setCallStatus('In Call');
+                    }}
+                    className="flex flex-col items-center justify-center w-16 h-16 rounded-full bg-green-500 text-white hover:bg-green-600 shadow-lg hover:shadow-xl transform hover:scale-105 transition-all"
+                  >
+                    <Phone className="w-8 h-8" />
+                  </button>
+                  <button
+                    onClick={() => {
+                      activeCall.reject();
+                      setActiveCall(null);
+                      setCallStatus('Ready');
+                    }}
+                    className="col-start-3 flex flex-col items-center justify-center w-16 h-16 rounded-full bg-red-500 text-white hover:bg-red-600 shadow-lg hover:shadow-xl transform hover:scale-105 transition-all"
+                  >
+                    <PhoneOff className="w-8 h-8" />
+                  </button>
+                </>
+              ) : (
+                <>
+                  <button onClick={toggleMute} className={`flex flex-col items-center justify-center w-16 h-16 rounded-full transition-all ${isMuted ? 'bg-gray-800 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}>
+                    {isMuted ? <MicOff className="w-6 h-6" /> : <Mic className="w-6 h-6" />}
+                  </button>
 
-      <div className="grid grid-cols-3 gap-6 w-full max-w-xs">
-        {callStatus === 'Incoming Call...' ? (
-          <>
-            <button
-              onClick={() => {
-                activeCall.accept();
-                setCallStatus('In Call');
-              }}
-              className="flex flex-col items-center justify-center w-16 h-16 rounded-full bg-green-500 text-white hover:bg-green-600 shadow-lg hover:shadow-xl transform hover:scale-105 transition-all"
-            >
-              <Phone className="w-8 h-8" />
-            </button>
-            <button
-              onClick={() => {
-                activeCall.reject();
-                setActiveCall(null);
-                setCallStatus('Ready');
-              }}
-              className="col-start-3 flex flex-col items-center justify-center w-16 h-16 rounded-full bg-red-500 text-white hover:bg-red-600 shadow-lg hover:shadow-xl transform hover:scale-105 transition-all"
-            >
-              <PhoneOff className="w-8 h-8" />
-            </button>
-          </>
+                  <button
+                    onClick={() => handleGoToMessage(dialedNumber || activeCall.parameters?.From || activeCall.parameters?.To)}
+                    className="flex flex-col items-center justify-center w-16 h-16 rounded-full bg-gray-600 text-white hover:bg-gray-700 shadow-lg hover:shadow-xl transform hover:scale-105 transition-all"
+                    title="Message"
+                  >
+                    <MessageSquare className="w-6 h-6" />
+                  </button>
+
+                  <button onClick={handleHangup} className="col-start-3 flex flex-col items-center justify-center w-16 h-16 rounded-full bg-red-500 text-white hover:bg-red-600 shadow-lg hover:shadow-xl transform hover:scale-105 transition-all">
+                    <PhoneOff className="w-8 h-8" />
+                  </button>
+                </>
+              )}
+            </div>
+          </div>
         ) : (
-          <>
-            <button onClick={toggleMute} className={`flex flex-col items-center justify-center w-16 h-16 rounded-full transition-all ${isMuted ? 'bg-gray-800 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}>
-              {isMuted ? <MicOff className="w-6 h-6" /> : <Mic className="w-6 h-6" />}
-            </button>
-
-            <button
-              onClick={() => handleGoToMessage(dialedNumber || activeCall.parameters?.From || activeCall.parameters?.To)}
-              className="flex flex-col items-center justify-center w-16 h-16 rounded-full bg-gray-600 text-white hover:bg-gray-700 shadow-lg hover:shadow-xl transform hover:scale-105 transition-all"
-              title="Message"
-            >
-              <MessageSquare className="w-6 h-6" />
-            </button>
-
-            <button onClick={handleHangup} className="col-start-3 flex flex-col items-center justify-center w-16 h-16 rounded-full bg-red-500 text-white hover:bg-red-600 shadow-lg hover:shadow-xl transform hover:scale-105 transition-all">
-              <PhoneOff className="w-8 h-8" />
-            </button>
-          </>
+          <div className="flex-1 flex flex-col">
+            <div className="text-center mb-8">
+              <p className="text-xs font-medium text-gray-400 uppercase tracking-wider mb-1">Make a Call</p>
+              <p className="text-sm text-gray-500">Calling as {identity || '...'}</p>
+            </div>
+            <Dialpad onCall={handleCall} />
+          </div>
         )}
       </div>
-    </div>
-  ) : (
-    <div className="flex-1 flex flex-col">
-      <div className="text-center mb-8">
-        <p className="text-xs font-medium text-gray-400 uppercase tracking-wider mb-1">Make a Call</p>
-        <p className="text-sm text-gray-500">Calling as {identity || '...'}</p>
-      </div>
-      <Dialpad onCall={handleCall} />
-    </div>
-  )}
-</div>
     </div >
   );
 }
