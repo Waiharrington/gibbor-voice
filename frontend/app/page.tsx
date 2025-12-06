@@ -245,17 +245,20 @@ export default function Home() {
 
       const call = await device.connect({ params });
 
+      // Set active call immediately to show UI controls (including Keypad)
+      setActiveCall(call);
+
       call.on('accept', () => {
         setCallStatus('In Call');
-        setActiveCall(call);
+        // setActiveCall(call); // Already set
       });
-      // ... (rest of listeners)
 
       call.on('disconnect', () => {
         setCallStatus('Ready');
         setActiveCall(null);
         setIsMuted(false);
         setDialedNumber('');
+        setIsKeypadOpen(false); // Reset keypad state
       });
 
       call.on('cancel', () => {
