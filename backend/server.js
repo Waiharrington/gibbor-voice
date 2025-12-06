@@ -62,15 +62,27 @@ app.get("/token", async (req, res) => {
     }
 });
 
-// Fetch available Twilio numbers
+// Fetch available Twilio numbers (Incoming + Verified Outgoing)
 app.get("/phone-numbers", async (req, res) => {
     try {
-        const numbers = await twilioClient.incomingPhoneNumbers.list({ limit: 20 });
-        const mapped = numbers.map(n => ({
+        const [incoming, verified] = await Promise.all([
+            twilioClient.incomingPhoneNumbers.list({ limit: 20 }),
+            twilioClient.outgoingCallerIds.list({ limit: 20 })
+        ]);
+
+        const mappedIncoming = incoming.map(n => ({
             phoneNumber: n.phoneNumber,
-            friendlyName: n.friendlyName
+            friendlyName: n.friendlyName,
+            type: 'Twilio'
         }));
-        res.json(mapped);
+
+        const mappedVerified = verified.map(n => ({
+            phoneNumber: n.phoneNumber,
+            friendlyName: n.friendlyName,
+            type: 'Verified'
+        }));
+
+        res.json([...mappedIncoming, ...mappedVerified]);
     } catch (e) {
         console.error("Error fetching numbers:", e);
         res.status(500).json({ error: e.message });
