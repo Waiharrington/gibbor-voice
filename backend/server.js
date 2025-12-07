@@ -497,7 +497,7 @@ app.get("/campaigns/:id/next-lead", async (req, res) => {
 app.post("/leads/:id/update", async (req, res) => {
     try {
         const { status, notes } = req.body;
-        const updateData = { status, last_call_at: new Date() };
+        const updateData = { status, last_call_at: new Date(), updated_at: new Date() };
         if (notes) updateData.notes = notes;
 
         const { error } = await supabase
