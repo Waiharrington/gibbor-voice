@@ -142,6 +142,9 @@ export default function Home() {
   const [currentView, setCurrentView] = useState<'calls' | 'messages' | 'campaigns'>('calls');
   const [initialConvId, setInitialConvId] = useState<string | null>(null);
 
+  // History Stack for Back functionality
+  const [leadHistory, setLeadHistory] = useState<any[]>([]);
+
 
   const handleViewChange = (view: string) => {
     setCurrentView(view as 'calls' | 'messages' | 'campaigns');
@@ -158,6 +161,13 @@ export default function Home() {
 
   const fetchNextLead = async (campaignId: string) => {
     try {
+      // 1. Push current lead to history BEFORE fetching next, if it exists and we are not just starting
+      // We check if currentLead is already the last item in history to avoid dupes if re-renders happen?
+      // Simple verification: Only push if not null.
+      if (currentLead) {
+        setLeadHistory(prev => [...prev, currentLead]);
+      }
+
       // Reset current lead temporarily to show loading state if needed, or handle optimistic UI
       setCurrentLead(null);
 
@@ -238,7 +248,26 @@ export default function Home() {
   };
 
   const handleBackLead = async () => {
-    alert("Back functionality requires backend update. Coming soon!");
+    if (leadHistory.length === 0) {
+      alert("No previous leads in history.");
+      return;
+    }
+
+    const prevLead = leadHistory[leadHistory.length - 1]; // Get last
+    const newHistory = leadHistory.slice(0, -1); // Remove last
+
+    setLeadHistory(newHistory);
+    setCurrentLead(prevLead);
+
+    // Optionally refetch freshest data for this lead from backend
+    // to ensure we see the correct status if we just updated it.
+    try {
+      const res = await fetch(`https://gibbor-voice-production.up.railway.app/leads/${prevLead.id}`);
+      if (res.ok) {
+        const freshLead = await res.json();
+        if (freshLead) setCurrentLead(freshLead);
+      }
+    } catch (e) { console.error("Error refreshing back lead", e); }
   };
 
   // Fetch token & History
