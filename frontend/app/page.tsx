@@ -579,9 +579,9 @@ export default function Home() {
                 {/* Header Info */}
                 <div className="flex items-start justify-between mb-6">
                   <div>
-                    <h1 className="text-4xl font-extrabold text-gray-900 tracking-tight">{currentLead.name || 'Unknown'}</h1>
-                    <p className="text-2xl text-cyan-600 font-mono mt-2 flex items-center font-bold">
-                      <Phone className="w-6 h-6 mr-3" />
+                    <h1 className="text-xl font-bold text-gray-900">{currentLead.name || 'Unknown'}</h1>
+                    <p className="text-lg text-cyan-600 font-mono mt-1 flex items-center font-bold">
+                      <Phone className="w-4 h-4 mr-2" />
                       {currentLead.phone}
                     </p>
                   </div>
@@ -596,7 +596,7 @@ export default function Home() {
                 {/* Grid Fields (Editable) */}
                 <div className="grid grid-cols-2 gap-6 mb-6">
                   <div className="space-y-1">
-                    <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Referred By</label>
+                    <label className="text-xs font-bold text-black uppercase tracking-wider">Referred By</label>
                     <input
                       type="text"
                       className="w-full p-2 bg-gray-50 border border-gray-200 rounded-lg text-gray-800 font-medium focus:ring-1 focus:ring-cyan-500 focus:border-cyan-500 transition-all"
@@ -604,7 +604,7 @@ export default function Home() {
                     />
                   </div>
                   <div className="space-y-1">
-                    <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">City</label>
+                    <label className="text-xs font-bold text-black uppercase tracking-wider">City</label>
                     <div className="relative">
                       <Building className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
                       <input
@@ -615,7 +615,7 @@ export default function Home() {
                     </div>
                   </div>
                   <div className="col-span-2 space-y-1">
-                    <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Address</label>
+                    <label className="text-xs font-bold text-black uppercase tracking-wider">Address</label>
                     <div className="relative">
                       <MapPin className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
                       <input
@@ -630,7 +630,7 @@ export default function Home() {
                 {/* Text Areas */}
                 <div className="space-y-4">
                   <div>
-                    <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1 block">General Info</label>
+                    <label className="text-xs font-bold text-black uppercase tracking-wider mb-1 block">General Info</label>
                     <textarea
                       rows={3}
                       className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-700 leading-relaxed focus:ring-1 focus:ring-cyan-500 focus:border-cyan-500 transition-all resize-none"
@@ -639,7 +639,7 @@ export default function Home() {
                   </div>
 
                   <div>
-                    <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1 block">Rep Observations</label>
+                    <label className="text-xs font-bold text-black uppercase tracking-wider mb-1 block">Rep Observations</label>
                     <textarea
                       rows={2}
                       className="w-full p-3 bg-yellow-50 border border-yellow-100 rounded-xl text-gray-700 leading-relaxed focus:ring-1 focus:ring-yellow-400 focus:border-yellow-400 transition-all resize-none"
@@ -648,21 +648,24 @@ export default function Home() {
                   </div>
 
                   <div className="relative group">
-                    <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1 block flex items-center justify-between">
-                      <span>TLMK Observations (History)</span>
-                      <button onClick={() => handleCopy(currentLead.tlmk_notes || '')} className="text-cyan-600 hover:text-cyan-700 text-xs font-bold flex items-center" title="Copy">
-                        <Copy className="w-3 h-3 mr-1" /> Copy
-                      </button>
+                    <label className="text-xs font-bold text-black uppercase tracking-wider mb-1 block">
+                      TLMK Observations (History)
                     </label>
-                    <div className="p-3 bg-blue-50 rounded-xl text-gray-700 text-sm leading-relaxed border border-blue-100 max-h-32 overflow-y-auto">
+                    <div className="p-3 bg-blue-50 rounded-xl text-gray-700 text-sm leading-relaxed border border-blue-100 max-h-32 overflow-y-auto w-full">
                       {currentLead.tlmk_notes || 'No history'}
                     </div>
                   </div>
 
                   {/* NEW COMMENTS FIELD */}
                   <div>
-                    <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1 block">
-                      Call Comments (Current)
+                    <label className="text-xs font-bold text-black uppercase tracking-wider mb-1 block flex items-center justify-between">
+                      <span>Call Comments (Current)</span>
+                      <button onClick={() => {
+                        const noteInput = document.getElementById('current-call-notes') as HTMLTextAreaElement;
+                        if (noteInput) handleCopy(noteInput.value);
+                      }} className="text-cyan-600 hover:text-cyan-700 text-xs font-bold flex items-center" title="Copy">
+                        <Copy className="w-3 h-3 mr-1" /> Copy
+                      </button>
                     </label>
                     <textarea
                       id="current-call-notes"
@@ -745,7 +748,7 @@ export default function Home() {
 
               {/* MIDDLE: Status List (Scrollable) */}
               <div className="flex-1 overflow-y-auto p-3 bg-gray-50/50">
-                <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest px-1 mb-2 block">Disposition</label>
+                <label className="text-xs font-bold text-gray-500 uppercase tracking-wider px-1 mb-2 block">Disposition</label>
                 <div className="space-y-1.5">
                   {CALL_STATUSES.map(status => (
                     <button
@@ -755,7 +758,7 @@ export default function Home() {
                         handleLeadDisposition(status.id, noteInput?.value || '');
                         if (noteInput) noteInput.value = ''; // Clear notes
                       }}
-                      className={`w-full text-left px-3 py-2.5 rounded-lg transition-all border text-sm font-medium flex items-center justify-between group bg-white hover:bg-gray-100 border-gray-200 hover:border-gray-300 shadow-sm`}
+                      className={`w-full text-left px-3 py-2.5 rounded-lg transition-all border text-sm font-bold text-gray-900 flex items-center justify-between group bg-white hover:bg-gray-100 border-gray-200 hover:border-gray-300 shadow-sm`}
                       style={{ borderLeftWidth: '4px', borderLeftColor: status.color.includes('green') ? '#22c55e' : status.color.includes('red') ? '#ef4444' : status.color.includes('yellow') ? '#eab308' : '#3b82f6' }}
                     >
                       <span>{status.label}</span>
