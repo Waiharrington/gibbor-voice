@@ -118,6 +118,16 @@ export default function Home() {
   // Multi-select Status State
   const [selectedStatuses, setSelectedStatuses] = useState<string[]>([]);
 
+
+  const [isKeypadOpen, setIsKeypadOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // Campaigns & Dialer State
+  const [activeCampaignId, setActiveCampaignId] = useState<string | null>(null);
+  const [currentLead, setCurrentLead] = useState<any | null>(null);
+  const [dialerMode, setDialerMode] = useState(false);
+
   // Reset selected statuses when currentLead changes
   useEffect(() => {
     if (currentLead?.status) {
@@ -127,14 +137,6 @@ export default function Home() {
       setSelectedStatuses([]);
     }
   }, [currentLead?.id]); // Only reset when ID changes
-  const [isKeypadOpen, setIsKeypadOpen] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  // Campaigns & Dialer State
-  const [activeCampaignId, setActiveCampaignId] = useState<string | null>(null);
-  const [currentLead, setCurrentLead] = useState<any | null>(null);
-  const [dialerMode, setDialerMode] = useState(false);
 
   // View Navigation State (Persistent Call)
   const [currentView, setCurrentView] = useState<'calls' | 'messages' | 'campaigns'>('calls');
