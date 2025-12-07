@@ -788,176 +788,198 @@ export default function Home() {
                   </div>
                 ) : (
                   <div className="w-full">
-                    <button
-                      onClick={() => handleCall(currentLead.phone)}
-                      className="w-full py-4 bg-green-500 text-white rounded-xl font-bold text-lg shadow-lg hover:bg-green-600 hover:shadow-xl hover:-translate-y-0.5 transition-all flex items-center justify-center active:scale-95 transform"
-                    >
-                      <Phone className="w-5 h-5 mr-2" />
-                      Call Lead
-                    </button>
-                  </div>
+                    <div className="w-full space-y-3">
+                      {/* Caller ID Dropdown */}
+                      <div className="relative">
+                        <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1 block">Calling From</label>
+                        <select
+                          className="w-full p-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 outline-none focus:ring-2 focus:ring-cyan-500"
+                          value={selectedCallerId}
+                          onChange={(e) => setSelectedCallerId(e.target.value)}
+                        >
+                          {availableNumbers.length > 0 ? (
+                            availableNumbers.map(num => (
+                              <option key={num.phoneNumber} value={num.phoneNumber}>
+                                {num.friendlyName || num.phoneNumber}
+                              </option>
+                            ))
+                          ) : (
+                            <option value="">Loading numbers...</option>
+                          )}
+                          <option value="client:agent">Browser (Testing)</option>
+                        </select>
+                      </div>
+
+                      <button
+                        onClick={() => handleCall(currentLead.phone, selectedCallerId)} // Pass selected ID
+                        className="w-full py-4 bg-green-500 text-white rounded-xl font-bold text-lg shadow-lg hover:bg-green-600 hover:shadow-xl hover:-translate-y-0.5 transition-all flex items-center justify-center active:scale-95 transform"
+                      >
+                        <Phone className="w-5 h-5 mr-2" />
+                        Call Lead
+                      </button>
+                    </div>
                 )}
 
-                {!activeCall && (
-                  <div className="w-full mt-3 flex justify-between text-[10px] text-gray-400 font-medium uppercase tracking-wider">
-                    <button onClick={() => setDialerMode(false)} className="hover:text-red-500 transition-colors">Exit Dialer</button>
-                    <span>{identity}</span>
+                    {!activeCall && (
+                      <div className="w-full mt-3 flex justify-between text-[10px] text-gray-400 font-medium uppercase tracking-wider">
+                        <button onClick={() => setDialerMode(false)} className="hover:text-red-500 transition-colors">Exit Dialer</button>
+                        <span>{identity}</span>
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
 
               {/* MIDDLE: Status List (Scrollable) */}
-              <div className="flex-1 overflow-y-auto p-3 bg-gray-50/50">
-                <label className="text-xs font-bold text-gray-500 uppercase tracking-wider px-1 mb-2 block">Disposition (Multi-select)</label>
-                <div className="space-y-1.5">
-                  {CALL_STATUSES.map(status => {
-                    const isSelected = selectedStatuses.includes(status.id);
-                    return (
-                      <button
-                        key={status.id}
-                        onClick={() => {
-                          const noteInput = document.getElementById('current-call-notes') as HTMLTextAreaElement;
-                          handleLeadDisposition(status.id, noteInput?.value || '');
-                          // Do NOT clear notes on multi-select toggle
-                        }}
-                        className={`w-full text-left px-3 py-2.5 rounded-lg transition-all border text-sm font-bold flex items-center justify-between group shadow-sm ${isSelected ? 'bg-blue-50 border-blue-500 text-blue-900' : 'bg-white border-gray-200 text-gray-900 hover:bg-gray-50 hover:border-gray-300'}`}
-                        style={{ borderLeftWidth: '4px', borderLeftColor: status.color.includes('green') ? '#22c55e' : status.color.includes('red') ? '#ef4444' : status.color.includes('yellow') ? '#eab308' : '#3b82f6' }}
-                      >
-                        <span className="flex-1">{status.label}</span>
-                        {isSelected ? (
-                          <div className="w-5 h-5 rounded-full border-2 border-blue-600 bg-blue-600 flex items-center justify-center text-white">
-                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="w-3 h-3"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                          </div>
-                        ) : (
-                          <div className="w-5 h-5 rounded-full border-2 border-gray-300 group-hover:border-gray-400 transition-colors"></div>
-                        )}
-                      </button>
-                    );
-                  })}
+                <div className="flex-1 overflow-y-auto p-3 bg-gray-50/50">
+                  <label className="text-xs font-bold text-gray-500 uppercase tracking-wider px-1 mb-2 block">Disposition (Multi-select)</label>
+                  <div className="space-y-1.5">
+                    {CALL_STATUSES.map(status => {
+                      const isSelected = selectedStatuses.includes(status.id);
+                      return (
+                        <button
+                          key={status.id}
+                          onClick={() => {
+                            const noteInput = document.getElementById('current-call-notes') as HTMLTextAreaElement;
+                            handleLeadDisposition(status.id, noteInput?.value || '');
+                            // Do NOT clear notes on multi-select toggle
+                          }}
+                          className={`w-full text-left px-3 py-2.5 rounded-lg transition-all border text-sm font-bold flex items-center justify-between group shadow-sm ${isSelected ? 'bg-blue-50 border-blue-500 text-blue-900' : 'bg-white border-gray-200 text-gray-900 hover:bg-gray-50 hover:border-gray-300'}`}
+                          style={{ borderLeftWidth: '4px', borderLeftColor: status.color.includes('green') ? '#22c55e' : status.color.includes('red') ? '#ef4444' : status.color.includes('yellow') ? '#eab308' : '#3b82f6' }}
+                        >
+                          <span className="flex-1">{status.label}</span>
+                          {isSelected ? (
+                            <div className="w-5 h-5 rounded-full border-2 border-blue-600 bg-blue-600 flex items-center justify-center text-white">
+                              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="w-3 h-3"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                            </div>
+                          ) : (
+                            <div className="w-5 h-5 rounded-full border-2 border-gray-300 group-hover:border-gray-400 transition-colors"></div>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* BOTTOM: Nav */}
+                <div className="p-3 bg-white border-t border-gray-200 grid grid-cols-3 gap-2">
+                  <button onClick={handleBackLead} className="flex flex-col items-center justify-center p-2 text-gray-500 hover:bg-gray-100 rounded-lg transition-colors">
+                    <ArrowDownLeft className="w-4 h-4 mb-1 rotate-90" />
+                    <span className="text-[10px] uppercase font-bold tracking-wider">Back</span>
+                  </button>
+                  <button onClick={handleSkipLead} className="flex flex-col items-center justify-center p-2 text-gray-500 hover:bg-gray-100 rounded-lg transition-colors">
+                    <ArrowDownLeft className="w-4 h-4 mb-1 rotate-[-90deg]" />
+                    <span className="text-[10px] uppercase font-bold tracking-wider">Skip</span>
+                  </button>
+                  <button onClick={handleNextLead} className="flex flex-col items-center justify-center p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors">
+                    <ArrowDownLeft className="w-4 h-4 mb-1 rotate-[-135deg]" /> {/* Next Icon Proxy */}
+                    <span className="text-[10px] uppercase font-bold tracking-wider">Next</span>
+                  </button>
                 </div>
               </div>
-
-              {/* BOTTOM: Nav */}
-              <div className="p-3 bg-white border-t border-gray-200 grid grid-cols-3 gap-2">
-                <button onClick={handleBackLead} className="flex flex-col items-center justify-center p-2 text-gray-500 hover:bg-gray-100 rounded-lg transition-colors">
-                  <ArrowDownLeft className="w-4 h-4 mb-1 rotate-90" />
-                  <span className="text-[10px] uppercase font-bold tracking-wider">Back</span>
-                </button>
-                <button onClick={handleSkipLead} className="flex flex-col items-center justify-center p-2 text-gray-500 hover:bg-gray-100 rounded-lg transition-colors">
-                  <ArrowDownLeft className="w-4 h-4 mb-1 rotate-[-90deg]" />
-                  <span className="text-[10px] uppercase font-bold tracking-wider">Skip</span>
-                </button>
-                <button onClick={handleNextLead} className="flex flex-col items-center justify-center p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors">
-                  <ArrowDownLeft className="w-4 h-4 mb-1 rotate-[-135deg]" /> {/* Next Icon Proxy */}
-                  <span className="text-[10px] uppercase font-bold tracking-wider">Next</span>
-                </button>
-              </div>
             </div>
-          </div>
-        )
-      ) : (
-        // Default Right Panel (Dialpad/Active Call) - ONLY SHOW IF NOT IN DIALER MODE
-        <div className="w-96 bg-white flex flex-col p-8">
-          {activeCall ? (
-            <div className="flex-1 flex flex-col items-center justify-center text-center space-y-8 animate-in fade-in zoom-in duration-300">
-              <div className="w-24 h-24 bg-cyan-100 text-cyan-600 rounded-full flex items-center justify-center text-3xl font-bold shadow-sm">
-                {/* Initials or Icon */}
-                <Phone className="w-10 h-10" />
-              </div>
-              <div>
-                <h2 className="text-2xl font-bold text-gray-800">
-                  {/* Prioritize dialedNumber for outbound, otherwise use call parameters */}
-                  {dialedNumber || activeCall.parameters?.From || activeCall.parameters?.To || 'Unknown'}
-                </h2>
-                <p className="text-green-600 font-medium mt-2 animate-pulse">{callStatus}</p>
-                {callStatus.startsWith('In Call') && (
-                  <p className="text-3xl font-mono text-gray-600 mt-2">{formatDuration(duration)}</p>
-                )}
-              </div>
+            )
+            ) : (
+            // Default Right Panel (Dialpad/Active Call) - ONLY SHOW IF NOT IN DIALER MODE
+            <div className="w-96 bg-white flex flex-col p-8">
+              {activeCall ? (
+                <div className="flex-1 flex flex-col items-center justify-center text-center space-y-8 animate-in fade-in zoom-in duration-300">
+                  <div className="w-24 h-24 bg-cyan-100 text-cyan-600 rounded-full flex items-center justify-center text-3xl font-bold shadow-sm">
+                    {/* Initials or Icon */}
+                    <Phone className="w-10 h-10" />
+                  </div>
+                  <div>
+                    <h2 className="text-2xl font-bold text-gray-800">
+                      {/* Prioritize dialedNumber for outbound, otherwise use call parameters */}
+                      {dialedNumber || activeCall.parameters?.From || activeCall.parameters?.To || 'Unknown'}
+                    </h2>
+                    <p className="text-green-600 font-medium mt-2 animate-pulse">{callStatus}</p>
+                    {callStatus.startsWith('In Call') && (
+                      <p className="text-3xl font-mono text-gray-600 mt-2">{formatDuration(duration)}</p>
+                    )}
+                  </div>
 
-              <div className="grid grid-cols-3 gap-6 w-full max-w-xs">
-                {callStatus === 'Incoming Call...' ? (
-                  <>
-                    <button
-                      onClick={() => {
-                        activeCall.accept();
-                        setCallStatus('In Call');
-                      }}
-                      className="flex flex-col items-center justify-center w-16 h-16 rounded-full bg-green-500 text-white hover:bg-green-600 shadow-lg hover:shadow-xl transform hover:scale-105 transition-all"
-                      aria-label="Answer"
-                      title="Answer"
-                    >
-                      <Phone className="w-8 h-8" />
-                    </button>
-                    <button
-                      onClick={() => {
-                        activeCall.reject();
-                        setActiveCall(null);
-                        setCallStatus('Ready');
-                      }}
-                      className="col-start-3 flex flex-col items-center justify-center w-16 h-16 rounded-full bg-red-500 text-white hover:bg-red-600 shadow-lg hover:shadow-xl transform hover:scale-105 transition-all"
-                      aria-label="Reject"
-                      title="Reject"
-                    >
-                      <PhoneOff className="w-8 h-8" />
-                    </button>
-                  </>
-                ) : (
-                  <>
-                    <button onClick={toggleMute} aria-label={isMuted ? "Unmute" : "Mute"} title={isMuted ? "Unmute" : "Mute"} className={`flex flex-col items-center justify-center w-16 h-16 rounded-full transition-all ${isMuted ? 'bg-gray-800 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}>
-                      {isMuted ? <MicOff className="w-6 h-6" /> : <Mic className="w-6 h-6" />}
-                    </button>
+                  <div className="grid grid-cols-3 gap-6 w-full max-w-xs">
+                    {callStatus === 'Incoming Call...' ? (
+                      <>
+                        <button
+                          onClick={() => {
+                            activeCall.accept();
+                            setCallStatus('In Call');
+                          }}
+                          className="flex flex-col items-center justify-center w-16 h-16 rounded-full bg-green-500 text-white hover:bg-green-600 shadow-lg hover:shadow-xl transform hover:scale-105 transition-all"
+                          aria-label="Answer"
+                          title="Answer"
+                        >
+                          <Phone className="w-8 h-8" />
+                        </button>
+                        <button
+                          onClick={() => {
+                            activeCall.reject();
+                            setActiveCall(null);
+                            setCallStatus('Ready');
+                          }}
+                          className="col-start-3 flex flex-col items-center justify-center w-16 h-16 rounded-full bg-red-500 text-white hover:bg-red-600 shadow-lg hover:shadow-xl transform hover:scale-105 transition-all"
+                          aria-label="Reject"
+                          title="Reject"
+                        >
+                          <PhoneOff className="w-8 h-8" />
+                        </button>
+                      </>
+                    ) : (
+                      <>
+                        <button onClick={toggleMute} aria-label={isMuted ? "Unmute" : "Mute"} title={isMuted ? "Unmute" : "Mute"} className={`flex flex-col items-center justify-center w-16 h-16 rounded-full transition-all ${isMuted ? 'bg-gray-800 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}>
+                          {isMuted ? <MicOff className="w-6 h-6" /> : <Mic className="w-6 h-6" />}
+                        </button>
 
-                    <button
-                      onClick={() => setIsKeypadOpen(!isKeypadOpen)}
-                      className={`flex flex-col items-center justify-center w-16 h-16 rounded-full transition-all ${isKeypadOpen ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
-                      title="Keypad"
-                      aria-label="Keypad"
-                    >
-                      <div className="grid grid-cols-3 gap-0.5 w-6 h-6">
-                        {[...Array(9)].map((_, i) => <div key={i} className={`w-1 h-1 rounded-full ${isKeypadOpen ? 'bg-white' : 'bg-gray-500'}`} />)}
-                      </div>
-                    </button>
+                        <button
+                          onClick={() => setIsKeypadOpen(!isKeypadOpen)}
+                          className={`flex flex-col items-center justify-center w-16 h-16 rounded-full transition-all ${isKeypadOpen ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
+                          title="Keypad"
+                          aria-label="Keypad"
+                        >
+                          <div className="grid grid-cols-3 gap-0.5 w-6 h-6">
+                            {[...Array(9)].map((_, i) => <div key={i} className={`w-1 h-1 rounded-full ${isKeypadOpen ? 'bg-white' : 'bg-gray-500'}`} />)}
+                          </div>
+                        </button>
 
-                    <button onClick={handleHangup} aria-label="Hangup" title="Hangup" className="col-start-3 flex flex-col items-center justify-center w-16 h-16 rounded-full bg-red-500 text-white hover:bg-red-600 shadow-lg hover:shadow-xl transform hover:scale-105 transition-all">
-                      <PhoneOff className="w-8 h-8" />
-                    </button>
-                  </>
-                )}
-              </div>
+                        <button onClick={handleHangup} aria-label="Hangup" title="Hangup" className="col-start-3 flex flex-col items-center justify-center w-16 h-16 rounded-full bg-red-500 text-white hover:bg-red-600 shadow-lg hover:shadow-xl transform hover:scale-105 transition-all">
+                          <PhoneOff className="w-8 h-8" />
+                        </button>
+                      </>
+                    )}
+                  </div>
 
-              {/* In-Call Keypad Overlay */}
-              {isKeypadOpen && (
-                <div className="mt-8 grid grid-cols-3 gap-4 animate-in slide-in-from-bottom-5 fade-in duration-300">
-                  {['1', '2', '3', '4', '5', '6', '7', '8', '9', '*', '0', '#'].map((digit) => (
-                    <button
-                      key={digit}
-                      onClick={() => {
-                        if (activeCall) {
-                          activeCall.sendDigits(digit);
-                          setDuration((prev) => prev); // Force re-render if needed? No, just visual feedback
-                        }
-                      }}
-                      className="w-14 h-14 rounded-full bg-gray-50 hover:bg-gray-100 flex items-center justify-center text-xl font-medium text-gray-700 transition-colors active:bg-gray-200"
-                    >
-                      {digit}
-                    </button>
-                  ))}
+                  {/* In-Call Keypad Overlay */}
+                  {isKeypadOpen && (
+                    <div className="mt-8 grid grid-cols-3 gap-4 animate-in slide-in-from-bottom-5 fade-in duration-300">
+                      {['1', '2', '3', '4', '5', '6', '7', '8', '9', '*', '0', '#'].map((digit) => (
+                        <button
+                          key={digit}
+                          onClick={() => {
+                            if (activeCall) {
+                              activeCall.sendDigits(digit);
+                              setDuration((prev) => prev); // Force re-render if needed? No, just visual feedback
+                            }
+                          }}
+                          className="w-14 h-14 rounded-full bg-gray-50 hover:bg-gray-100 flex items-center justify-center text-xl font-medium text-gray-700 transition-colors active:bg-gray-200"
+                        >
+                          {digit}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+
+                </div>
+              ) : (
+                <div className="flex-1 flex flex-col">
+                  <div className="text-center mb-8">
+                    <p className="text-xs font-medium text-gray-400 uppercase tracking-wider mb-1">Make a Call</p>
+                    <p className="text-sm text-gray-500">Calling as {identity || '...'}</p>
+                  </div>
+                  <Dialpad onCall={handleCall} />
                 </div>
               )}
-
             </div>
-          ) : (
-            <div className="flex-1 flex flex-col">
-              <div className="text-center mb-8">
-                <p className="text-xs font-medium text-gray-400 uppercase tracking-wider mb-1">Make a Call</p>
-                <p className="text-sm text-gray-500">Calling as {identity || '...'}</p>
-              </div>
-              <Dialpad onCall={handleCall} />
-            </div>
-          )}
-        </div>
       )}
-    </div >
-  );
+          </div >
+        );
 }
