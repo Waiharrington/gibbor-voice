@@ -1,197 +1,15 @@
+'use client';
+
+import { useState, useEffect, useRef } from 'react';
+import Sidebar from '@/components/Sidebar';
+import Dialpad from '@/components/Dialpad';
+import MessagesPanel from '@/components/MessagesPanel';
+import CampaignManager from '@/components/CampaignManager';
+import { Device } from '@twilio/voice-sdk';
+import { Phone, PhoneOff, Mic, MicOff, Search, ArrowUpRight, ArrowDownLeft, MoreVertical, Download, MessageSquare, Copy, MapPin, Building, Info, FileText, Send } from 'lucide-react';
+import { format } from 'date-fns';
+import { supabase } from '@/utils/supabaseClient';
 import { CALL_STATUSES } from '@/constants/statuses';
-import { Copy, MapPin, Building, User, Info, FileText, Send } from 'lucide-react';
-
-// ... (AudioPlayer component remains same) ...
-
-export default function Home() {
-  // ... (State logic same) ...
-  const [leadHistory, setLeadHistory] = useState<string[]>([]); // Stack of lead IDs
-
-  // ... (existing functions) ...
-
-  const handleCopy = (text: string) => {
-    navigator.clipboard.writeText(text);
-    alert('Copied to clipboard!'); // Or use a toast
-  };
-
-  const handleNextLead = () => {
-    if (activeCampaignId) fetchNextLead(activeCampaignId);
-  };
-
-  const handleSkipLead = () => {
-    handleNextLead();
-  };
-
-  const handleBackLead = async () => {
-    alert("Back functionality requires backend update. Coming soon!");
-    // Logic: pop from history, fetch that lead
-  };
-
-  // ... (render) ...
-
-  return (
-    <div className="flex h-screen bg-white overflow-hidden">
-      <Sidebar currentView={currentView} onViewChange={handleViewChange} />
-
-      {/* 2. Call List (Left) - Hide in Dialer Mode or keep? User screenshot shows Sidebar + Main Content. Let's hide List in Dialer Mode to give more space */}
-      {currentView === 'calls' && !dialerMode && (
-        // ... Existing Call List ...
-        <div className="w-80 border-r border-gray-200 flex flex-col bg-white">
-          {/* ... content ... */}
-        </div>
-      )}
-
-      {/* DIALER MODE LAYOUT */}
-      {dialerMode ? (
-        !currentLead ? (
-          <div className="flex-1 flex items-center justify-center bg-gray-50 flex-col">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-cyan-500 mb-4"></div>
-            <p className="text-gray-500 font-medium">Fetching next lead...</p>
-            <button onClick={() => setDialerMode(false)} className="mt-8 text-red-400 hover:text-red-500 text-sm">Cancel</button>
-          </div>
-        ) : (
-          <div className="flex-1 flex bg-gray-50">
-            {/* CENTER: Lead Info */}
-            <div className="flex-1 p-8 overflow-y-auto">
-              <div className="max-w-4xl mx-auto bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
-                {/* Header Info */}
-                <div className="flex items-start justify-between mb-8">
-                  <div>
-                    <h1 className="text-3xl font-bold text-gray-900">{currentLead.name || 'Unknown'}</h1>
-                    <p className="text-xl text-cyan-600 font-mono mt-1 flex items-center">
-                      <Phone className="w-5 h-5 mr-2" />
-                      {currentLead.phone}
-                    </p>
-                  </div>
-                  <div className="text-right">
-                    <span className="inline-flex items-center px-4 py-1.5 rounded-full text-sm font-medium bg-purple-100 text-purple-700">
-                      <Info className="w-4 h-4 mr-2" />
-                      Power Dialer Active
-                    </span>
-                  </div>
-                </div>
-
-                {/* Grid Fields */}
-                <div className="grid grid-cols-2 gap-8 mb-8">
-                  <div className="space-y-1">
-                    <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Referred By</label>
-                    <div className="p-3 bg-gray-50 rounded-lg text-gray-800 font-medium">
-                      {currentLead.referred_by || '-'}
-                    </div>
-                  </div>
-                  <div className="space-y-1">
-                    <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">City</label>
-                    <div className="p-3 bg-gray-50 rounded-lg text-gray-800 font-medium flex items-center">
-                      <Building className="w-4 h-4 mr-2 text-gray-400" />
-                      {currentLead.city || '-'}
-                    </div>
-                  </div>
-                  <div className="col-span-2 space-y-1">
-                    <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Address</label>
-                    <div className="p-3 bg-gray-50 rounded-lg text-gray-800 font-medium flex items-center">
-                      <MapPin className="w-4 h-4 mr-2 text-gray-400" />
-                      {currentLead.address || '-'}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Text Areas */}
-                <div className="space-y-6">
-                  <div>
-                    <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 block">General Info</label>
-                    <div className="p-4 bg-gray-50 rounded-xl text-gray-700 leading-relaxed whitespace-pre-wrap">
-                      {currentLead.general_info || 'No info'}
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 block">Rep Observations</label>
-                    <div className="p-4 bg-yellow-50 rounded-xl text-gray-700 leading-relaxed whitespace-pre-wrap border border-yellow-100">
-                      {currentLead.rep_notes || 'None'}
-                    </div>
-                  </div>
-
-                  <div className="relative group">
-                    <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 block flex items-center">
-                      TLMK Observations (Comentarios)
-                      <button onClick={() => handleCopy(currentLead.tlmk_notes || '')} className="ml-2 text-cyan-600 hover:text-cyan-700 text-xs font-bold" title="Copy">
-                        <Copy className="w-3 h-3" />
-                      </button>
-                    </label>
-                    <div className="p-4 bg-blue-50 rounded-xl text-gray-700 leading-relaxed whitespace-pre-wrap border border-blue-100">
-                      {currentLead.tlmk_notes || 'None'}
-                    </div>
-                  </div>
-                </div>
-
-              </div>
-            </div>
-
-            {/* RIGHT: Controls & Status */}
-            <div className="w-96 bg-white border-l border-gray-200 flex flex-col h-full shadow-xl z-20">
-              <div className="p-6 border-b border-gray-100 bg-gray-50">
-                {/* Call Button */}
-                <button
-                  onClick={() => handleCall(currentLead.phone)}
-                  className="w-full py-5 bg-green-500 text-white rounded-2xl font-bold text-xl shadow-lg hover:bg-green-600 hover:shadow-xl hover:-translate-y-1 transition-all flex items-center justify-center"
-                >
-                  <Phone className="w-6 h-6 mr-3" />
-                  Call Lead
-                </button>
-                <div className="mt-4 flex justify-between text-xs text-center text-gray-500">
-                  <button onClick={() => setDialerMode(false)} className="hover:text-red-500">Exit Dialer</button>
-                  <span>{identity}</span>
-                </div>
-              </div>
-
-              {/* Status List */}
-              <div className="flex-1 overflow-y-auto p-4 space-y-2">
-                <label className="text-xs font-semibold text-gray-400 uppercase tracking-wider px-2 mb-2 block">Disposition</label>
-                {CALL_STATUSES.map(status => (
-                  <button
-                    key={status.id}
-                    onClick={() => handleLeadDisposition(status.id)}
-                    className={`w-full text-left px-4 py-3 rounded-xl transition-all border ${status.color} hover:brightness-95 border-transparent hover:border-black/5 flex items-center justify-between group`}
-                  >
-                    <span className="font-medium">{status.label}</span>
-                    <div className="w-2 h-2 rounded-full bg-current opacity-20 group-hover:opacity-100 transition-opacity" />
-                  </button>
-                ))}
-              </div>
-
-              {/* Footer Nav */}
-              <div className="p-4 bg-gray-50 border-t border-gray-200 grid grid-cols-3 gap-2">
-                <button onClick={handleBackLead} className="flex flex-col items-center justify-center p-2 text-gray-500 hover:bg-gray-200 rounded-lg text-xs">
-                  <ArrowDownLeft className="w-5 h-5 mb-1 rotate-90" />
-                  Back
-                </button>
-                <button onClick={handleSkipLead} className="flex flex-col items-center justify-center p-2 text-gray-500 hover:bg-gray-200 rounded-lg text-xs">
-                  <ArrowDownLeft className="w-5 h-5 mb-1 rotate-[-90deg]" />
-                  Skip
-                </button>
-                <button onClick={handleNextLead} className="flex flex-col items-center justify-center p-2 text-blue-600 hover:bg-blue-50 rounded-lg text-xs font-semibold">
-                  Next
-                </button>
-              </div>
-            </div>
-          </div>
-        )
-      ) : (
-        // Default Layout (3-col)
-        <>
-          {/* Center Panel (Details) */}
-          <div className="flex-1 flex flex-col bg-white border-r border-gray-200">
-            {/* ... Existing ... */}
-          </div>
-          {/* Right Panel (Dialpad) */}
-          <div className="w-96 bg-white flex flex-col p-8">
-            {/* ... Existing ... */}
-          </div>
-        </>
-      )}
-    </div>
-  );
-}
 
 // Simple Custom Audio Player Component
 function AudioPlayer({ src }: { src: string }) {
@@ -310,7 +128,6 @@ export default function Home() {
   const [initialConvId, setInitialConvId] = useState<string | null>(null);
 
 
-
   const handleViewChange = (view: string) => {
     setCurrentView(view as 'calls' | 'messages' | 'campaigns');
     if (view === 'calls') setInitialConvId(null);
@@ -326,6 +143,9 @@ export default function Home() {
 
   const fetchNextLead = async (campaignId: string) => {
     try {
+      // Reset current lead temporarily to show loading state if needed, or handle optimistic UI
+      setCurrentLead(null);
+
       const res = await fetch(`https://gibbor-voice-production.up.railway.app/campaigns/${campaignId}/next-lead`);
       if (!res.ok) throw new Error('Failed to fetch next lead');
       const lead = await res.json();
@@ -341,7 +161,8 @@ export default function Home() {
       }
     } catch (err) {
       console.error("Error fetching lead:", err);
-      alert("Error fetching next lead. See console.");
+      // alert("Error fetching next lead. See console.");
+      setDialerMode(false);
     }
   };
 
@@ -371,6 +192,23 @@ export default function Home() {
       console.error("Error updating lead:", err);
       alert("Failed to update lead status.");
     }
+  };
+
+  const handleCopy = (text: string) => {
+    navigator.clipboard.writeText(text);
+    // You might want to add a toast notification here
+  };
+
+  const handleNextLead = () => {
+    if (activeCampaignId) fetchNextLead(activeCampaignId);
+  };
+
+  const handleSkipLead = () => {
+    handleNextLead();
+  };
+
+  const handleBackLead = async () => {
+    alert("Back functionality requires backend update. Coming soon!");
   };
 
   // Fetch token & History
@@ -536,7 +374,7 @@ export default function Home() {
       {/* 1. Sidebar */}
       <Sidebar currentView={currentView} onViewChange={handleViewChange} />
 
-      {currentView === 'calls' && (
+      {currentView === 'calls' && !dialerMode && (
         <>
           {/* 2. Call List (Left) */}
           <div className="w-80 border-r border-gray-200 flex flex-col bg-white">
@@ -725,152 +563,244 @@ export default function Home() {
         <CampaignManager onStartDialer={handleStartDialer} />
       )}
 
-      {/* 4. Right Panel (Dialpad/Active Call) */}
-      <div className="w-96 bg-white flex flex-col p-8">
-        {activeCall ? (
-          <div className="flex-1 flex flex-col items-center justify-center text-center space-y-8 animate-in fade-in zoom-in duration-300">
-            <div className="w-24 h-24 bg-cyan-100 text-cyan-600 rounded-full flex items-center justify-center text-3xl font-bold shadow-sm">
-              {/* Initials or Icon */}
-              <Phone className="w-10 h-10" />
-            </div>
-            <div>
-              <h2 className="text-2xl font-bold text-gray-800">
-                {/* Prioritize dialedNumber for outbound, otherwise use call parameters */}
-                {dialedNumber || activeCall.parameters?.From || activeCall.parameters?.To || 'Unknown'}
-              </h2>
-              <p className="text-green-600 font-medium mt-2 animate-pulse">{callStatus}</p>
-              {callStatus.startsWith('In Call') && (
-                <p className="text-3xl font-mono text-gray-600 mt-2">{formatDuration(duration)}</p>
-              )}
-            </div>
+      {/* DIALER MODE LAYOUT */}
+      {dialerMode ? (
+        !currentLead ? (
+          <div className="flex-1 flex items-center justify-center bg-gray-50 flex-col">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-cyan-500 mb-4"></div>
+            <p className="text-gray-500 font-medium">Fetching next lead...</p>
+            <button onClick={() => setDialerMode(false)} className="mt-8 text-red-400 hover:text-red-500 text-sm">Cancel</button>
+          </div>
+        ) : (
+          <div className="flex-1 flex bg-gray-50">
+            {/* CENTER: Lead Info */}
+            <div className="flex-1 p-8 overflow-y-auto">
+              <div className="max-w-4xl mx-auto bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
+                {/* Header Info */}
+                <div className="flex items-start justify-between mb-8">
+                  <div>
+                    <h1 className="text-3xl font-bold text-gray-900">{currentLead.name || 'Unknown'}</h1>
+                    <p className="text-xl text-cyan-600 font-mono mt-1 flex items-center">
+                      <Phone className="w-5 h-5 mr-2" />
+                      {currentLead.phone}
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <span className="inline-flex items-center px-4 py-1.5 rounded-full text-sm font-medium bg-purple-100 text-purple-700">
+                      <Info className="w-4 h-4 mr-2" />
+                      Power Dialer Active
+                    </span>
+                  </div>
+                </div>
 
-            <div className="grid grid-cols-3 gap-6 w-full max-w-xs">
-              {callStatus === 'Incoming Call...' ? (
-                <>
-                  <button
-                    onClick={() => {
-                      activeCall.accept();
-                      setCallStatus('In Call');
-                    }}
-                    className="flex flex-col items-center justify-center w-16 h-16 rounded-full bg-green-500 text-white hover:bg-green-600 shadow-lg hover:shadow-xl transform hover:scale-105 transition-all"
-                    aria-label="Answer"
-                    title="Answer"
-                  >
-                    <Phone className="w-8 h-8" />
-                  </button>
-                  <button
-                    onClick={() => {
-                      activeCall.reject();
-                      setActiveCall(null);
-                      setCallStatus('Ready');
-                    }}
-                    className="col-start-3 flex flex-col items-center justify-center w-16 h-16 rounded-full bg-red-500 text-white hover:bg-red-600 shadow-lg hover:shadow-xl transform hover:scale-105 transition-all"
-                    aria-label="Reject"
-                    title="Reject"
-                  >
-                    <PhoneOff className="w-8 h-8" />
-                  </button>
-                </>
-              ) : (
-                <>
-                  <button onClick={toggleMute} aria-label={isMuted ? "Unmute" : "Mute"} title={isMuted ? "Unmute" : "Mute"} className={`flex flex-col items-center justify-center w-16 h-16 rounded-full transition-all ${isMuted ? 'bg-gray-800 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}>
-                    {isMuted ? <MicOff className="w-6 h-6" /> : <Mic className="w-6 h-6" />}
-                  </button>
-
-                  <button
-                    onClick={() => setIsKeypadOpen(!isKeypadOpen)}
-                    className={`flex flex-col items-center justify-center w-16 h-16 rounded-full transition-all ${isKeypadOpen ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
-                    title="Keypad"
-                    aria-label="Keypad"
-                  >
-                    <div className="grid grid-cols-3 gap-0.5 w-6 h-6">
-                      {[...Array(9)].map((_, i) => <div key={i} className={`w-1 h-1 rounded-full ${isKeypadOpen ? 'bg-white' : 'bg-gray-500'}`} />)}
+                {/* Grid Fields */}
+                <div className="grid grid-cols-2 gap-8 mb-8">
+                  <div className="space-y-1">
+                    <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Referred By</label>
+                    <div className="p-3 bg-gray-50 rounded-lg text-gray-800 font-medium">
+                      {currentLead.referred_by || '-'}
                     </div>
-                  </button>
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">City</label>
+                    <div className="p-3 bg-gray-50 rounded-lg text-gray-800 font-medium flex items-center">
+                      <Building className="w-4 h-4 mr-2 text-gray-400" />
+                      {currentLead.city || '-'}
+                    </div>
+                  </div>
+                  <div className="col-span-2 space-y-1">
+                    <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Address</label>
+                    <div className="p-3 bg-gray-50 rounded-lg text-gray-800 font-medium flex items-center">
+                      <MapPin className="w-4 h-4 mr-2 text-gray-400" />
+                      {currentLead.address || '-'}
+                    </div>
+                  </div>
+                </div>
 
-                  <button onClick={handleHangup} aria-label="Hangup" title="Hangup" className="col-start-3 flex flex-col items-center justify-center w-16 h-16 rounded-full bg-red-500 text-white hover:bg-red-600 shadow-lg hover:shadow-xl transform hover:scale-105 transition-all">
-                    <PhoneOff className="w-8 h-8" />
-                  </button>
-                </>
-              )}
+                {/* Text Areas */}
+                <div className="space-y-6">
+                  <div>
+                    <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 block">General Info</label>
+                    <div className="p-4 bg-gray-50 rounded-xl text-gray-700 leading-relaxed whitespace-pre-wrap">
+                      {currentLead.general_info || 'No info'}
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 block">Rep Observations</label>
+                    <div className="p-4 bg-yellow-50 rounded-xl text-gray-700 leading-relaxed whitespace-pre-wrap border border-yellow-100">
+                      {currentLead.rep_notes || 'None'}
+                    </div>
+                  </div>
+
+                  <div className="relative group">
+                    <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 block flex items-center">
+                      TLMK Observations (Comentarios)
+                      <button onClick={() => handleCopy(currentLead.tlmk_notes || '')} className="ml-2 text-cyan-600 hover:text-cyan-700 text-xs font-bold" title="Copy">
+                        <Copy className="w-3 h-3" />
+                      </button>
+                    </label>
+                    <div className="p-4 bg-blue-50 rounded-xl text-gray-700 leading-relaxed whitespace-pre-wrap border border-blue-100">
+                      {currentLead.tlmk_notes || 'None'}
+                    </div>
+                  </div>
+                </div>
+
+              </div>
             </div>
 
-            {/* In-Call Keypad Overlay */}
-            {isKeypadOpen && (
-              <div className="mt-8 grid grid-cols-3 gap-4 animate-in slide-in-from-bottom-5 fade-in duration-300">
-                {['1', '2', '3', '4', '5', '6', '7', '8', '9', '*', '0', '#'].map((digit) => (
+            {/* RIGHT: Controls & Status */}
+            <div className="w-96 bg-white border-l border-gray-200 flex flex-col h-full shadow-xl z-20">
+              <div className="p-6 border-b border-gray-100 bg-gray-50">
+                {/* Call Button */}
+                <button
+                  onClick={() => handleCall(currentLead.phone)}
+                  className="w-full py-5 bg-green-500 text-white rounded-2xl font-bold text-xl shadow-lg hover:bg-green-600 hover:shadow-xl hover:-translate-y-1 transition-all flex items-center justify-center"
+                >
+                  <Phone className="w-6 h-6 mr-3" />
+                  Call Lead
+                </button>
+                <div className="mt-4 flex justify-between text-xs text-center text-gray-500">
+                  <button onClick={() => setDialerMode(false)} className="hover:text-red-500">Exit Dialer</button>
+                  <span>{identity}</span>
+                </div>
+              </div>
+
+              {/* Status List */}
+              <div className="flex-1 overflow-y-auto p-4 space-y-2">
+                <label className="text-xs font-semibold text-gray-400 uppercase tracking-wider px-2 mb-2 block">Disposition</label>
+                {CALL_STATUSES.map(status => (
                   <button
-                    key={digit}
-                    onClick={() => {
-                      if (activeCall) {
-                        activeCall.sendDigits(digit);
-                        setDuration((prev) => prev); // Force re-render if needed? No, just visual feedback
-                      }
-                    }}
-                    className="w-14 h-14 rounded-full bg-gray-50 hover:bg-gray-100 flex items-center justify-center text-xl font-medium text-gray-700 transition-colors active:bg-gray-200"
+                    key={status.id}
+                    onClick={() => handleLeadDisposition(status.id)}
+                    className={`w-full text-left px-4 py-3 rounded-xl transition-all border ${status.color} hover:brightness-95 border-transparent hover:border-black/5 flex items-center justify-between group`}
                   >
-                    {digit}
+                    <span className="font-medium">{status.label}</span>
+                    <div className="w-2 h-2 rounded-full bg-current opacity-20 group-hover:opacity-100 transition-opacity" />
                   </button>
                 ))}
               </div>
-            )}
 
-          </div>
-        ) : dialerMode && currentLead ? (
-          <div className="flex-1 flex flex-col animate-in fade-in slide-in-from-right-10 duration-500">
-            <div className="text-center mb-8">
-              <div className="w-20 h-20 bg-purple-100 text-purple-600 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl font-bold">
-                {currentLead.name ? currentLead.name.charAt(0) : '#'}
-              </div>
-              <h2 className="text-xl font-bold text-gray-900">{currentLead.name || 'Unknown'}</h2>
-              <p className="text-lg text-gray-600 font-mono mt-1">{currentLead.phone}</p>
-              <div className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-purple-50 text-purple-700 mt-2">
-                Power Dialer Active
-              </div>
-            </div>
-
-            <div className="space-y-4">
-              <button
-                onClick={() => handleCall(currentLead.phone)}
-                className="w-full py-4 bg-green-500 text-white rounded-xl font-semibold shadow-lg hover:bg-green-600 hover:shadow-xl hover:-translate-y-0.5 transition-all flex items-center justify-center text-lg"
-              >
-                <Phone className="w-6 h-6 mr-2" />
-                Call Lead
-              </button>
-
-              <div className="grid grid-cols-2 gap-3 pt-4 border-t border-gray-100">
-                <button onClick={() => handleLeadDisposition('sale')} className="p-3 bg-green-50 text-green-700 rounded-lg hover:bg-green-100 font-medium text-sm transition-colors border border-green-200">
-                  Sale 💰
+              {/* Footer Nav */}
+              <div className="p-4 bg-gray-50 border-t border-gray-200 grid grid-cols-3 gap-2">
+                <button onClick={handleBackLead} className="flex flex-col items-center justify-center p-2 text-gray-500 hover:bg-gray-200 rounded-lg text-xs">
+                  <ArrowDownLeft className="w-5 h-5 mb-1 rotate-90" />
+                  Back
                 </button>
-                <button onClick={() => handleLeadDisposition('not_interested')} className="p-3 bg-red-50 text-red-700 rounded-lg hover:bg-red-100 font-medium text-sm transition-colors border border-red-200">
-                  Not Interested 🚫
+                <button onClick={handleSkipLead} className="flex flex-col items-center justify-center p-2 text-gray-500 hover:bg-gray-200 rounded-lg text-xs">
+                  <ArrowDownLeft className="w-5 h-5 mb-1 rotate-[-90deg]" />
+                  Skip
                 </button>
-                <button onClick={() => handleLeadDisposition('voicemail')} className="p-3 bg-gray-50 text-gray-700 rounded-lg hover:bg-gray-100 font-medium text-sm transition-colors border border-gray-200">
-                  Voicemail 📼
-                </button>
-                <button onClick={() => handleLeadDisposition('callback')} className="p-3 bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 font-medium text-sm transition-colors border border-blue-200">
-                  Callback 📅
+                <button onClick={handleNextLead} className="flex flex-col items-center justify-center p-2 text-blue-600 hover:bg-blue-50 rounded-lg text-xs font-semibold">
+                  Next
                 </button>
               </div>
+            </div>
+          </div>
+        )
+      ) : (
+        // Default Right Panel (Dialpad/Active Call) - ONLY SHOW IF NOT IN DIALER MODE
+        <div className="w-96 bg-white flex flex-col p-8">
+          {activeCall ? (
+            <div className="flex-1 flex flex-col items-center justify-center text-center space-y-8 animate-in fade-in zoom-in duration-300">
+              <div className="w-24 h-24 bg-cyan-100 text-cyan-600 rounded-full flex items-center justify-center text-3xl font-bold shadow-sm">
+                {/* Initials or Icon */}
+                <Phone className="w-10 h-10" />
+              </div>
+              <div>
+                <h2 className="text-2xl font-bold text-gray-800">
+                  {/* Prioritize dialedNumber for outbound, otherwise use call parameters */}
+                  {dialedNumber || activeCall.parameters?.From || activeCall.parameters?.To || 'Unknown'}
+                </h2>
+                <p className="text-green-600 font-medium mt-2 animate-pulse">{callStatus}</p>
+                {callStatus.startsWith('In Call') && (
+                  <p className="text-3xl font-mono text-gray-600 mt-2">{formatDuration(duration)}</p>
+                )}
+              </div>
 
-              <button onClick={() => fetchNextLead(activeCampaignId!)} className="w-full py-2 text-gray-400 hover:text-gray-600 text-sm mt-2">
-                Skip Lead
-              </button>
-              <button onClick={() => setDialerMode(false)} className="w-full py-2 text-red-400 hover:text-red-600 text-sm">
-                Exit Dialer
-              </button>
+              <div className="grid grid-cols-3 gap-6 w-full max-w-xs">
+                {callStatus === 'Incoming Call...' ? (
+                  <>
+                    <button
+                      onClick={() => {
+                        activeCall.accept();
+                        setCallStatus('In Call');
+                      }}
+                      className="flex flex-col items-center justify-center w-16 h-16 rounded-full bg-green-500 text-white hover:bg-green-600 shadow-lg hover:shadow-xl transform hover:scale-105 transition-all"
+                      aria-label="Answer"
+                      title="Answer"
+                    >
+                      <Phone className="w-8 h-8" />
+                    </button>
+                    <button
+                      onClick={() => {
+                        activeCall.reject();
+                        setActiveCall(null);
+                        setCallStatus('Ready');
+                      }}
+                      className="col-start-3 flex flex-col items-center justify-center w-16 h-16 rounded-full bg-red-500 text-white hover:bg-red-600 shadow-lg hover:shadow-xl transform hover:scale-105 transition-all"
+                      aria-label="Reject"
+                      title="Reject"
+                    >
+                      <PhoneOff className="w-8 h-8" />
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <button onClick={toggleMute} aria-label={isMuted ? "Unmute" : "Mute"} title={isMuted ? "Unmute" : "Mute"} className={`flex flex-col items-center justify-center w-16 h-16 rounded-full transition-all ${isMuted ? 'bg-gray-800 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}>
+                      {isMuted ? <MicOff className="w-6 h-6" /> : <Mic className="w-6 h-6" />}
+                    </button>
+
+                    <button
+                      onClick={() => setIsKeypadOpen(!isKeypadOpen)}
+                      className={`flex flex-col items-center justify-center w-16 h-16 rounded-full transition-all ${isKeypadOpen ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
+                      title="Keypad"
+                      aria-label="Keypad"
+                    >
+                      <div className="grid grid-cols-3 gap-0.5 w-6 h-6">
+                        {[...Array(9)].map((_, i) => <div key={i} className={`w-1 h-1 rounded-full ${isKeypadOpen ? 'bg-white' : 'bg-gray-500'}`} />)}
+                      </div>
+                    </button>
+
+                    <button onClick={handleHangup} aria-label="Hangup" title="Hangup" className="col-start-3 flex flex-col items-center justify-center w-16 h-16 rounded-full bg-red-500 text-white hover:bg-red-600 shadow-lg hover:shadow-xl transform hover:scale-105 transition-all">
+                      <PhoneOff className="w-8 h-8" />
+                    </button>
+                  </>
+                )}
+              </div>
+
+              {/* In-Call Keypad Overlay */}
+              {isKeypadOpen && (
+                <div className="mt-8 grid grid-cols-3 gap-4 animate-in slide-in-from-bottom-5 fade-in duration-300">
+                  {['1', '2', '3', '4', '5', '6', '7', '8', '9', '*', '0', '#'].map((digit) => (
+                    <button
+                      key={digit}
+                      onClick={() => {
+                        if (activeCall) {
+                          activeCall.sendDigits(digit);
+                          setDuration((prev) => prev); // Force re-render if needed? No, just visual feedback
+                        }
+                      }}
+                      className="w-14 h-14 rounded-full bg-gray-50 hover:bg-gray-100 flex items-center justify-center text-xl font-medium text-gray-700 transition-colors active:bg-gray-200"
+                    >
+                      {digit}
+                    </button>
+                  ))}
+                </div>
+              )}
+
             </div>
-          </div>
-        ) : (
-          <div className="flex-1 flex flex-col">
-            <div className="text-center mb-8">
-              <p className="text-xs font-medium text-gray-400 uppercase tracking-wider mb-1">Make a Call</p>
-              <p className="text-sm text-gray-500">Calling as {identity || '...'}</p>
+          ) : (
+            <div className="flex-1 flex flex-col">
+              <div className="text-center mb-8">
+                <p className="text-xs font-medium text-gray-400 uppercase tracking-wider mb-1">Make a Call</p>
+                <p className="text-sm text-gray-500">Calling as {identity || '...'}</p>
+              </div>
+              <Dialpad onCall={handleCall} />
             </div>
-            <Dialpad onCall={handleCall} />
-          </div>
-        )}
-      </div>
+          )}
+        </div>
+      )}
     </div >
   );
 }
