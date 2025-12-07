@@ -1,3 +1,5 @@
+'use client';
+
 import { useState, useEffect } from 'react';
 import { Upload, Plus, Play, Phone, Trash2, X, ArrowRight, FileSpreadsheet } from 'lucide-react';
 import Papa from 'papaparse';
@@ -8,12 +10,89 @@ interface Campaign {
     status: string;
     created_at: string;
 }
-// ... (SYSTEM_FIELDS remains)
+
+const SYSTEM_FIELDS = [
+    { key: 'phone', label: 'Phone Number (Required)', required: true },
+    { key: 'name', label: 'Lead Name' },
+    { key: 'referred_by', label: 'Referred By' },
+    { key: 'city', label: 'City' },
+    { key: 'address', label: 'Address' },
+    { key: 'general_info', label: 'General Info' },
+    { key: 'rep_notes', label: 'Rep Notes' },
+    { key: 'tlmk_notes', label: 'TLMK Notes' },
+    { key: 'notes', label: 'General Notes' }, // fallback
+];
 
 export default function CampaignManager({ onStartDialer }: { onStartDialer: (campaignId: string) => void }) {
-    // ... (state remains)
+    const [campaigns, setCampaigns] = useState<Campaign[]>([]);
+    const [newCampaignName, setNewCampaignName] = useState('');
+    const [isCreating, setIsCreating] = useState(false);
 
-    // ... (fetchCampaigns, handleCreate, handleDelete remain)
+    // Upload & Mapping State
+    const [uploadingId, setUploadingId] = useState<string | null>(null);
+    const [isMappingOpen, setIsMappingOpen] = useState(false);
+    const [currentFile, setCurrentFile] = useState<File | null>(null);
+    const [csvHeaders, setCsvHeaders] = useState<string[]>([]);
+    const [fieldMapping, setFieldMapping] = useState<Record<string, string>>({});
+    const [targetCampaignId, setTargetCampaignId] = useState<string | null>(null);
+
+    useEffect(() => {
+        fetchCampaigns();
+    }, []);
+
+    const fetchCampaigns = async () => {
+        try {
+            const res = await fetch('https://gibbor-voice-production.up.railway.app/campaigns');
+            if (res.ok) {
+                const data = await res.json();
+                setCampaigns(data);
+            }
+        } catch (error) {
+            console.error(error);
+        }
+    };
+
+    const handleCreate = async () => {
+        if (!newCampaignName.trim()) return;
+
+        try {
+            const res = await fetch('https://gibbor-voice-production.up.railway.app/campaigns', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name: newCampaignName })
+            });
+
+            if (res.ok) {
+                setNewCampaignName('');
+                setIsCreating(false);
+                fetchCampaigns();
+            } else {
+                const err = await res.json();
+                alert(`Error creating campaign: ${err.error || 'Unknown error'}`);
+            }
+        } catch (error) {
+            console.error(error);
+            alert('Failed to connect to server');
+        }
+    };
+
+    const handleDelete = async (id: string) => {
+        if (!confirm('Are you sure you want to delete this campaign? All leads in it will be lost.')) return;
+
+        try {
+            const res = await fetch(`https://gibbor-voice-production.up.railway.app/campaigns/${id}`, {
+                method: 'DELETE'
+            });
+            if (res.ok) {
+                fetchCampaigns();
+            } else {
+                alert('Failed to delete campaign');
+            }
+        } catch (e) {
+            console.error(e);
+            alert('Error deleting campaign');
+        }
+    };
 
     const onFileSelect = (campaignId: string, file: File) => {
         setTargetCampaignId(campaignId);
@@ -144,6 +223,7 @@ export default function CampaignManager({ onStartDialer }: { onStartDialer: (cam
                                         <div className="flex-1">
                                             <select
                                                 className="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 transition-all font-medium text-gray-800"
+                                                title={field.label}
                                                 value={fieldMapping[field.key] || ''}
                                                 onChange={(e) => setFieldMapping({ ...fieldMapping, [field.key]: e.target.value })}
                                             >
@@ -168,6 +248,7 @@ export default function CampaignManager({ onStartDialer }: { onStartDialer: (cam
                             <button
                                 onClick={handleUploadConfirm}
                                 disabled={!fieldMapping['phone']}
+                                title={!fieldMapping['phone'] ? 'Please map the Phone Number field' : 'Import Leads'}
                                 className={`px-6 py-2 rounded-lg font-bold text-white shadow-md transition-all ${!fieldMapping['phone'] ? 'bg-gray-300 cursor-not-allowed' : 'bg-indigo-600 hover:bg-indigo-700 hover:shadow-lg hover:-translate-y-0.5'}`}
                             >
                                 Import Leads
@@ -208,6 +289,7 @@ export default function CampaignManager({ onStartDialer }: { onStartDialer: (cam
                                         accept=".csv"
                                         className="hidden"
                                         disabled={!!uploadingId}
+                                        title="Upload CSV"
                                         onClick={(e) => (e.currentTarget.value = '')} // Reset to allow re-selection
                                         onChange={(e) => {
                                             if (e.target.files?.[0]) onFileSelect(campaign.id, e.target.files[0]);
