@@ -294,8 +294,77 @@ app.get("/history/messages", async (req, res) => {
 
         if (error) throw error;
         res.json(data);
-        res.json(data);
     } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+// Reports Endpoint
+app.get("/reports", async (req, res) => {
+    try {
+        const { startDate, endDate, campaignId } = req.query;
+
+        let query = supabase
+            .from('calls')
+            .select('*');
+
+        // Apply filters
+        if (startDate) query = query.gte('created_at', startDate);
+        if (endDate) query = query.lte('created_at', endDate);
+        // Note: Campaign filtering on calls would require linking calls to leads/campaigns explicitly. 
+        // For now, we report on ALL calls or filter by date.
+
+        const { data: calls, error } = await query;
+        if (error) throw error;
+
+        // Aggregations
+        const total_calls = calls.length;
+        const total_duration = calls.reduce((sum, c) => sum + (c.duration || 0), 0);
+
+        // "Connected" implies meaningful conversation. 
+        // Twilio statuses: 'completed' usually means answered. 'no-answer', 'busy' are unconnected.
+        // We can check if duration > 0 as a proxy for connection if status is ambiguous.
+        const connected_calls = calls.filter(c => ['completed', 'answered'].includes(c.status) || (c.duration && c.duration > 0));
+        const connected_duration = connected_calls.reduce((sum, c) => sum + (c.duration || 0), 0);
+
+        // Status Breakdown (Lead Disposition?) 
+        // NOTE: Calls table stores Twilio call status (completed, busy). 
+        // Leads table stores Agent Disposition (Sale, Appointment).
+        // Since user wants "Status Chart" usually referring to Outcomes (Cita, Venta), 
+        // we might need to query LEADS table too if that's what they mean.
+        // BUT user asked for "Call Time", so we start with Calls stats. 
+        // Let's ALSO fetch Leads Updated in this timeframe for the Disposition Chart.
+
+        let leadsQuery = supabase.from('leads').select('status, updated_at');
+        if (startDate) leadsQuery = leadsQuery.gte('updated_at', startDate);
+        if (endDate) leadsQuery = leadsQuery.lte('updated_at', endDate);
+
+        const { data: leads, error: leadsError } = await leadsQuery;
+        if (leadsError) console.error("Leads report error", leadsError);
+
+        const status_counts = {};
+        if (leads) {
+            leads.forEach(l => {
+                // Handle multi-select? "Cita, Venta". Split and count? Or just count primary?
+                // For simplicity, count specific occurrences.
+                const statuses = l.status ? l.status.split(',') : ['Unknown'];
+                statuses.forEach(s => {
+                    const cleanS = s.trim();
+                    status_counts[cleanS] = (status_counts[cleanS] || 0) + 1;
+                });
+            });
+        }
+
+        res.json({
+            total_calls,
+            total_duration,
+            connected_duration,
+            avg_duration: total_calls > 0 ? Math.round(total_duration / total_calls) : 0,
+            status_counts
+        });
+
+    } catch (e) {
+        console.error("Report error:", e);
         res.status(500).json({ error: e.message });
     }
 });
