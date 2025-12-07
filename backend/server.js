@@ -352,12 +352,30 @@ app.post("/campaigns/:id/upload", upload.single('file'), async (req, res) => {
         .on('data', (data) => results.push(data))
         .on('end', async () => {
             const leads = results.map(row => {
-                const phoneKey = Object.keys(row).find(k => k.toLowerCase().includes('phone') || k.toLowerCase().includes('tel') || k.toLowerCase().includes('cel'));
-                const nameKey = Object.keys(row).find(k => k.toLowerCase().includes('name') || k.toLowerCase().includes('nombre'));
+                // Flexible header matching
+                const findKey = (keywords) => Object.keys(row).find(k => keywords.some(w => k.toLowerCase().includes(w)));
+
+                const phone = row[findKey(['phone', 'tel', 'cel', 'mobile', 'cell'])] || null;
+                const name = row[findKey(['name', 'nombre', 'cliente'])] || 'Unknown';
+                const referred_by = row[findKey(['refer', 'ref'])] || null;
+                const address = row[findKey(['address', 'direccion', 'dirección', 'addr'])] || null;
+                const city = row[findKey(['city', 'ciudad', 'town'])] || null;
+                const general_info = row[findKey(['info', 'desc'])] || null;
+                const rep_notes = row[findKey(['rep', 'representante'])] || null; // "Observaciones del representante"
+                const tlmk_notes = row[findKey(['tlmk', 'telemarketing'])] || null; // "Observaciones del telemarketing"
+                const notes = row[findKey(['note', 'nota', 'comment', 'comentario'])] || null;
+
                 return {
                     campaign_id: campaignId,
-                    phone: phoneKey ? row[phoneKey] : null,
-                    name: nameKey ? row[nameKey] : 'Unknown',
+                    phone: phone,
+                    name: name,
+                    referred_by: referred_by,
+                    address: address,
+                    city: city,
+                    general_info: general_info,
+                    rep_notes: rep_notes,
+                    tlmk_notes: tlmk_notes,
+                    notes: notes,
                     status: 'pending'
                 };
             }).filter(l => l.phone);
