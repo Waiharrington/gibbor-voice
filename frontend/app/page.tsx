@@ -384,6 +384,7 @@ export default function Home() {
 
       const call = await device.connect({ params });
 
+      setCallStatus('Dialing...'); // Immediate UI update
       // Set active call immediately to show UI controls (including Keypad)
       setActiveCall(call);
 
