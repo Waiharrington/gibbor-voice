@@ -102,15 +102,15 @@ export default function CampaignManager({ onStartDialer }: { onStartDialer: (cam
         Papa.parse(file, {
             header: true,
             preview: 1, // Just first row to get headers
-            step: (row: any) => {
-                // Debug log
-                console.log("Parsing row:", row);
-                if (row.meta.fields) {
-                    setCsvHeaders(row.meta.fields);
+            complete: (results: any) => {
+                console.log("Parse complete results:", results);
+                if (results.meta && results.meta.fields) {
+                    setCsvHeaders(results.meta.fields);
+                } else if (results.data && results.data.length > 0) {
+                    // Fallback: Get keys from first data row
+                    console.log("Using fallback keys from data[0]");
+                    setCsvHeaders(Object.keys(results.data[0]));
                 }
-            },
-            complete: () => {
-                console.log("Parse complete. Opening mapping modal.");
                 setIsMappingOpen(true);
             },
             error: (err: any) => {
