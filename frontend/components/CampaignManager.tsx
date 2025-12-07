@@ -32,16 +32,24 @@ export default function CampaignManager({ onStartDialer }: { onStartDialer: (cam
     const handleCreate = async () => {
         if (!newCampaignName.trim()) return;
 
-        const res = await fetch('https://gibbor-voice-production.up.railway.app/campaigns', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ name: newCampaignName })
-        });
+        try {
+            const res = await fetch('https://gibbor-voice-production.up.railway.app/campaigns', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name: newCampaignName })
+            });
 
-        if (res.ok) {
-            setNewCampaignName('');
-            setIsCreating(false);
-            fetchCampaigns();
+            if (res.ok) {
+                setNewCampaignName('');
+                setIsCreating(false);
+                fetchCampaigns();
+            } else {
+                const err = await res.json();
+                alert(`Error creating campaign: ${err.error || 'Unknown error'}`);
+            }
+        } catch (error) {
+            console.error(error);
+            alert('Failed to connect to server');
         }
     };
 
