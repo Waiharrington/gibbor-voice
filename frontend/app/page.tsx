@@ -205,7 +205,7 @@ export default function Home() {
     // Optimistic update / Log disposition
     try {
       // Update local state immediately for UI responsiveness
-      setCurrentLead(prev => prev ? { ...prev, status: statusString } : null);
+      setCurrentLead((prev: any) => prev ? { ...prev, status: statusString } : null);
 
       await fetch(`https://gibbor-voice-production.up.railway.app/leads/${currentLead.id}/update`, {
         method: 'POST',
