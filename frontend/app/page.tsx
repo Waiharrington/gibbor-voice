@@ -593,23 +593,23 @@ export default function Home() {
                   </div>
                 </div>
 
-                {/* Grid Fields (Editable) */}
-                <div className="grid grid-cols-2 gap-6 mb-6">
-                  <div className="space-y-1">
+                {/* Grid Fields (Editable) - Single Row Layout */}
+                <div className="grid grid-cols-4 gap-4 mb-4">
+                  <div className="col-span-1 space-y-1">
                     <label className="text-xs font-bold text-black uppercase tracking-wider">Referred By</label>
                     <input
                       type="text"
-                      className="w-full p-2 bg-gray-50 border border-gray-200 rounded-lg text-gray-800 font-medium focus:ring-1 focus:ring-cyan-500 focus:border-cyan-500 transition-all"
+                      className="w-full p-2 bg-gray-50 border border-gray-200 rounded-lg text-gray-800 font-medium focus:ring-1 focus:ring-cyan-500 focus:border-cyan-500 transition-all text-xs"
                       defaultValue={currentLead.referred_by || ''}
                     />
                   </div>
-                  <div className="space-y-1">
+                  <div className="col-span-1 space-y-1">
                     <label className="text-xs font-bold text-black uppercase tracking-wider">City</label>
                     <div className="relative">
-                      <Building className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
+                      <Building className="absolute left-2.5 top-2.5 w-3.5 h-3.5 text-gray-400" />
                       <input
                         type="text"
-                        className="w-full pl-9 p-2 bg-gray-50 border border-gray-200 rounded-lg text-gray-800 font-medium focus:ring-1 focus:ring-cyan-500 focus:border-cyan-500 transition-all"
+                        className="w-full pl-8 p-2 bg-gray-50 border border-gray-200 rounded-lg text-gray-800 font-medium focus:ring-1 focus:ring-cyan-500 focus:border-cyan-500 transition-all text-xs"
                         defaultValue={currentLead.city || ''}
                       />
                     </div>
@@ -617,10 +617,10 @@ export default function Home() {
                   <div className="col-span-2 space-y-1">
                     <label className="text-xs font-bold text-black uppercase tracking-wider">Address</label>
                     <div className="relative">
-                      <MapPin className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
+                      <MapPin className="absolute left-2.5 top-2.5 w-3.5 h-3.5 text-gray-400" />
                       <input
                         type="text"
-                        className="w-full pl-9 p-2 bg-gray-50 border border-gray-200 rounded-lg text-gray-800 font-medium focus:ring-1 focus:ring-cyan-500 focus:border-cyan-500 transition-all"
+                        className="w-full pl-8 p-2 bg-gray-50 border border-gray-200 rounded-lg text-gray-800 font-medium focus:ring-1 focus:ring-cyan-500 focus:border-cyan-500 transition-all text-xs"
                         defaultValue={currentLead.address || ''}
                       />
                     </div>
