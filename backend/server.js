@@ -300,6 +300,20 @@ app.get("/history/messages", async (req, res) => {
     }
 });
 
+app.get("/campaigns", async (req, res) => {
+    try {
+        const { data, error } = await supabase
+            .from('campaigns')
+            .select('*')
+            .order('created_at', { ascending: false });
+
+        if (error) throw error;
+        res.json(data);
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
 app.post("/campaigns", async (req, res) => {
     try {
         const { name } = req.body;
