@@ -573,76 +573,103 @@ export default function Home() {
           </div>
         ) : (
           <div className="flex-1 flex bg-gray-50">
-            {/* CENTER: Lead Info */}
-            <div className="flex-1 p-8 overflow-y-auto">
-              <div className="max-w-4xl mx-auto bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
+            {/* CENTER: Lead Info (Editable) */}
+            <div className="flex-1 p-6 overflow-y-auto">
+              <div className="max-w-5xl mx-auto bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
                 {/* Header Info */}
-                <div className="flex items-start justify-between mb-8">
+                <div className="flex items-start justify-between mb-6">
                   <div>
-                    <h1 className="text-3xl font-bold text-gray-900">{currentLead.name || 'Unknown'}</h1>
-                    <p className="text-xl text-cyan-600 font-mono mt-1 flex items-center">
-                      <Phone className="w-5 h-5 mr-2" />
+                    <h1 className="text-4xl font-extrabold text-gray-900 tracking-tight">{currentLead.name || 'Unknown'}</h1>
+                    <p className="text-2xl text-cyan-600 font-mono mt-2 flex items-center font-bold">
+                      <Phone className="w-6 h-6 mr-3" />
                       {currentLead.phone}
                     </p>
                   </div>
                   <div className="text-right">
-                    <span className="inline-flex items-center px-4 py-1.5 rounded-full text-sm font-medium bg-purple-100 text-purple-700">
-                      <Info className="w-4 h-4 mr-2" />
+                    <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-700 uppercase tracking-wide">
+                      <Info className="w-3 h-3 mr-1.5" />
                       Power Dialer Active
                     </span>
                   </div>
                 </div>
 
-                {/* Grid Fields */}
-                <div className="grid grid-cols-2 gap-8 mb-8">
+                {/* Grid Fields (Editable) */}
+                <div className="grid grid-cols-2 gap-6 mb-6">
                   <div className="space-y-1">
-                    <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Referred By</label>
-                    <div className="p-3 bg-gray-50 rounded-lg text-gray-800 font-medium">
-                      {currentLead.referred_by || '-'}
-                    </div>
+                    <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Referred By</label>
+                    <input
+                      type="text"
+                      className="w-full p-2 bg-gray-50 border border-gray-200 rounded-lg text-gray-800 font-medium focus:ring-1 focus:ring-cyan-500 focus:border-cyan-500 transition-all"
+                      defaultValue={currentLead.referred_by || ''}
+                    />
                   </div>
                   <div className="space-y-1">
-                    <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">City</label>
-                    <div className="p-3 bg-gray-50 rounded-lg text-gray-800 font-medium flex items-center">
-                      <Building className="w-4 h-4 mr-2 text-gray-400" />
-                      {currentLead.city || '-'}
+                    <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">City</label>
+                    <div className="relative">
+                      <Building className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
+                      <input
+                        type="text"
+                        className="w-full pl-9 p-2 bg-gray-50 border border-gray-200 rounded-lg text-gray-800 font-medium focus:ring-1 focus:ring-cyan-500 focus:border-cyan-500 transition-all"
+                        defaultValue={currentLead.city || ''}
+                      />
                     </div>
                   </div>
                   <div className="col-span-2 space-y-1">
-                    <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Address</label>
-                    <div className="p-3 bg-gray-50 rounded-lg text-gray-800 font-medium flex items-center">
-                      <MapPin className="w-4 h-4 mr-2 text-gray-400" />
-                      {currentLead.address || '-'}
+                    <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Address</label>
+                    <div className="relative">
+                      <MapPin className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
+                      <input
+                        type="text"
+                        className="w-full pl-9 p-2 bg-gray-50 border border-gray-200 rounded-lg text-gray-800 font-medium focus:ring-1 focus:ring-cyan-500 focus:border-cyan-500 transition-all"
+                        defaultValue={currentLead.address || ''}
+                      />
                     </div>
                   </div>
                 </div>
 
                 {/* Text Areas */}
-                <div className="space-y-6">
+                <div className="space-y-4">
                   <div>
-                    <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 block">General Info</label>
-                    <div className="p-4 bg-gray-50 rounded-xl text-gray-700 leading-relaxed whitespace-pre-wrap">
-                      {currentLead.general_info || 'No info'}
-                    </div>
+                    <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1 block">General Info</label>
+                    <textarea
+                      rows={3}
+                      className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-700 leading-relaxed focus:ring-1 focus:ring-cyan-500 focus:border-cyan-500 transition-all resize-none"
+                      defaultValue={currentLead.general_info || ''}
+                    />
                   </div>
 
                   <div>
-                    <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 block">Rep Observations</label>
-                    <div className="p-4 bg-yellow-50 rounded-xl text-gray-700 leading-relaxed whitespace-pre-wrap border border-yellow-100">
-                      {currentLead.rep_notes || 'None'}
-                    </div>
+                    <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1 block">Rep Observations</label>
+                    <textarea
+                      rows={2}
+                      className="w-full p-3 bg-yellow-50 border border-yellow-100 rounded-xl text-gray-700 leading-relaxed focus:ring-1 focus:ring-yellow-400 focus:border-yellow-400 transition-all resize-none"
+                      defaultValue={currentLead.rep_notes || ''}
+                    />
                   </div>
 
                   <div className="relative group">
-                    <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 block flex items-center">
-                      TLMK Observations (Comentarios)
-                      <button onClick={() => handleCopy(currentLead.tlmk_notes || '')} className="ml-2 text-cyan-600 hover:text-cyan-700 text-xs font-bold" title="Copy">
-                        <Copy className="w-3 h-3" />
+                    <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1 block flex items-center justify-between">
+                      <span>TLMK Observations (History)</span>
+                      <button onClick={() => handleCopy(currentLead.tlmk_notes || '')} className="text-cyan-600 hover:text-cyan-700 text-xs font-bold flex items-center" title="Copy">
+                        <Copy className="w-3 h-3 mr-1" /> Copy
                       </button>
                     </label>
-                    <div className="p-4 bg-blue-50 rounded-xl text-gray-700 leading-relaxed whitespace-pre-wrap border border-blue-100">
-                      {currentLead.tlmk_notes || 'None'}
+                    <div className="p-3 bg-blue-50 rounded-xl text-gray-700 text-sm leading-relaxed border border-blue-100 max-h-32 overflow-y-auto">
+                      {currentLead.tlmk_notes || 'No history'}
                     </div>
+                  </div>
+
+                  {/* NEW COMMENTS FIELD */}
+                  <div>
+                    <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1 block">
+                      Call Comments (Current)
+                    </label>
+                    <textarea
+                      id="current-call-notes"
+                      rows={4}
+                      placeholder="Write notes for this call..."
+                      className="w-full p-3 bg-white border border-gray-300 rounded-xl text-gray-900 leading-relaxed focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition-all shadow-sm resize-none"
+                    />
                   </div>
                 </div>
 
@@ -650,49 +677,107 @@ export default function Home() {
             </div>
 
             {/* RIGHT: Controls & Status */}
-            <div className="w-96 bg-white border-l border-gray-200 flex flex-col h-full shadow-xl z-20">
-              <div className="p-6 border-b border-gray-100 bg-gray-50">
-                {/* Call Button */}
-                <button
-                  onClick={() => handleCall(currentLead.phone)}
-                  className="w-full py-5 bg-green-500 text-white rounded-2xl font-bold text-xl shadow-lg hover:bg-green-600 hover:shadow-xl hover:-translate-y-1 transition-all flex items-center justify-center"
-                >
-                  <Phone className="w-6 h-6 mr-3" />
-                  Call Lead
-                </button>
-                <div className="mt-4 flex justify-between text-xs text-center text-gray-500">
-                  <button onClick={() => setDialerMode(false)} className="hover:text-red-500">Exit Dialer</button>
-                  <span>{identity}</span>
+            <div className="w-80 bg-white border-l border-gray-200 flex flex-col h-full shadow-2xl z-20">
+
+              {/* TOP: Call Controls */}
+              <div className="p-5 border-b border-gray-100 bg-gray-50 flex flex-col items-center">
+
+                {/* Active Call State or Start Call Button */}
+                {activeCall ? (
+                  <div className="w-full flex flex-col items-center space-y-4 animate-in fade-in slide-in-from-top-4 duration-300">
+                    <div className="text-center">
+                      <span className="inline-flex h-3 w-3 relative">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                        <span className="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
+                      </span>
+                      <span className="ml-2 font-mono text-xl font-bold text-gray-800">{formatDuration(duration)}</span>
+                      <p className="text-xs text-gray-500 uppercase tracking-wider mt-1 font-semibold">{callStatus}</p>
+                    </div>
+
+                    <div className="grid grid-cols-3 gap-3 w-full">
+                      <button onClick={toggleMute} className={`flex flex-col items-center justify-center h-14 rounded-xl transition-all border ${isMuted ? 'bg-gray-800 text-white border-gray-800' : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'}`}>
+                        {isMuted ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
+                      </button>
+                      <button onClick={() => setIsKeypadOpen(!isKeypadOpen)} className={`flex flex-col items-center justify-center h-14 rounded-xl transition-all border ${isKeypadOpen ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'}`}>
+                        <div className="grid grid-cols-3 gap-0.5 w-4 h-4">
+                          {[...Array(9)].map((_, i) => <div key={i} className={`w-1 h-1 rounded-full ${isKeypadOpen ? 'bg-white' : 'bg-gray-400'}`} />)}
+                        </div>
+                      </button>
+                      <button onClick={handleHangup} className="col-span-1 flex flex-col items-center justify-center h-14 rounded-xl bg-red-500 text-white hover:bg-red-600 shadow-md transition-all active:scale-95">
+                        <PhoneOff className="w-6 h-6" />
+                      </button>
+                    </div>
+
+                    {/* In-Call Keypad (Overlay or Expand) */}
+                    {isKeypadOpen && (
+                      <div className="grid grid-cols-3 gap-2 w-full pt-2">
+                        {['1', '2', '3', '4', '5', '6', '7', '8', '9', '*', '0', '#'].map((digit) => (
+                          <button
+                            key={digit}
+                            onClick={() => activeCall.sendDigits(digit)}
+                            className="h-10 rounded-lg bg-white border border-gray-200 hover:bg-gray-50 flex items-center justify-center text-lg font-bold text-gray-700 transition-colors"
+                          >
+                            {digit}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="w-full">
+                    <button
+                      onClick={() => handleCall(currentLead.phone)}
+                      className="w-full py-4 bg-green-500 text-white rounded-xl font-bold text-lg shadow-lg hover:bg-green-600 hover:shadow-xl hover:-translate-y-0.5 transition-all flex items-center justify-center active:scale-95 transform"
+                    >
+                      <Phone className="w-5 h-5 mr-2" />
+                      Call Lead
+                    </button>
+                  </div>
+                )}
+
+                {!activeCall && (
+                  <div className="w-full mt-3 flex justify-between text-[10px] text-gray-400 font-medium uppercase tracking-wider">
+                    <button onClick={() => setDialerMode(false)} className="hover:text-red-500 transition-colors">Exit Dialer</button>
+                    <span>{identity}</span>
+                  </div>
+                )}
+              </div>
+
+              {/* MIDDLE: Status List (Scrollable) */}
+              <div className="flex-1 overflow-y-auto p-3 bg-gray-50/50">
+                <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest px-1 mb-2 block">Disposition</label>
+                <div className="space-y-1.5">
+                  {CALL_STATUSES.map(status => (
+                    <button
+                      key={status.id}
+                      onClick={() => {
+                        const noteInput = document.getElementById('current-call-notes') as HTMLTextAreaElement;
+                        handleLeadDisposition(status.id, noteInput?.value || '');
+                        if (noteInput) noteInput.value = ''; // Clear notes
+                      }}
+                      className={`w-full text-left px-3 py-2.5 rounded-lg transition-all border text-sm font-medium flex items-center justify-between group bg-white hover:bg-gray-100 border-gray-200 hover:border-gray-300 shadow-sm`}
+                      style={{ borderLeftWidth: '4px', borderLeftColor: status.color.includes('green') ? '#22c55e' : status.color.includes('red') ? '#ef4444' : status.color.includes('yellow') ? '#eab308' : '#3b82f6' }}
+                    >
+                      <span>{status.label}</span>
+                      {/* We can use the status color class if we want, but inline style ensures visible specific colors derived from the Tailwind class names roughly */}
+                    </button>
+                  ))}
                 </div>
               </div>
 
-              {/* Status List */}
-              <div className="flex-1 overflow-y-auto p-4 space-y-2">
-                <label className="text-xs font-semibold text-gray-400 uppercase tracking-wider px-2 mb-2 block">Disposition</label>
-                {CALL_STATUSES.map(status => (
-                  <button
-                    key={status.id}
-                    onClick={() => handleLeadDisposition(status.id)}
-                    className={`w-full text-left px-4 py-3 rounded-xl transition-all border ${status.color} hover:brightness-95 border-transparent hover:border-black/5 flex items-center justify-between group`}
-                  >
-                    <span className="font-medium">{status.label}</span>
-                    <div className="w-2 h-2 rounded-full bg-current opacity-20 group-hover:opacity-100 transition-opacity" />
-                  </button>
-                ))}
-              </div>
-
-              {/* Footer Nav */}
-              <div className="p-4 bg-gray-50 border-t border-gray-200 grid grid-cols-3 gap-2">
-                <button onClick={handleBackLead} className="flex flex-col items-center justify-center p-2 text-gray-500 hover:bg-gray-200 rounded-lg text-xs">
-                  <ArrowDownLeft className="w-5 h-5 mb-1 rotate-90" />
-                  Back
+              {/* BOTTOM: Nav */}
+              <div className="p-3 bg-white border-t border-gray-200 grid grid-cols-3 gap-2">
+                <button onClick={handleBackLead} className="flex flex-col items-center justify-center p-2 text-gray-500 hover:bg-gray-100 rounded-lg transition-colors">
+                  <ArrowDownLeft className="w-4 h-4 mb-1 rotate-90" />
+                  <span className="text-[10px] uppercase font-bold tracking-wider">Back</span>
                 </button>
-                <button onClick={handleSkipLead} className="flex flex-col items-center justify-center p-2 text-gray-500 hover:bg-gray-200 rounded-lg text-xs">
-                  <ArrowDownLeft className="w-5 h-5 mb-1 rotate-[-90deg]" />
-                  Skip
+                <button onClick={handleSkipLead} className="flex flex-col items-center justify-center p-2 text-gray-500 hover:bg-gray-100 rounded-lg transition-colors">
+                  <ArrowDownLeft className="w-4 h-4 mb-1 rotate-[-90deg]" />
+                  <span className="text-[10px] uppercase font-bold tracking-wider">Skip</span>
                 </button>
-                <button onClick={handleNextLead} className="flex flex-col items-center justify-center p-2 text-blue-600 hover:bg-blue-50 rounded-lg text-xs font-semibold">
-                  Next
+                <button onClick={handleNextLead} className="flex flex-col items-center justify-center p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors">
+                  <ArrowDownLeft className="w-4 h-4 mb-1 rotate-[-135deg]" /> {/* Next Icon Proxy */}
+                  <span className="text-[10px] uppercase font-bold tracking-wider">Next</span>
                 </button>
               </div>
             </div>
