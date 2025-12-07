@@ -103,14 +103,19 @@ export default function CampaignManager({ onStartDialer }: { onStartDialer: (cam
             header: true,
             preview: 1, // Just first row to get headers
             step: (row: any) => {
+                // Debug log
+                console.log("Parsing row:", row);
                 if (row.meta.fields) {
                     setCsvHeaders(row.meta.fields);
-                    // Initialize mapping with smart guesses?
-                    // Optional: could implement simple automap here
                 }
             },
             complete: () => {
+                console.log("Parse complete. Opening mapping modal.");
                 setIsMappingOpen(true);
+            },
+            error: (err: any) => {
+                console.error("Papa Parse Error:", err);
+                alert("Error reading CSV file. See console for details.");
             }
         });
     };
