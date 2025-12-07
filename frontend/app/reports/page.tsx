@@ -165,7 +165,7 @@ export default function ReportsPage() {
                                         <div key={status} className="relative">
                                             <div className="flex justify-between items-center mb-1">
                                                 <span className="text-sm font-bold text-gray-700 capitalize">{status}</span>
-                                                <span className="text-sm text-gray-500 font-medium">{count} ({percent}%)</span>
+                                                <span className="text-sm text-gray-500 font-medium">{count as number} ({percent}%)</span>
                                             </div>
                                             <div className="w-full bg-gray-100 rounded-full h-3 overflow-hidden">
                                                 <div
