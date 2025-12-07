@@ -347,23 +347,42 @@ app.post("/campaigns/:id/upload", upload.single('file'), async (req, res) => {
     const campaignId = req.params.id;
     const results = [];
 
+    // Parse mapping from FormData
+    // It comes as a JSON string, e.g. {"phone":"Celular", "name":"Cliente"}
+    let mapping = {};
+    try {
+        if (req.body.mapping) {
+            mapping = JSON.parse(req.body.mapping);
+        }
+    } catch (e) {
+        console.error("Error parsing mapping JSON", e);
+    }
+
+    // Helper to get value from row using mapping OR fuzzy search
+    const getValue = (row, fieldKey, keywords) => {
+        // 1. Try explicit mapping
+        if (mapping[fieldKey] && row[mapping[fieldKey]] !== undefined) {
+            return row[mapping[fieldKey]];
+        }
+        // 2. Fallback to fuzzy search (Smart Match)
+        const foundKey = Object.keys(row).find(k => keywords.some(w => k.toLowerCase().includes(w)));
+        return foundKey ? row[foundKey] : null;
+    };
+
     fs.createReadStream(req.file.path)
         .pipe(csv())
         .on('data', (data) => results.push(data))
         .on('end', async () => {
             const leads = results.map(row => {
-                // Flexible header matching
-                const findKey = (keywords) => Object.keys(row).find(k => keywords.some(w => k.toLowerCase().includes(w)));
-
-                const phone = row[findKey(['phone', 'tel', 'cel', 'mobile', 'cell'])] || null;
-                const name = row[findKey(['name', 'nombre', 'cliente'])] || 'Unknown';
-                const referred_by = row[findKey(['refer', 'ref'])] || null;
-                const address = row[findKey(['address', 'direccion', 'dirección', 'addr'])] || null;
-                const city = row[findKey(['city', 'ciudad', 'town'])] || null;
-                const general_info = row[findKey(['info', 'desc'])] || null;
-                const rep_notes = row[findKey(['rep', 'representante'])] || null; // "Observaciones del representante"
-                const tlmk_notes = row[findKey(['tlmk', 'telemarketing'])] || null; // "Observaciones del telemarketing"
-                const notes = row[findKey(['note', 'nota', 'comment', 'comentario'])] || null;
+                const phone = getValue(row, 'phone', ['phone', 'tel', 'cel', 'mobile', 'cell']);
+                const name = getValue(row, 'name', ['name', 'nombre', 'cliente']);
+                const referred_by = getValue(row, 'referred_by', ['refer', 'ref']);
+                const address = getValue(row, 'address', ['address', 'direccion', 'dirección', 'addr']);
+                const city = getValue(row, 'city', ['city', 'ciudad', 'town']);
+                const general_info = getValue(row, 'general_info', ['info', 'desc']);
+                const rep_notes = getValue(row, 'rep_notes', ['rep', 'representante']);
+                const tlmk_notes = getValue(row, 'tlmk_notes', ['tlmk', 'telemarketing']);
+                const notes = getValue(row, 'notes', ['note', 'nota', 'comment', 'comentario']);
 
                 return {
                     campaign_id: campaignId,
