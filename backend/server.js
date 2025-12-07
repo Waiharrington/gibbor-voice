@@ -148,7 +148,8 @@ app.post("/incoming-call", async (req, res) => {
             recordingStatusCallback: `${baseUrl}/recording-status`,
             recordingStatusCallbackEvent: ['completed'],
             action: `${baseUrl}/call-status`,
-            method: 'POST'
+            method: 'POST',
+            answerOnBridge: true
         });
         dial.number(To);
     }
