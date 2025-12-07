@@ -102,7 +102,7 @@ export default function CampaignManager({ onStartDialer }: { onStartDialer: (cam
         Papa.parse(file, {
             header: true,
             preview: 1, // Just first row to get headers
-            step: (row) => {
+            step: (row: any) => {
                 if (row.meta.fields) {
                     setCsvHeaders(row.meta.fields);
                     // Initialize mapping with smart guesses?
