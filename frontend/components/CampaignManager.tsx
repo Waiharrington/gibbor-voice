@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Upload, Plus, Play, Phone, Trash2, X, ArrowRight, FileSpreadsheet } from 'lucide-react';
-import Papa from 'papaparse';
+import * as Papa from 'papaparse';
 
 interface Campaign {
     id: string;
