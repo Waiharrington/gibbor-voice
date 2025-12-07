@@ -647,7 +647,7 @@ export default function Home() {
                   <div className="text-right">
                     <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-700 uppercase tracking-wide">
                       <Info className="w-3 h-3 mr-1.5" />
-                      Power Dialer Active v2.1
+                      Power Dialer Active v2.2
                     </span>
                   </div>
                 </div>
