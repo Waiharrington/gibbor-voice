@@ -329,6 +329,20 @@ app.post("/campaigns", async (req, res) => {
     }
 });
 
+app.delete("/campaigns/:id", async (req, res) => {
+    try {
+        const { error } = await supabase
+            .from('campaigns')
+            .delete()
+            .eq('id', req.params.id);
+
+        if (error) throw error;
+        res.json({ success: true });
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
 app.post("/campaigns/:id/upload", upload.single('file'), async (req, res) => {
     const campaignId = req.params.id;
     const results = [];
