@@ -779,23 +779,28 @@ export default function Home() {
                 <label className="text-xs font-bold text-gray-500 uppercase tracking-wider px-1 mb-2 block">Disposition (Multi-select)</label>
                 <div className="space-y-1.5">
                   {CALL_STATUSES.map(status => {
-                    const isSelected = (currentLead?.status || '').includes(status.label) || (currentLead?.status || '').includes(status.id);
-                    // Since we save the *label* or *id*? The previous code used ID. 
-                    // But if we want multi-select, we might be saving "ID1, ID2" or "Label1, Label2".
-                    // Let's assume we save Labels for readability in the CSV/DB usually, or IDs.
-                    // The previous statuses.ts had ids like 'cita', 'visited'.
-                    // Let's check if we should check against a local state instead of currentLead.status for immediate feedback.
-                    // Yes, use local state for immediate feedback.
-
-                    // Helper to determine if selected based on local selectedStatuses array (which we will add to the component)
-                    // checks if status.id is in selectedStatuses
-                    // We need to inject the state logic above first, but replace_file_content replaces a block.
-                    // I will implement the logic inside the map for now assuming the state exists, 
-                    // BUT I need to add the state variable to the component body first.
-                    // Since I can't do two non-contiguous edits in one 'replace_file_content' if I use the single version... 
-                    // I should use multi_replace or just do the UI update here and expect the state update in a separate step?
-                    // No, I'll use multi_replace_file_content to do both in one go.
-                    return null;
+                    const isSelected = selectedStatuses.includes(status.id);
+                    return (
+                      <button
+                        key={status.id}
+                        onClick={() => {
+                          const noteInput = document.getElementById('current-call-notes') as HTMLTextAreaElement;
+                          handleLeadDisposition(status.id, noteInput?.value || '');
+                          // Do NOT clear notes on multi-select toggle
+                        }}
+                        className={`w-full text-left px-3 py-2.5 rounded-lg transition-all border text-sm font-bold flex items-center justify-between group shadow-sm ${isSelected ? 'bg-blue-50 border-blue-500 text-blue-900' : 'bg-white border-gray-200 text-gray-900 hover:bg-gray-50 hover:border-gray-300'}`}
+                        style={{ borderLeftWidth: '4px', borderLeftColor: status.color.includes('green') ? '#22c55e' : status.color.includes('red') ? '#ef4444' : status.color.includes('yellow') ? '#eab308' : '#3b82f6' }}
+                      >
+                        <span className="flex-1">{status.label}</span>
+                        {isSelected ? (
+                          <div className="w-5 h-5 rounded-full border-2 border-blue-600 bg-blue-600 flex items-center justify-center text-white">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="w-3 h-3"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                          </div>
+                        ) : (
+                          <div className="w-5 h-5 rounded-full border-2 border-gray-300 group-hover:border-gray-400 transition-colors"></div>
+                        )}
+                      </button>
+                    );
                   })}
                 </div>
               </div>
