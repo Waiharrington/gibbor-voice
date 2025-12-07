@@ -223,9 +223,9 @@ export default function Home() {
         body: JSON.stringify({ status: statusString, notes })
       });
 
-      // Auto-fetch next lead REMOVED per user request
+      // Auto-fetch next lead (User request: Advance automatically)
       if (activeCampaignId) {
-        // fetchNextLead(activeCampaignId);
+        fetchNextLead(activeCampaignId);
       }
     } catch (err) {
       console.error("Error updating lead:", err);
