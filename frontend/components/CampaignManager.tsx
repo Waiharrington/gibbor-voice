@@ -103,9 +103,7 @@ export default function CampaignManager({ onStartDialer }: { onStartDialer: (cam
             header: true,
             preview: 1, // Just first row to get headers
             step: (row) => {
-                // @ts-expect-error PapaParse types are loose
                 if (row.meta.fields) {
-                    // @ts-expect-error PapaParse types are loose
                     setCsvHeaders(row.meta.fields);
                     // Initialize mapping with smart guesses?
                     // Optional: could implement simple automap here
