@@ -53,13 +53,32 @@ export default function Sidebar({ currentView, onViewChange }: SidebarProps) {
                         </button>
                     </li>
                     <li>
+                        <Link href="/history" className="flex items-center px-4 py-3 text-gray-600 hover:bg-gray-100 transition-colors">
+                            <Clock className="w-5 h-5 mr-3 text-gray-500" />
+                            History
+                        </Link>
+                    </li>
+                    <li>
+                        <Link href="/reports" className="flex items-center px-4 py-3 text-gray-600 hover:bg-gray-100 transition-colors">
+                            <BarChart3 className="w-5 h-5 mr-3 text-gray-500" />
+                            Reports
+                        </Link>
+                    </li>
+                    <li>
+                        <Link href="/contacts" className="flex items-center px-4 py-3 text-gray-600 hover:bg-gray-100 transition-colors">
+                            <User className="w-5 h-5 mr-3 text-gray-500" />
+                            Contacts
+                        </Link>
+                    </li>
+                </ul>
+            </nav>
 
-                        <div className="p-4 border-t border-gray-200">
-                            <Link href="/settings" className="flex items-center px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-md transition-colors">
-                                <Settings className="w-5 h-5 mr-3 text-gray-500" />
-                                Settings
-                            </Link>
-                        </div>
-                    </aside >
-                    );
+            <div className="p-4 border-t border-gray-200">
+                <Link href="/settings" className="flex items-center px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-md transition-colors">
+                    <Settings className="w-5 h-5 mr-3 text-gray-500" />
+                    Settings
+                </Link>
+            </div>
+        </aside >
+    );
 }
