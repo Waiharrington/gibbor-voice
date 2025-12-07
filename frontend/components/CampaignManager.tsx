@@ -1,8 +1,9 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Upload, Plus, Play, Phone, Trash2 } from 'lucide-react';
+import { Upload, Plus, Play, Phone, Trash2, X, ArrowRight, FileSpreadsheet } from 'lucide-react';
 import { supabase } from '@/utils/supabaseClient';
+import Papa from 'papaparse';
 
 interface Campaign {
     id: string;
@@ -11,11 +12,30 @@ interface Campaign {
     created_at: string;
 }
 
+const SYSTEM_FIELDS = [
+    { key: 'phone', label: 'Phone Number (Required)', required: true },
+    { key: 'name', label: 'Lead Name' },
+    { key: 'referred_by', label: 'Referred By' },
+    { key: 'city', label: 'City' },
+    { key: 'address', label: 'Address' },
+    { key: 'general_info', label: 'General Info' },
+    { key: 'rep_notes', label: 'Rep Notes' },
+    { key: 'tlmk_notes', label: 'TLMK Notes' },
+    { key: 'notes', label: 'General Notes' }, // fallback
+];
+
 export default function CampaignManager({ onStartDialer }: { onStartDialer: (campaignId: string) => void }) {
     const [campaigns, setCampaigns] = useState<Campaign[]>([]);
     const [newCampaignName, setNewCampaignName] = useState('');
     const [isCreating, setIsCreating] = useState(false);
+
+    // Upload & Mapping State
     const [uploadingId, setUploadingId] = useState<string | null>(null);
+    const [isMappingOpen, setIsMappingOpen] = useState(false);
+    const [currentFile, setCurrentFile] = useState<File | null>(null);
+    const [csvHeaders, setCsvHeaders] = useState<string[]>([]);
+    const [fieldMapping, setFieldMapping] = useState<Record<string, string>>({});
+    const [targetCampaignId, setTargetCampaignId] = useState<string | null>(null);
 
     useEffect(() => {
         fetchCampaigns();
@@ -75,31 +95,64 @@ export default function CampaignManager({ onStartDialer }: { onStartDialer: (cam
         }
     };
 
-    const handleFileUpload = async (campaignId: string, file: File) => {
-        setUploadingId(campaignId);
+    const onFileSelect = (campaignId: string, file: File) => {
+        setTargetCampaignId(campaignId);
+        setCurrentFile(file);
+
+        // Parse Only Headers
+        Papa.parse(file, {
+            header: true,
+            preview: 1, // Just first row to get headers
+            step: (row) => {
+                // @ts-ignore
+                if (row.meta.fields) {
+                    // @ts-ignore
+                    setCsvHeaders(row.meta.fields);
+                    // Initialize mapping with smart guesses?
+                    // Optional: could implement simple automap here
+                }
+            },
+            complete: () => {
+                setIsMappingOpen(true);
+            }
+        });
+    };
+
+    const handleUploadConfirm = async () => {
+        if (!currentFile || !targetCampaignId) return;
+        setUploadingId(targetCampaignId);
+        setIsMappingOpen(false);
+
         const formData = new FormData();
-        formData.append('file', file);
+        formData.append('file', currentFile);
+        formData.append('mapping', JSON.stringify(fieldMapping));
 
         try {
-            const res = await fetch(`https://gibbor-voice-production.up.railway.app/campaigns/${campaignId}/upload`, {
+            const res = await fetch(`https://gibbor-voice-production.up.railway.app/campaigns/${targetCampaignId}/upload`, {
                 method: 'POST',
                 body: formData
             });
+
             if (res.ok) {
-                alert('Leads uploaded successfully!');
+                const data = await res.json();
+                alert(data.message || 'Leads uploaded successfully!');
             } else {
-                alert('Upload failed.');
+                const err = await res.json();
+                alert(`Upload failed: ${err.error}`);
             }
         } catch (e) {
             console.error(e);
             alert('Error uploading file');
         } finally {
             setUploadingId(null);
+            setCurrentFile(null);
+            setTargetCampaignId(null);
+            setFieldMapping({});
         }
     };
 
     return (
-        <div className="flex-1 bg-white p-8 overflow-y-auto">
+        <div className="flex-1 bg-white p-8 overflow-y-auto relative">
             <div className="flex justify-between items-center mb-8">
                 <h1 className="text-2xl font-bold text-gray-800">Campaigns</h1>
                 <button
@@ -138,6 +191,72 @@ export default function CampaignManager({ onStartDialer }: { onStartDialer: (cam
                 </div>
             )}
 
+            {/* MAPPING MODAL */}
+            {isMappingOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+                    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh]">
+                        <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50">
+                            <h3 className="text-xl font-bold text-gray-800 flex items-center">
+                                <FileSpreadsheet className="w-6 h-6 mr-2 text-indigo-600" />
+                                Map Columns
+                            </h3>
+                            <button onClick={() => setIsMappingOpen(false)} className="text-gray-400 hover:text-gray-600">
+                                <X className="w-6 h-6" />
+                            </button>
+                        </div>
+
+                        <div className="p-6 overflow-y-auto flex-1">
+                            <p className="text-sm text-gray-500 mb-6 bg-blue-50 p-4 rounded-lg border border-blue-100">
+                                Match your CSV columns (Right) to the system fields (Left).
+                                <strong> Phone Number is required.</strong>
+                            </p>
+
+                            <div className="space-y-4">
+                                {SYSTEM_FIELDS.map((field) => (
+                                    <div key={field.key} className="flex items-center gap-4">
+                                        <div className="w-1/3 text-right">
+                                            <label className={`text-sm font-semibold ${field.required ? 'text-indigo-600' : 'text-gray-700'}`}>
+                                                {field.label}
+                                                {field.required && '*'}
+                                            </label>
+                                        </div>
+                                        <ArrowRight className="w-4 h-4 text-gray-300" />
+                                        <div className="flex-1">
+                                            <select
+                                                className="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 transition-all font-medium text-gray-800"
+                                                value={fieldMapping[field.key] || ''}
+                                                onChange={(e) => setFieldMapping({ ...fieldMapping, [field.key]: e.target.value })}
+                                            >
+                                                <option value="">-- Select Column --</option>
+                                                {csvHeaders.map(h => (
+                                                    <option key={h} value={h}>{h}</option>
+                                                ))}
+                                            </select>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+
+                        <div className="p-6 border-t border-gray-100 bg-gray-50 flex justify-end gap-3">
+                            <button
+                                onClick={() => setIsMappingOpen(false)}
+                                className="px-4 py-2 text-gray-600 font-medium hover:bg-gray-100 rounded-lg transition-colors"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={handleUploadConfirm}
+                                disabled={!fieldMapping['phone']}
+                                className={`px-6 py-2 rounded-lg font-bold text-white shadow-md transition-all ${!fieldMapping['phone'] ? 'bg-gray-300 cursor-not-allowed' : 'bg-indigo-600 hover:bg-indigo-700 hover:shadow-lg hover:-translate-y-0.5'}`}
+                            >
+                                Import Leads
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             <div className="grid gap-6">
                 {campaigns.map((campaign) => (
                     <div key={campaign.id} className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow">
@@ -161,16 +280,17 @@ export default function CampaignManager({ onStartDialer }: { onStartDialer: (cam
                                 >
                                     <Trash2 className="w-5 h-5" />
                                 </button>
-                                <label className="cursor-pointer inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 transition-colors">
+                                <label className="cursor-pointer inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 transition-colors relative">
                                     <Upload className="w-4 h-4 mr-2 text-gray-500" />
                                     {uploadingId === campaign.id ? 'Uploading...' : 'Upload CSV'}
                                     <input
                                         type="file"
                                         accept=".csv"
                                         className="hidden"
-                                        disabled={uploadingId === campaign.id}
+                                        disabled={!!uploadingId}
+                                        onClick={(e) => (e.currentTarget.value = '')} // Reset to allow re-selection
                                         onChange={(e) => {
-                                            if (e.target.files?.[0]) handleFileUpload(campaign.id, e.target.files[0]);
+                                            if (e.target.files?.[0]) onFileSelect(campaign.id, e.target.files[0]);
                                         }}
                                     />
                                 </label>
