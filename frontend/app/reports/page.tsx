@@ -5,15 +5,34 @@ import { BarChart3, Calendar, Clock, Phone, Timer } from 'lucide-react';
 import Sidebar from '@/components/Sidebar';
 
 export default function ReportsPage() {
+
     const [stats, setStats] = useState<any>(null);
     const [dateRange, setDateRange] = useState('today');
     const [customStart, setCustomStart] = useState('');
     const [customEnd, setCustomEnd] = useState('');
+    const [selectedCampaignId, setSelectedCampaignId] = useState('all');
+    const [campaigns, setCampaigns] = useState<any[]>([]);
     const [isLoading, setIsLoading] = useState(false);
 
     useEffect(() => {
+        fetchCampaigns();
+    }, []);
+
+    useEffect(() => {
         fetchReports();
-    }, [dateRange, customStart, customEnd]);
+    }, [dateRange, customStart, customEnd, selectedCampaignId]);
+
+    const fetchCampaigns = async () => {
+        try {
+            const res = await fetch('https://gibbor-voice-production.up.railway.app/campaigns');
+            if (res.ok) {
+                const data = await res.json();
+                setCampaigns(data);
+            }
+        } catch (error) {
+            console.error(error);
+        }
+    };
 
     const fetchReports = async () => {
         setIsLoading(true);
@@ -42,7 +61,8 @@ export default function ReportsPage() {
 
             const queryObj = new URLSearchParams({
                 startDate: start.toISOString(),
-                endDate: end.toISOString()
+                endDate: end.toISOString(),
+                campaignId: selectedCampaignId
             });
 
             const res = await fetch(`https://gibbor-voice-production.up.railway.app/reports?${queryObj.toString()}`);
@@ -57,14 +77,6 @@ export default function ReportsPage() {
         }
     };
 
-    const formatTime = (seconds: number) => {
-        if (!seconds) return '00:00:00';
-        const h = Math.floor(seconds / 3600);
-        const m = Math.floor((seconds % 3600) / 60);
-        const s = seconds % 60;
-        return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
-    };
-
     return (
         <div className="flex h-screen bg-gray-50 font-sans">
             <Sidebar />
@@ -75,17 +87,36 @@ export default function ReportsPage() {
                         Reports & Analytics
                     </h1>
 
-                    {/* Date Filters */}
-                    <div className="flex items-center space-x-2 bg-gray-100 p-1 rounded-lg">
-                        {['today', 'yesterday', 'last7', 'custom'].map(range => (
-                            <button
-                                key={range}
-                                onClick={() => setDateRange(range)}
-                                className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all ${dateRange === range ? 'bg-white text-indigo-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
+                    <div className="flex items-center space-x-4">
+                        {/* Campaign Filter */}
+                        <div className="relative">
+                            <select
+                                className="appearance-none bg-gray-50 border border-gray-200 text-gray-700 py-1.5 px-4 pr-8 rounded-lg leading-tight focus:outline-none focus:bg-white focus:border-indigo-500 text-sm font-medium"
+                                value={selectedCampaignId}
+                                onChange={(e) => setSelectedCampaignId(e.target.value)}
                             >
-                                {range === 'today' ? 'Today' : range === 'yesterday' ? 'Yesterday' : range === 'last7' ? 'Last 7 Days' : 'Custom'}
-                            </button>
-                        ))}
+                                <option value="all">Global Summary (All Campaigns)</option>
+                                {campaigns.map(c => (
+                                    <option key={c.id} value={c.id}>{c.name}</option>
+                                ))}
+                            </select>
+                            <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+                                <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" /></svg>
+                            </div>
+                        </div>
+
+                        {/* Date Filters */}
+                        <div className="flex items-center space-x-2 bg-gray-100 p-1 rounded-lg">
+                            {['today', 'yesterday', 'last7', 'custom'].map(range => (
+                                <button
+                                    key={range}
+                                    onClick={() => setDateRange(range)}
+                                    className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all ${dateRange === range ? 'bg-white text-indigo-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
+                                >
+                                    {range === 'today' ? 'Today' : range === 'yesterday' ? 'Yesterday' : range === 'last7' ? 'Last 7 Days' : 'Custom'}
+                                </button>
+                            ))}
+                        </div>
                     </div>
                 </header>
 
