@@ -263,7 +263,13 @@ export default function Home() {
   };
 
   const handleNextLead = () => {
-    if (activeCampaignId) fetchNextLead(activeCampaignId, currentLead?.id);
+    if (activeCampaignId) {
+      // Pass currentLead.id to ensure we don't fetch the same one, even if status update lags
+      fetchNextLead(activeCampaignId, currentLead?.id);
+    } else {
+      alert("Error: No Active Campaign ID found. Please refresh.");
+      console.error("handleNextLead called but activeCampaignId is null");
+    }
   };
 
   const handleSkipLead = () => {
