@@ -581,9 +581,19 @@ app.post("/auto-dialer/connect", (req, res) => {
     const twiml = new twilio.twiml.VoiceResponse();
     // Assuming 'agent' is the connected client identity
     const dial = twiml.dial();
-    dial.client("agent");
 
-    console.log("Auto Dialer: Lead answered, bridging to agent");
+    // Pass Lead ID as a custom parameter to the client
+    // Twilio Client receives this in connection.parameters
+    const { leadId } = req.query;
+
+    dial.client({
+        identity: "agent",
+    }).parameter({
+        name: "leadId",
+        value: leadId || "unknown"
+    });
+
+    console.log(`Auto Dialer: Lead ${leadId} answered, bridging to agent`);
 
     res.type('text/xml');
     res.send(twiml.toString());
