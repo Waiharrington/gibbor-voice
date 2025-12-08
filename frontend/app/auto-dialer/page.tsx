@@ -57,7 +57,7 @@ export default function AutoDialerPage() {
         fetchNumbers();
     }, []);
 
-    const toggleDialer = () => {
+    const toggleDialer = async () => {
         if (!selectedCampaignId && !isDialing) {
             alert("Please select a campaign first.");
             return;
@@ -66,16 +66,49 @@ export default function AutoDialerPage() {
             alert("Please select a Caller ID.");
             return;
         }
+
         setIsDialing(!isDialing);
 
-        // Mocking the "Start" effect for visual feedback
         if (!isDialing) {
-            setLines([
-                { id: 1, status: 'Dialing...', lead: { name: 'Juan Perez', phone: '+1234567890' } },
-                { id: 2, status: 'Ringing...', lead: { name: 'Maria Lopez', phone: '+1987654321' } },
-                { id: 3, status: 'Idle', lead: null },
-            ]);
+            // Start Dialing - Real Backend Call
+            try {
+                const res = await fetch('https://gibbor-voice-production.up.railway.app/auto-dialer/start', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        campaignId: selectedCampaignId,
+                        callerId: selectedCallerId
+                    })
+                });
+
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data.leads && data.leads.length > 0) {
+                        // Map backend leads to UI lines
+                        const newLines = data.leads.map((l: any, index: number) => ({
+                            id: index + 1,
+                            status: 'Dialing...',
+                            lead: l
+                        }));
+                        // Fill remaining slots if < 3 leads
+                        while (newLines.length < 3) {
+                            newLines.push({ id: newLines.length + 1, status: 'Idle', lead: null });
+                        }
+                        setLines(newLines);
+                    } else {
+                        alert(data.message || "No leads found to dial.");
+                        setIsDialing(false); // Reset if no leads
+                    }
+                } else {
+                    console.error("Failed to start dialing");
+                    setIsDialing(false);
+                }
+            } catch (e) {
+                console.error(e);
+                setIsDialing(false);
+            }
         } else {
+            // Stop Dialing (Reset UI)
             setLines([
                 { id: 1, status: 'Idle', lead: null },
                 { id: 2, status: 'Idle', lead: null },
