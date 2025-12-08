@@ -817,7 +817,6 @@ export default function Home() {
                         Call Lead
                       </button>
                     </div>
-                )}
 
                     {!activeCall && (
                       <div className="w-full mt-3 flex justify-between text-[10px] text-gray-400 font-medium uppercase tracking-wider">
@@ -826,8 +825,9 @@ export default function Home() {
                       </div>
                     )}
                   </div>
+                )}
 
-              {/* MIDDLE: Status List (Scrollable) */}
+                {/* MIDDLE: Status List (Scrollable) */}
                 <div className="flex-1 overflow-y-auto p-3 bg-gray-50/50">
                   <label className="text-xs font-bold text-gray-500 uppercase tracking-wider px-1 mb-2 block">Disposition (Multi-select)</label>
                   <div className="space-y-1.5">
