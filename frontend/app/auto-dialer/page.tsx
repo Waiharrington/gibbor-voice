@@ -64,6 +64,30 @@ export default function AutoDialerPage() {
         }
     };
 
+    const fetchLeadDetails = async (id: string) => {
+        const { data } = await supabase.from('leads').select('*').eq('id', id).single();
+        if (data) setConnectedLead(data);
+    };
+
+    const handleHangup = () => {
+        if (activeConnection) {
+            activeConnection.disconnect();
+        }
+    };
+
+    // Disposition Logic
+    const handleDisposition = async (status: string) => {
+        if (!connectedLead) return;
+
+        // Optimistic UI update
+        alert(`Disposed as: ${status}`); // Placeholder for real logic (e.g. save to DB and next lead)
+
+        // In Auto Dialer, hanging up usually means we are ready for next? 
+        // Or if we are in "Dialing" mode, maybe it resumes?
+        // For now, just clear the active call screen.
+        handleHangup();
+    };
+
     useEffect(() => {
         fetchNumbers();
     }, []);
@@ -126,24 +150,6 @@ export default function AutoDialerPage() {
 
 
 
-    const handleHangup = () => {
-        if (activeConnection) {
-            activeConnection.disconnect();
-        }
-    };
-
-    // Disposition Logic
-    const handleDisposition = async (status: string) => {
-        if (!connectedLead) return;
-
-        // Optimistic UI update
-        alert(`Disposed as: ${status}`); // Placeholder for real logic (e.g. save to DB and next lead)
-
-        // In Auto Dialer, hanging up usually means we are ready for next? 
-        // Or if we are in "Dialing" mode, maybe it resumes?
-        // For now, just clear the active call screen.
-        handleHangup();
-    };
 
     const toggleDialer = async () => {
         if (!selectedCampaignId && !isDialing) {
