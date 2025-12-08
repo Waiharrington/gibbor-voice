@@ -1,7 +1,5 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import Sidebar from '@/components/Sidebar';
 import { useState, useEffect, useRef } from 'react';
 import Sidebar from '@/components/Sidebar';
 import { Phone, Users, Play, Square, Activity, Volume2, Voicemail, Mic, MicOff, X, PhoneOff } from 'lucide-react';
@@ -17,8 +15,6 @@ interface Line {
 export default function AutoDialerPage() {
     const [campaigns, setCampaigns] = useState<any[]>([]);
     const [selectedCampaignId, setSelectedCampaignId] = useState('');
-    const [availableNumbers, setAvailableNumbers] = useState<any[]>([]);
-    const [selectedCallerId, setSelectedCallerId] = useState('');
     const [availableNumbers, setAvailableNumbers] = useState<any[]>([]);
     const [selectedCallerId, setSelectedCallerId] = useState('');
     const [isDialing, setIsDialing] = useState(false);
