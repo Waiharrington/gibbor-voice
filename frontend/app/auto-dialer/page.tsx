@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import Sidebar from '@/components/Sidebar';
 import { Phone, Users, Play, Square, Activity, Volume2, Voicemail, Mic, MicOff, X, PhoneOff } from 'lucide-react';
 import { Device, Connection } from '@twilio/voice-sdk';
-import supabase from '@/lib/supabaseClient';
+import { supabase } from '@/utils/supabaseClient';
 
 interface Line {
     id: number;
