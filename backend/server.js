@@ -535,6 +535,67 @@ app.post("/leads/:id/update", async (req, res) => {
     }
 });
 
+// Auto Dialer Endpoints
+app.post("/auto-dialer/start", async (req, res) => {
+    try {
+        const { campaignId, callerId } = req.body;
+        console.log(`Starting Auto Dialer for Campaign: ${campaignId}, Caller: ${callerId}`);
+
+        // 1. Fetch 3 pending leads
+        const { data: leads, error } = await supabase
+            .from('leads')
+            .select('*')
+            .eq('campaign_id', campaignId)
+            .eq('status', 'pending')
+            .limit(3);
+
+        if (error) throw error;
+        if (!leads || leads.length === 0) return res.json({ message: "No pending leads found", leads: [] });
+
+        const baseUrl = process.env.BASE_URL || 'https://gibbor-voice-production.up.railway.app';
+        const calls = [];
+
+        // 2. Dial each lead
+        for (const lead of leads) {
+            const call = await twilioClient.calls.create({
+                url: `${baseUrl}/auto-dialer/connect`, // TwiML to bridge to agent
+                to: lead.phone,
+                from: callerId || process.env.TWILIO_PHONE_NUMBER,
+                machineDetection: 'Enable', // AMD
+                statusCallback: `${baseUrl}/auto-dialer/status`,
+                statusCallbackEvent: ['initiated', 'ringing', 'answered', 'completed']
+            });
+            calls.push({ ...lead, callSid: call.sid });
+        }
+
+        res.json({ message: "Dialing initiated", leads: calls });
+
+    } catch (e) {
+        console.error("Auto Dialer Error:", e);
+        res.status(500).json({ error: e.message });
+    }
+});
+
+// Connected Webhook (Lead Answered) -> Bridge to Agent
+app.post("/auto-dialer/connect", (req, res) => {
+    const twiml = new twilio.twiml.VoiceResponse();
+    // Assuming 'agent' is the connected client identity
+    const dial = twiml.dial();
+    dial.client("agent");
+
+    console.log("Auto Dialer: Lead answered, bridging to agent");
+
+    res.type('text/xml');
+    res.send(twiml.toString());
+});
+
+// Auto Dialer Status Callback (Optional for now, good for debugging)
+app.post("/auto-dialer/status", (req, res) => {
+    const { CallSid, CallStatus, AnsweredBy } = req.body;
+    console.log(`Auto Dialer Status: ${CallSid} is ${CallStatus}. AnsweredBy: ${AnsweredBy}`);
+    res.sendStatus(200);
+});
+
 // Health check
 app.get("/", (req, res) => {
     console.log("Health check hit! - Force Update");
