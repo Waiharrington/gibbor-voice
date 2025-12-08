@@ -513,7 +513,7 @@ app.post("/leads/:id/update", async (req, res) => {
     try {
         console.log(`POST /leads/${req.params.id}/update called`, req.body);
         const { status, notes } = req.body;
-        const { status, notes } = req.body;
+
         // Fix: Use last_call_at instead of updated_at (column doesn't exist)
         const updateData = { status, last_call_at: new Date() };
         if (notes) updateData.notes = notes;
