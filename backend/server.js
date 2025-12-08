@@ -511,27 +511,29 @@ app.get("/campaigns/:id/next-lead", async (req, res) => {
 
 app.post("/leads/:id/update", async (req, res) => {
     try {
-        console.log(`POST /leads/${req.params.id}/update called`, req.body);
-        const { status, notes } = req.body;
-        const updateData = { status, last_call_at: new Date(), updated_at: new Date() };
-        if (notes) updateData.notes = notes;
+        try {
+            console.log(`POST /leads/${req.params.id}/update called`, req.body);
+            const { status, notes } = req.body;
+            // Fix: Use last_call_at instead of updated_at (column doesn't exist)
+            const updateData = { status, last_call_at: new Date() };
+            if (notes) updateData.notes = notes;
 
-        const { error } = await supabase
-            .from('leads')
-            .update(updateData)
-            .eq('id', req.params.id);
+            const { error } = await supabase
+                .from('leads')
+                .update(updateData)
+                .eq('id', req.params.id);
 
-        if (error) {
-            console.error("Supabase update error:", error);
-            throw error;
+            if (error) {
+                console.error("Supabase update error:", error);
+                throw error;
+            }
+            console.log("Update success for", req.params.id, updateData);
+            res.json({ success: true });
+        } catch (e) {
+            console.error("Endpoint error:", e);
+            res.status(500).json({ error: e.message });
         }
-        console.log("Update success for", req.params.id, updateData);
-        res.json({ success: true });
-    } catch (e) {
-        console.error("Endpoint error:", e);
-        res.status(500).json({ error: e.message });
-    }
-});
+    });
 
 // Health check
 app.get("/", (req, res) => {
