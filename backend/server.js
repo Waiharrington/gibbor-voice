@@ -490,8 +490,10 @@ app.get("/campaigns/:id/next-lead", async (req, res) => {
             .eq('campaign_id', req.params.id)
             .eq('status', 'pending');
 
+        // Support multiple excluded IDs (comma separated or single)
         if (exclude_id) {
-            query = query.neq('id', exclude_id);
+            const ids = exclude_id.split(',');
+            query = query.not('id', 'in', `(${ids.join(',')})`);
         }
 
         const { data, error } = await query
@@ -509,6 +511,7 @@ app.get("/campaigns/:id/next-lead", async (req, res) => {
 
 app.post("/leads/:id/update", async (req, res) => {
     try {
+        console.log(`POST /leads/${req.params.id}/update called`, req.body);
         const { status, notes } = req.body;
         const updateData = { status, last_call_at: new Date(), updated_at: new Date() };
         if (notes) updateData.notes = notes;
@@ -518,9 +521,14 @@ app.post("/leads/:id/update", async (req, res) => {
             .update(updateData)
             .eq('id', req.params.id);
 
-        if (error) throw error;
+        if (error) {
+            console.error("Supabase update error:", error);
+            throw error;
+        }
+        console.log("Update success for", req.params.id, updateData);
         res.json({ success: true });
     } catch (e) {
+        console.error("Endpoint error:", e);
         res.status(500).json({ error: e.message });
     }
 });
