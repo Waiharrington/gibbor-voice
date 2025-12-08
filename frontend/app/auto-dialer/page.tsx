@@ -33,9 +33,7 @@ export default function AutoDialerPage() {
         { id: 3, status: 'Idle', lead: null },
     ]);
 
-    useEffect(() => {
-        fetchCampaigns();
-    }, []);
+
 
     const fetchCampaigns = async () => {
         try {
@@ -48,6 +46,10 @@ export default function AutoDialerPage() {
             console.error(error);
         }
     };
+
+    useEffect(() => {
+        fetchCampaigns();
+    }, []);
 
     const fetchNumbers = async () => {
         try {
@@ -122,10 +124,7 @@ export default function AutoDialerPage() {
         };
     }, []);
 
-    const fetchLeadDetails = async (id: string) => {
-        const { data } = await supabase.from('leads').select('*').eq('id', id).single();
-        if (data) setConnectedLead(data);
-    };
+
 
     const handleHangup = () => {
         if (activeConnection) {
