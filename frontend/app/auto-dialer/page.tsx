@@ -4,13 +4,19 @@ import { useState, useEffect } from 'react';
 import Sidebar from '@/components/Sidebar';
 import { Phone, Users, Play, Square, Activity, Volume2, Voicemail } from 'lucide-react';
 
+interface Line {
+    id: number;
+    status: string;
+    lead: { name: string; phone: string; } | null;
+}
+
 export default function AutoDialerPage() {
     const [campaigns, setCampaigns] = useState<any[]>([]);
     const [selectedCampaignId, setSelectedCampaignId] = useState('');
     const [isDialing, setIsDialing] = useState(false);
 
     // Mock State for Lines (will be real later)
-    const [lines, setLines] = useState([
+    const [lines, setLines] = useState<Line[]>([
         { id: 1, status: 'Idle', lead: null },
         { id: 2, status: 'Idle', lead: null },
         { id: 3, status: 'Idle', lead: null },
