@@ -77,6 +77,14 @@ export default function ReportsPage() {
         }
     };
 
+    const formatTime = (seconds: number) => {
+        if (!seconds) return '00:00:00';
+        const h = Math.floor(seconds / 3600);
+        const m = Math.floor((seconds % 3600) / 60);
+        const s = seconds % 60;
+        return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+    };
+
     return (
         <div className="flex h-screen bg-gray-50 font-sans">
             <Sidebar />
