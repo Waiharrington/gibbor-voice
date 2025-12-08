@@ -521,11 +521,21 @@ app.get("/", (req, res) => {
 // Helper to get Twilio Numbers
 app.get('/incoming-phone-numbers', async (req, res) => {
     try {
-        const numbers = await twilioClient.incomingPhoneNumbers.list({ limit: 20 });
-        res.json(numbers.map(n => ({
+        const incoming = await twilioClient.incomingPhoneNumbers.list({ limit: 20 });
+        const formattedIncoming = incoming.map(n => ({
             phoneNumber: n.phoneNumber,
-            friendlyName: n.friendlyName
-        })));
+            friendlyName: n.friendlyName,
+            type: 'Twilio'
+        }));
+
+        const verified = await twilioClient.outgoingCallerIds.list({ limit: 20 });
+        const formattedVerified = verified.map(n => ({
+            phoneNumber: n.phoneNumber,
+            friendlyName: n.friendlyName,
+            type: 'Verified'
+        }));
+
+        res.json([...formattedIncoming, ...formattedVerified]);
     } catch (e) {
         console.error("Error fetching numbers", e);
         res.status(500).json({ error: e.message });
