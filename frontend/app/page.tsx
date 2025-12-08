@@ -145,6 +145,27 @@ export default function Home() {
   // History Stack for Back functionality
   const [leadHistory, setLeadHistory] = useState<any[]>([]);
 
+  // Caller ID State
+  const [selectedCallerId, setSelectedCallerId] = useState<string>('');
+  const [availableNumbers, setAvailableNumbers] = useState<any[]>([]);
+
+  // Fetch available numbers on mount
+  useEffect(() => {
+    async function fetchNumbers() {
+      try {
+        const res = await fetch(`https://gibbor-voice-production.up.railway.app/incoming-phone-numbers`);
+        if (res.ok) {
+          const nums = await res.json();
+          setAvailableNumbers(nums);
+          if (nums.length > 0) setSelectedCallerId(nums[0].phoneNumber);
+        }
+      } catch (e) {
+        console.error("Failed to fetch numbers", e);
+      }
+    }
+    fetchNumbers();
+  }, []);
+
 
   const handleViewChange = (view: string) => {
     setCurrentView(view as 'calls' | 'messages' | 'campaigns');
