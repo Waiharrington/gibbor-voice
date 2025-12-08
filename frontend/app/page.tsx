@@ -180,11 +180,12 @@ export default function Home() {
 
   // --- Campaign & Dialer Logic ---
 
-  const fetchNextLead = async (campaignId: string, excludeId?: string) => {
+  const fetchNextLead = async (campaignId: string, excludeId?: string, leadToArchive?: any) => {
     setIsLoading(true);
     try {
-      if (currentLead) {
-        setLeadHistory(prev => [...prev, currentLead]);
+      const leadToPush = leadToArchive || currentLead;
+      if (leadToPush) {
+        setLeadHistory(prev => [...prev, leadToPush]);
       }
 
       setCurrentLead(null);
