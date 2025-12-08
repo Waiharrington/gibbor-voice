@@ -702,7 +702,7 @@ export default function Home() {
                       type="text"
                       className="w-full p-2 bg-gray-50 border border-gray-200 rounded-lg text-gray-800 font-medium focus:ring-1 focus:ring-cyan-500 focus:border-cyan-500 transition-all text-xs"
                       value={currentLead.referred_by || ''}
-                      onChange={(e) => setCurrentLead(prev => ({ ...prev, referred_by: e.target.value }))}
+                      onChange={(e) => setCurrentLead((prev: any) => ({ ...prev, referred_by: e.target.value }))}
                     />
                   </div>
                   <div className="col-span-1 space-y-1">
@@ -713,7 +713,7 @@ export default function Home() {
                         type="text"
                         className="w-full pl-8 p-2 bg-gray-50 border border-gray-200 rounded-lg text-gray-800 font-medium focus:ring-1 focus:ring-cyan-500 focus:border-cyan-500 transition-all text-xs"
                         value={currentLead.city || ''}
-                        onChange={(e) => setCurrentLead(prev => ({ ...prev, city: e.target.value }))}
+                        onChange={(e) => setCurrentLead((prev: any) => ({ ...prev, city: e.target.value }))}
                       />
                     </div>
                   </div>
@@ -725,7 +725,7 @@ export default function Home() {
                         type="text"
                         className="w-full pl-8 p-2 bg-gray-50 border border-gray-200 rounded-lg text-gray-800 font-medium focus:ring-1 focus:ring-cyan-500 focus:border-cyan-500 transition-all text-xs"
                         value={currentLead.address || ''}
-                        onChange={(e) => setCurrentLead(prev => ({ ...prev, address: e.target.value }))}
+                        onChange={(e) => setCurrentLead((prev: any) => ({ ...prev, address: e.target.value }))}
                       />
                     </div>
                   </div>
@@ -739,7 +739,7 @@ export default function Home() {
                       rows={3}
                       className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-700 leading-relaxed focus:ring-1 focus:ring-cyan-500 focus:border-cyan-500 transition-all resize-none"
                       value={currentLead.general_info || ''}
-                      onChange={(e) => setCurrentLead(prev => ({ ...prev, general_info: e.target.value }))}
+                      onChange={(e) => setCurrentLead((prev: any) => ({ ...prev, general_info: e.target.value }))}
                     />
                   </div>
 
@@ -749,7 +749,7 @@ export default function Home() {
                       rows={2}
                       className="w-full p-3 bg-yellow-50 border border-yellow-100 rounded-xl text-gray-700 leading-relaxed focus:ring-1 focus:ring-yellow-400 focus:border-yellow-400 transition-all resize-none"
                       value={currentLead.rep_notes || ''}
-                      onChange={(e) => setCurrentLead(prev => ({ ...prev, rep_notes: e.target.value }))}
+                      onChange={(e) => setCurrentLead((prev: any) => ({ ...prev, rep_notes: e.target.value }))}
                     />
                   </div>
 
@@ -779,7 +779,7 @@ export default function Home() {
                       placeholder="Write notes for this call..."
                       className="w-full p-3 bg-white border border-gray-300 rounded-xl text-gray-900 leading-relaxed focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition-all shadow-sm resize-none"
                       value={currentLead.notes || ''}
-                      onChange={(e) => setCurrentLead(prev => ({ ...prev, notes: e.target.value }))}
+                      onChange={(e) => setCurrentLead((prev: any) => ({ ...prev, notes: e.target.value }))}
                     />
                   </div>
                 </div>
