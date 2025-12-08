@@ -313,105 +313,100 @@ export default function AutoDialerPage() {
                                 </div>
 
                                 {/* AMD Indicator (Visual Flair) */}
-                            </div>
-
-                                {/* AMD Indicator (Visual Flair) */ }
-                                {
-                                ['Dialing...', 'Ringing...'].includes(line.status) && (
+                                {['Dialing...', 'Ringing...'].includes(line.status) && (
                                     <div className="absolute bottom-4 left-0 right-0 flex justify-center items-center gap-2 text-xs text-gray-400">
                                         <Volume2 className="w-3 h-3 animate-ping" />
                                         <span>Detecting Human vs Machine...</span>
                                     </div>
-                                )
-                            }
+                                )}
                             </div>
                         ))}
-            </div>
-
-            {/* Active Call Overlay (Disposition UI) */}
-            {activeConnection && connectedLead && (
-                <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
-                    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl overflow-hidden flex flex-col md:flex-row h-[80vh]">
-
-                        {/* Call Info & Controls */}
-                        <div className="w-full md:w-1/3 bg-gray-900 p-8 text-white flex flex-col items-center justify-center relative">
-                            <div className="w-24 h-24 bg-red-500 rounded-full flex items-center justify-center mb-6 animate-pulse">
-                                <Users className="w-10 h-10" />
-                            </div>
-                            <h2 className="text-3xl font-bold text-center mb-2">{connectedLead.name}</h2>
-                            <p className="text-indigo-300 font-mono text-xl mb-8">{connectedLead.phone}</p>
-
-                            <div className="flex gap-4 mb-12">
-                                <button
-                                    onClick={() => setIsMuted(!isMuted)}
-                                    className={`p-4 rounded-full ${isMuted ? 'bg-white text-gray-900' : 'bg-gray-800 hover:bg-gray-700'}`}
-                                >
-                                    {isMuted ? <MicOff /> : <Mic />}
-                                </button>
-                                <button
-                                    onClick={handleHangup}
-                                    className="p-4 rounded-full bg-red-600 hover:bg-red-700 text-white"
-                                >
-                                    <PhoneOff className="w-8 h-8" />
-                                </button>
-                            </div>
-
-                            <div className="absolute bottom-6 text-sm text-gray-500">
-                                Auto-Connected
-                            </div>
-                        </div>
-
-                        {/* Disposition Panel */}
-                        <div className="flex-1 p-8 bg-gray-50 overflow-y-auto">
-                            <h3 className="text-xl font-bold text-gray-800 mb-6">Select Disposition</h3>
-
-                            <div className="grid grid-cols-2 gap-4">
-                                {['No Contestó', 'Buzón', 'Número Equivocado', 'Volver a Llamar', 'Cita Agendada', 'Venta Cerrada', 'No Interesado'].map(status => (
-                                    <button
-                                        key={status}
-                                        onClick={() => handleDisposition(status)}
-                                        className="p-4 bg-white border border-gray-200 rounded-xl hover:border-indigo-500 hover:shadow-md transition-all text-left font-medium text-gray-700"
-                                    >
-                                        {status}
-                                    </button>
-                                ))}
-                            </div>
-
-                            <div className="mt-8">
-                                <label className="block text-sm font-medium text-gray-700 mb-2">Notes</label>
-                                <textarea
-                                    className="w-full p-4 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 min-h-[150px]"
-                                    placeholder="Add call notes..."
-                                />
-                            </div>
-                        </div>
                     </div>
-                </div>
-            )}
 
-            {/* Stats / Explainer */}
-            <div className="mt-12 bg-indigo-900 rounded-2xl p-8 text-white relative overflow-hidden">
-                <div className="relative z-10 max-w-2xl">
-                    <h2 className="text-2xl font-bold mb-4">How Multi-Line Works</h2>
-                    <ul className="space-y-3 text-indigo-100">
-                        <li className="flex items-center gap-3">
-                            <span className="bg-white/20 p-1 rounded">1</span>
-                            We dial 3 numbers simultaneously.
-                        </li>
-                        <li className="flex items-center gap-3">
-                            <span className="bg-white/20 p-1 rounded">2</span>
-                            Our AI listens for audio (Hello?) vs Silence/Beeps.
-                        </li>
-                        <li className="flex items-center gap-3">
-                            <span className="bg-white/20 p-1 rounded">3</span>
-                            <span className="font-bold text-white">Only ANY HUMAN</span> is connected to you instantly.
-                        </li>
-                    </ul>
-                </div>
-                <Voicemail className="absolute -bottom-10 -right-10 w-64 h-64 text-white/5 rotate-12" />
-            </div>
+                    {/* Active Call Overlay (Disposition UI) */}
+                    {activeConnection && connectedLead && (
+                        <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
+                            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl overflow-hidden flex flex-col md:flex-row h-[80vh]">
 
-        </main>
+                                {/* Call Info & Controls */}
+                                <div className="w-full md:w-1/3 bg-gray-900 p-8 text-white flex flex-col items-center justify-center relative">
+                                    <div className="w-24 h-24 bg-red-500 rounded-full flex items-center justify-center mb-6 animate-pulse">
+                                        <Users className="w-10 h-10" />
+                                    </div>
+                                    <h2 className="text-3xl font-bold text-center mb-2">{connectedLead.name}</h2>
+                                    <p className="text-indigo-300 font-mono text-xl mb-8">{connectedLead.phone}</p>
+
+                                    <div className="flex gap-4 mb-12">
+                                        <button
+                                            onClick={() => setIsMuted(!isMuted)}
+                                            className={`p-4 rounded-full ${isMuted ? 'bg-white text-gray-900' : 'bg-gray-800 hover:bg-gray-700'}`}
+                                        >
+                                            {isMuted ? <MicOff /> : <Mic />}
+                                        </button>
+                                        <button
+                                            onClick={handleHangup}
+                                            className="p-4 rounded-full bg-red-600 hover:bg-red-700 text-white"
+                                        >
+                                            <PhoneOff className="w-8 h-8" />
+                                        </button>
+                                    </div>
+
+                                    <div className="absolute bottom-6 text-sm text-gray-500">
+                                        Auto-Connected
+                                    </div>
+                                </div>
+
+                                {/* Disposition Panel */}
+                                <div className="flex-1 p-8 bg-gray-50 overflow-y-auto">
+                                    <h3 className="text-xl font-bold text-gray-800 mb-6">Select Disposition</h3>
+
+                                    <div className="grid grid-cols-2 gap-4">
+                                        {['No Contestó', 'Buzón', 'Número Equivocado', 'Volver a Llamar', 'Cita Agendada', 'Venta Cerrada', 'No Interesado'].map(status => (
+                                            <button
+                                                key={status}
+                                                onClick={() => handleDisposition(status)}
+                                                className="p-4 bg-white border border-gray-200 rounded-xl hover:border-indigo-500 hover:shadow-md transition-all text-left font-medium text-gray-700"
+                                            >
+                                                {status}
+                                            </button>
+                                        ))}
+                                    </div>
+
+                                    <div className="mt-8">
+                                        <label className="block text-sm font-medium text-gray-700 mb-2">Notes</label>
+                                        <textarea
+                                            className="w-full p-4 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 min-h-[150px]"
+                                            placeholder="Add call notes..."
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Stats / Explainer */}
+                    <div className="mt-12 bg-indigo-900 rounded-2xl p-8 text-white relative overflow-hidden">
+                        <div className="relative z-10 max-w-2xl">
+                            <h2 className="text-2xl font-bold mb-4">How Multi-Line Works</h2>
+                            <ul className="space-y-3 text-indigo-100">
+                                <li className="flex items-center gap-3">
+                                    <span className="bg-white/20 p-1 rounded">1</span>
+                                    We dial 3 numbers simultaneously.
+                                </li>
+                                <li className="flex items-center gap-3">
+                                    <span className="bg-white/20 p-1 rounded">2</span>
+                                    Our AI listens for audio (Hello?) vs Silence/Beeps.
+                                </li>
+                                <li className="flex items-center gap-3">
+                                    <span className="bg-white/20 p-1 rounded">3</span>
+                                    <span className="font-bold text-white">Only ANY HUMAN</span> is connected to you instantly.
+                                </li>
+                            </ul>
+                        </div>
+                        <Voicemail className="absolute -bottom-10 -right-10 w-64 h-64 text-white/5 rotate-12" />
+                    </div>
+
+                </main>
             </div >
         </div >
     );
