@@ -336,9 +336,10 @@ app.get("/reports", async (req, res) => {
         // BUT user asked for "Call Time", so we start with Calls stats. 
         // Let's ALSO fetch Leads Updated in this timeframe for the Disposition Chart.
 
-        let leadsQuery = supabase.from('leads').select('status, updated_at');
+        let leadsQuery = supabase.from('leads').select('status, updated_at, campaign_id');
         if (startDate) leadsQuery = leadsQuery.gte('updated_at', startDate);
         if (endDate) leadsQuery = leadsQuery.lte('updated_at', endDate);
+        if (campaignId && campaignId !== 'all') leadsQuery = leadsQuery.eq('campaign_id', campaignId);
 
         const { data: leads, error: leadsError } = await leadsQuery;
         if (leadsError) console.error("Leads report error", leadsError);
