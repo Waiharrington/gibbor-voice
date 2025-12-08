@@ -1,5 +1,10 @@
+'use client';
+
 import Link from 'next/link';
-import { Phone, Clock, MessageSquare, Settings, User, BarChart3, Activity } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { useState, useEffect } from 'react';
+import { Phone, Clock, MessageSquare, Settings, User, BarChart3, Activity, LogOut, Shield } from 'lucide-react';
+import { supabase } from '@/utils/supabaseClient';
 
 interface SidebarProps {
     currentView?: string;
@@ -7,6 +12,30 @@ interface SidebarProps {
 }
 
 export default function Sidebar({ currentView, onViewChange }: SidebarProps) {
+    const router = useRouter();
+    const [isAdmin, setIsAdmin] = useState(false);
+
+    useEffect(() => {
+        checkUserRole();
+    }, []);
+
+    const checkUserRole = async () => {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+            const { data } = await supabase
+                .from('profiles')
+                .select('role')
+                .eq('id', user.id)
+                .single();
+            if (data?.role === 'admin') setIsAdmin(true);
+        }
+    };
+
+    const handleLogout = async () => {
+        await supabase.auth.signOut();
+        router.push('/login');
+    };
+
     const handleNav = (view: string, e: React.MouseEvent) => {
         if (onViewChange) {
             e.preventDefault();
@@ -80,11 +109,24 @@ export default function Sidebar({ currentView, onViewChange }: SidebarProps) {
                 </ul>
             </nav>
 
-            <div className="p-4 border-t border-gray-200">
+            <div className="p-4 border-t border-gray-200 space-y-2">
+                {isAdmin && (
+                    <Link href="/admin" className="flex items-center px-4 py-2 text-indigo-700 bg-indigo-50 hover:bg-indigo-100 rounded-md transition-colors font-medium">
+                        <Shield className="w-5 h-5 mr-3" />
+                        Admin Panel
+                    </Link>
+                )}
                 <Link href="/settings" className="flex items-center px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-md transition-colors">
                     <Settings className="w-5 h-5 mr-3 text-gray-500" />
                     Settings
                 </Link>
+                <button
+                    onClick={handleLogout}
+                    className="w-full flex items-center px-4 py-2 text-red-600 hover:bg-red-50 rounded-md transition-colors"
+                >
+                    <LogOut className="w-5 h-5 mr-3" />
+                    Logout
+                </button>
             </div>
         </aside >
     );
