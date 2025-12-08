@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import Sidebar from '@/components/Sidebar';
 import { Phone, Users, Play, Square, Activity, Volume2, Voicemail, Mic, MicOff, X, PhoneOff } from 'lucide-react';
-import { Device, Connection } from '@twilio/voice-sdk';
+import { Device } from '@twilio/voice-sdk';
 import { supabase } from '@/utils/supabaseClient';
 
 interface Line {
@@ -21,7 +21,7 @@ export default function AutoDialerPage() {
 
     // activeCallState (when bridged)
     const [device, setDevice] = useState<Device | null>(null);
-    const [activeConnection, setActiveConnection] = useState<Connection | null>(null);
+    const [activeConnection, setActiveConnection] = useState<any | null>(null);
     const [connectedLead, setConnectedLead] = useState<any | null>(null);
     const [callStatus, setCallStatus] = useState('Idle');
     const [isMuted, setIsMuted] = useState(false);

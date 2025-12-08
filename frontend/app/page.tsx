@@ -6,7 +6,7 @@ import Sidebar from '@/components/Sidebar';
 import Dialpad from '@/components/Dialpad';
 import MessagesPanel from '@/components/MessagesPanel';
 import CampaignManager from '@/components/CampaignManager';
-import { Device, Connection } from '@twilio/voice-sdk';
+import { Device } from '@twilio/voice-sdk';
 import { Phone, PhoneOff, Mic, MicOff, Search, ArrowUpRight, ArrowDownLeft, MoreVertical, Download, MessageSquare, Copy, MapPin, Building, Info, FileText, Send } from 'lucide-react';
 import { format } from 'date-fns';
 import { supabase } from '@/utils/supabaseClient';
