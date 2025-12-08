@@ -518,6 +518,19 @@ app.get("/", (req, res) => {
     console.log("Health check hit! - Force Update");
     res.send("Gibbor Voice Backend is running!");
 });
+// Helper to get Twilio Numbers
+app.get('/incoming-phone-numbers', async (req, res) => {
+    try {
+        const numbers = await client.incomingPhoneNumbers.list({ limit: 20 });
+        res.json(numbers.map(n => ({
+            phoneNumber: n.phoneNumber,
+            friendlyName: n.friendlyName
+        })));
+    } catch (e) {
+        console.error("Error fetching numbers", e);
+        res.status(500).json({ error: e.message });
+    }
+});
 
 const PORT = process.env.PORT || 3001;
 const server = app.listen(PORT, () => {
