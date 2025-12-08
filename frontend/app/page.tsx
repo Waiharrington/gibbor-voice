@@ -253,9 +253,13 @@ export default function Home() {
 
       // Auto-fetch next lead (User request: Advance automatically)
       // Auto-fetch next lead (User request: Advance automatically)
+      // Auto-fetch next lead (User request: Advance automatically)
       if (activeCampaignId) {
-        // Pass currentLead.id to ensure we don't fetch the same one, even if status update lags
-        fetchNextLead(activeCampaignId, currentLead.id);
+        // Create the updated object explicitly to save to history
+        const leadToArchive = { ...currentLead, status: statusString, notes: notes || currentLead.notes };
+
+        // Pass currentLead.id to ensure we don't fetch the same one
+        fetchNextLead(activeCampaignId, currentLead.id, leadToArchive);
       }
     } catch (err) {
       console.error("Error updating lead:", err);
