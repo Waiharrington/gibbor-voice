@@ -67,7 +67,7 @@ export default function Dialpad({
     return (
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 w-80 p-6 flex flex-col items-center">
             {/* From Selector */}
-            {displayedNumbers.length > 0 ? (
+            {displayedNumbers.length > 0 && (
                 <div className="w-full mb-4">
                     <label className="block text-xs font-medium text-gray-500 mb-1 ml-1">Call From:</label>
                     <div className="relative">
