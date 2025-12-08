@@ -101,7 +101,7 @@ export default function AutoDialerPage() {
 
                 const newDevice = new Device(token, {
                     logLevel: 1,
-                    codecPreferences: [Device.AudioCodec.Opus, Device.AudioCodec.PCMU]
+                    codecPreferences: ['opus', 'pcmu'] as any
                 });
 
                 newDevice.on('ready', () => console.log('Device ready'));
