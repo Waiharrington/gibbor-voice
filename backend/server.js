@@ -558,7 +558,7 @@ app.post("/auto-dialer/start", async (req, res) => {
         // 2. Dial each lead
         for (const lead of leads) {
             const call = await twilioClient.calls.create({
-                url: `${baseUrl}/auto-dialer/connect`, // TwiML to bridge to agent
+                url: `${baseUrl}/auto-dialer/connect?leadId=${lead.id}`, // Pass Lead ID
                 to: lead.phone,
                 from: callerId || process.env.TWILIO_PHONE_NUMBER,
                 machineDetection: 'Enable', // AMD
