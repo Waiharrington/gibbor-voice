@@ -13,6 +13,8 @@ interface Line {
 export default function AutoDialerPage() {
     const [campaigns, setCampaigns] = useState<any[]>([]);
     const [selectedCampaignId, setSelectedCampaignId] = useState('');
+    const [availableNumbers, setAvailableNumbers] = useState<any[]>([]);
+    const [selectedCallerId, setSelectedCallerId] = useState('');
     const [isDialing, setIsDialing] = useState(false);
 
     // Mock State for Lines (will be real later)
@@ -38,9 +40,30 @@ export default function AutoDialerPage() {
         }
     };
 
+    const fetchNumbers = async () => {
+        try {
+            const res = await fetch('https://gibbor-voice-production.up.railway.app/incoming-phone-numbers');
+            if (res.ok) {
+                const data = await res.json();
+                setAvailableNumbers(data);
+                if (data.length > 0) setSelectedCallerId(data[0].phoneNumber);
+            }
+        } catch (error) {
+            console.error(error);
+        }
+    };
+
+    useEffect(() => {
+        fetchNumbers();
+    }, []);
+
     const toggleDialer = () => {
         if (!selectedCampaignId && !isDialing) {
             alert("Please select a campaign first.");
+            return;
+        }
+        if (!selectedCallerId && !isDialing) {
+            alert("Please select a Caller ID.");
             return;
         }
         setIsDialing(!isDialing);
@@ -91,12 +114,29 @@ export default function AutoDialerPage() {
                             </select>
                         </div>
 
+                        <div className="flex-1">
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Make Calls From (Caller ID)</label>
+                            <select
+                                className="w-full bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-indigo-500 focus:border-indigo-500 block p-2.5"
+                                value={selectedCallerId}
+                                onChange={(e) => setSelectedCallerId(e.target.value)}
+                                disabled={isDialing}
+                            >
+                                <option value="">-- Select --</option>
+                                {availableNumbers.map(n => (
+                                    <option key={n.phoneNumber} value={n.phoneNumber}>
+                                        {n.friendlyName || n.phoneNumber}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+
                         <div className="flex items-end">
                             <button
                                 onClick={toggleDialer}
                                 className={`flex items-center gap-2 px-8 py-3 rounded-lg font-bold text-white transition-all shadow-md ${isDialing
-                                        ? 'bg-red-500 hover:bg-red-600 shadow-red-200'
-                                        : 'bg-green-600 hover:bg-green-700 shadow-green-200'
+                                    ? 'bg-red-500 hover:bg-red-600 shadow-red-200'
+                                    : 'bg-green-600 hover:bg-green-700 shadow-green-200'
                                     }`}
                             >
                                 {isDialing ? (
@@ -116,16 +156,16 @@ export default function AutoDialerPage() {
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                         {lines.map((line) => (
                             <div key={line.id} className={`relative overflow-hidden rounded-2xl border-2 transition-all duration-300 ${line.status === 'Connected' ? 'border-green-500 bg-green-50' :
-                                    line.status === 'Ringing...' ? 'border-yellow-400 bg-yellow-50' :
-                                        line.status === 'Dialing...' ? 'border-blue-300 bg-blue-50' :
-                                            'border-gray-200 bg-white'
+                                line.status === 'Ringing...' ? 'border-yellow-400 bg-yellow-50' :
+                                    line.status === 'Dialing...' ? 'border-blue-300 bg-blue-50' :
+                                        'border-gray-200 bg-white'
                                 } h-64 flex flex-col items-center justify-center p-6 shadow-sm`}>
 
                                 {/* Status badge */}
                                 <div className={`absolute top-4 right-4 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${line.status === 'Connected' ? 'bg-green-200 text-green-800' :
-                                        line.status === 'Ringing...' ? 'bg-yellow-200 text-yellow-800' :
-                                            line.status === 'Dialing...' ? 'bg-blue-200 text-blue-800' :
-                                                'bg-gray-100 text-gray-500'
+                                    line.status === 'Ringing...' ? 'bg-yellow-200 text-yellow-800' :
+                                        line.status === 'Dialing...' ? 'bg-blue-200 text-blue-800' :
+                                            'bg-gray-100 text-gray-500'
                                     }`}>
                                     {line.status}
                                 </div>
