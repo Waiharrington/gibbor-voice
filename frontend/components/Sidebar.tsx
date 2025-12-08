@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { Phone, Clock, MessageSquare, Settings, User, BarChart3 } from 'lucide-react';
+import { Phone, Clock, MessageSquare, Settings, User, BarChart3, Activity } from 'lucide-react';
 
 interface SidebarProps {
     currentView?: string;
@@ -51,6 +51,12 @@ export default function Sidebar({ currentView, onViewChange }: SidebarProps) {
                             <BarChart3 className="w-5 h-5 mr-3 text-gray-500" />
                             Campaigns
                         </button>
+                    </li>
+                    <li>
+                        <Link href="/auto-dialer" className="flex items-center px-4 py-3 text-gray-600 hover:bg-gray-100 transition-colors">
+                            <Activity className="w-5 h-5 mr-3 text-gray-500" />
+                            Auto Dialer
+                        </Link>
                     </li>
                     <li>
                         <Link href="/history" className="flex items-center px-4 py-3 text-gray-600 hover:bg-gray-100 transition-colors">
