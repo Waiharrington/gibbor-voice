@@ -481,6 +481,8 @@ app.post("/campaigns/:id/upload", upload.single('file'), async (req, res) => {
 app.get("/campaigns/:id/next-lead", async (req, res) => {
     try {
         const { exclude_id } = req.query;
+        console.log(`GET /next-lead campaign=${req.params.id} exclude=${exclude_id}`);
+
         let query = supabase
             .from('leads')
             .select('*')
