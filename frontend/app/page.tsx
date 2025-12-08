@@ -689,7 +689,7 @@ export default function Home() {
                   </div>
                   <div className="text-right">
                     <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-700 uppercase tracking-wide">
-                      Power Dialer Active v2.8
+                      Power Dialer Active v2.9
                     </span>
                   </div>
                 </div>
