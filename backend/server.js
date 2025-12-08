@@ -521,7 +521,7 @@ app.get("/", (req, res) => {
 // Helper to get Twilio Numbers
 app.get('/incoming-phone-numbers', async (req, res) => {
     try {
-        const numbers = await client.incomingPhoneNumbers.list({ limit: 20 });
+        const numbers = await twilioClient.incomingPhoneNumbers.list({ limit: 20 });
         res.json(numbers.map(n => ({
             phoneNumber: n.phoneNumber,
             friendlyName: n.friendlyName
