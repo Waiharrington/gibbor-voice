@@ -1,4 +1,5 @@
 'use client';
+import { useRouter } from 'next/navigation';
 
 import { useState, useEffect, useRef } from 'react';
 import Sidebar from '@/components/Sidebar';
@@ -103,6 +104,7 @@ function AudioPlayer({ src }: { src: string }) {
 }
 
 export default function Home() {
+  const router = useRouter();
   const [device, setDevice] = useState<Device | null>(null);
   const [token, setToken] = useState<string | null>(null);
   const [activeCall, setActiveCall] = useState<any>(null);
@@ -141,6 +143,17 @@ export default function Home() {
   // View Navigation State (Persistent Call)
   const [currentView, setCurrentView] = useState<'calls' | 'messages' | 'campaigns'>('calls');
   const [initialConvId, setInitialConvId] = useState<string | null>(null);
+
+  // Auth Protection
+  useEffect(() => {
+    const checkAuth = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        router.push('/login');
+      }
+    };
+    checkAuth();
+  }, []);
 
   // History Stack for Back functionality
   const [leadHistory, setLeadHistory] = useState<any[]>([]);
