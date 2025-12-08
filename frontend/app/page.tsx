@@ -180,35 +180,42 @@ export default function Home() {
 
   // --- Campaign & Dialer Logic ---
 
-  const fetchNextLead = async (campaignId: string) => {
+  const fetchNextLead = async (campaignId: string, excludeId?: string) => {
+    setIsLoading(true);
     try {
-      // 1. Push current lead to history BEFORE fetching next, if it exists and we are not just starting
-      // We check if currentLead is already the last item in history to avoid dupes if re-renders happen?
-      // Simple verification: Only push if not null.
       if (currentLead) {
         setLeadHistory(prev => [...prev, currentLead]);
       }
 
-      // Reset current lead temporarily to show loading state if needed, or handle optimistic UI
       setCurrentLead(null);
 
-      const res = await fetch(`https://gibbor-voice-production.up.railway.app/campaigns/${campaignId}/next-lead`);
-      if (!res.ok) throw new Error('Failed to fetch next lead');
-      const lead = await res.json();
+      const url = excludeId
+        ? `https://gibbor-voice-production.up.railway.app/campaigns/${campaignId}/next-lead?exclude_id=${excludeId}`
+        : `https://gibbor-voice-production.up.railway.app/campaigns/${campaignId}/next-lead`;
 
+      const res = await fetch(url);
+      if (!res.ok) throw new Error("Failed to fetch next lead");
+
+      const lead = await res.json();
       if (lead) {
-        setCurrentLead(lead);
-        if (lead.phone) setDialedNumber(lead.phone);
+        if (excludeId && lead.id === excludeId) {
+          alert("No other pending leads found (Only this one remains).");
+          setCurrentLead(lead);
+        } else {
+          setCurrentLead(lead);
+          if (lead.phone) setDialedNumber(lead.phone);
+          setSelectedStatuses([]);
+        }
       } else {
-        // No more leads
         setCurrentLead(null);
         alert("No more pending leads in this campaign.");
         setDialerMode(false);
       }
     } catch (err) {
       console.error("Error fetching lead:", err);
-      // alert("Error fetching next lead. See console.");
-      setDialerMode(false);
+      alert("Error fetching next lead. Please check connection.");
+    } finally {
+      setIsLoading(false);
     }
   };
 
