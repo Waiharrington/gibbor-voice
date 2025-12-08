@@ -245,8 +245,10 @@ export default function Home() {
       });
 
       // Auto-fetch next lead (User request: Advance automatically)
+      // Auto-fetch next lead (User request: Advance automatically)
       if (activeCampaignId) {
-        fetchNextLead(activeCampaignId);
+        // Pass currentLead.id to ensure we don't fetch the same one, even if status update lags
+        fetchNextLead(activeCampaignId, currentLead.id);
       }
     } catch (err) {
       console.error("Error updating lead:", err);
@@ -261,10 +263,11 @@ export default function Home() {
   };
 
   const handleNextLead = () => {
-    if (activeCampaignId) fetchNextLead(activeCampaignId);
+    if (activeCampaignId) fetchNextLead(activeCampaignId, currentLead?.id);
   };
 
   const handleSkipLead = () => {
+    // Skip implies same action as next for now, but explicitly skipping
     handleNextLead();
   };
 

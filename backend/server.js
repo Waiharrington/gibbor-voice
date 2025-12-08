@@ -480,17 +480,26 @@ app.post("/campaigns/:id/upload", upload.single('file'), async (req, res) => {
 
 app.get("/campaigns/:id/next-lead", async (req, res) => {
     try {
-        const { data, error } = await supabase
+        const { exclude_id } = req.query;
+        let query = supabase
             .from('leads')
             .select('*')
             .eq('campaign_id', req.params.id)
-            .eq('status', 'pending')
+            .eq('status', 'pending');
+
+        if (exclude_id) {
+            query = query.neq('id', exclude_id);
+        }
+
+        const { data, error } = await query
             .limit(1)
             .maybeSingle();
 
+        if (error) throw error;
         if (!data) return res.json(null);
         res.json(data);
     } catch (e) {
+        console.error("Error fetching next lead:", e);
         res.status(500).json({ error: e.message });
     }
 });
