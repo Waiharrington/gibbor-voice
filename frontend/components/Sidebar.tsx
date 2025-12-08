@@ -27,7 +27,10 @@ export default function Sidebar({ currentView, onViewChange }: SidebarProps) {
                 .select('role')
                 .eq('id', user.id)
                 .single();
-            if (data?.role === 'admin') setIsAdmin(true);
+
+            // Safety cast to avoid TS strict null checks failing build
+            const profile = data as any;
+            if (profile?.role === 'admin') setIsAdmin(true);
         }
     };
 
