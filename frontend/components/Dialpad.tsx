@@ -3,27 +3,18 @@
 import { useState, useEffect } from 'react';
 import { Phone, Delete, ChevronDown } from 'lucide-react';
 
-export default function Dialpad({ onCall }: { onCall: (number: string, callerId?: string) => void }) {
+export default function Dialpad({
+    onCall,
+    availableNumbers,
+    selectedCallerId,
+    onCallerIdChange
+}: {
+    onCall: (number: string, callerId?: string) => void,
+    availableNumbers: any[],
+    selectedCallerId: string,
+    onCallerIdChange: (id: string) => void
+}) {
     const [number, setNumber] = useState('');
-    const [availableNumbers, setAvailableNumbers] = useState<{ phoneNumber: string, friendlyName: string, type: 'Twilio' | 'Verified' }[]>([]);
-    const [selectedFrom, setSelectedFrom] = useState<string>('');
-
-    // Fetch available numbers
-    useEffect(() => {
-        const fetchNumbers = async () => {
-            try {
-                const res = await fetch('https://gibbor-voice-production.up.railway.app/phone-numbers');
-                if (res.ok) {
-                    const data = await res.json();
-                    setAvailableNumbers(data);
-                    if (data.length > 0) setSelectedFrom(data[0].phoneNumber);
-                }
-            } catch (e) {
-                console.error("Failed to fetch numbers", e);
-            }
-        };
-        fetchNumbers();
-    }, []);
 
     const handlePress = (digit: string) => {
         setNumber((prev) => prev + digit);
@@ -35,7 +26,7 @@ export default function Dialpad({ onCall }: { onCall: (number: string, callerId?
 
     const handleCall = () => {
         if (number) {
-            onCall(number, selectedFrom);
+            onCall(number, selectedCallerId);
         }
     };
 
@@ -54,8 +45,8 @@ export default function Dialpad({ onCall }: { onCall: (number: string, callerId?
                     <label className="block text-xs font-medium text-gray-500 mb-1 ml-1">Call From:</label>
                     <div className="relative">
                         <select
-                            value={selectedFrom}
-                            onChange={(e) => setSelectedFrom(e.target.value)}
+                            value={selectedCallerId}
+                            onChange={(e) => onCallerIdChange(e.target.value)}
                             className="w-full appearance-none bg-gray-50 border border-gray-200 text-gray-700 py-2 px-3 pr-8 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-green-500"
                             title="Select Caller ID"
                             aria-label="Select Caller ID"

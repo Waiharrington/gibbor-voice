@@ -547,7 +547,7 @@ export default function Home() {
                       <MessageSquare className="w-5 h-5" />
                     </button>
                     <button
-                      onClick={() => handleCall(selectedCall.direction === 'outbound' ? selectedCall.to : selectedCall.from)}
+                      onClick={() => handleCall(selectedCall.direction === 'outbound' ? selectedCall.to : selectedCall.from, selectedCallerId)}
                       className="p-2 hover:bg-gray-100 rounded-full text-gray-500 hover:text-green-600 transition-colors"
                       title="Call"
                       aria-label="Call"
@@ -996,7 +996,12 @@ export default function Home() {
                 <p className="text-xs font-medium text-gray-400 uppercase tracking-wider mb-1">Make a Call</p>
                 <p className="text-sm text-gray-500">Calling as {identity || '...'}</p>
               </div>
-              <Dialpad onCall={handleCall} />
+              <Dialpad
+                onCall={handleCall}
+                availableNumbers={availableNumbers}
+                selectedCallerId={selectedCallerId}
+                onCallerIdChange={setSelectedCallerId}
+              />
             </div>
           )}
         </div>
