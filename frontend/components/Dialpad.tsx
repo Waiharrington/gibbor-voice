@@ -15,6 +15,33 @@ export default function Dialpad({
     onCallerIdChange: (id: string) => void
 }) {
     const [number, setNumber] = useState('');
+    const [localNumbers, setLocalNumbers] = useState<any[]>([]);
+
+    const displayedNumbers = availableNumbers.length > 0 ? availableNumbers : localNumbers;
+
+    // Fallback fetch if props are empty (reliability)
+    useEffect(() => {
+        if (availableNumbers.length === 0) {
+            const fetchNumbers = async () => {
+                try {
+                    // Try the new endpoint first, then fallback to old if needed?
+                    // Let's stick to the one we know works for page.tsx:
+                    const res = await fetch('https://gibbor-voice-production.up.railway.app/incoming-phone-numbers');
+                    if (res.ok) {
+                        const data = await res.json();
+                        setLocalNumbers(data);
+                        // If we have data and no selectedCallerId, auto-select first
+                        if (data.length > 0 && !selectedCallerId) {
+                            onCallerIdChange(data[0].phoneNumber);
+                        }
+                    }
+                } catch (e) {
+                    console.error("Dialpad fallback fetch failed", e);
+                }
+            };
+            fetchNumbers();
+        }
+    }, [availableNumbers.length, selectedCallerId, onCallerIdChange]);
 
     const handlePress = (digit: string) => {
         setNumber((prev) => prev + digit);
@@ -40,7 +67,7 @@ export default function Dialpad({
     return (
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 w-80 p-6 flex flex-col items-center">
             {/* From Selector */}
-            {availableNumbers.length > 0 && (
+            {displayedNumbers.length > 0 ? (
                 <div className="w-full mb-4">
                     <label className="block text-xs font-medium text-gray-500 mb-1 ml-1">Call From:</label>
                     <div className="relative">
@@ -51,13 +78,14 @@ export default function Dialpad({
                             title="Select Caller ID"
                             aria-label="Select Caller ID"
                         >
-                            {availableNumbers.map((n) => (
+                            {displayedNumbers.map((n) => (
                                 <option key={n.phoneNumber} value={n.phoneNumber}>
                                     {n.friendlyName || n.phoneNumber} {n.type === 'Verified' ? '(Verified)' : ''}
                                 </option>
                             ))}
                         </select>
                         <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-500">
+
                             <ChevronDown className="h-4 w-4" />
                         </div>
                     </div>
