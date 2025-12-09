@@ -31,6 +31,9 @@ export default function Sidebar({ currentView, onViewChange }: SidebarProps) {
             // Safety cast to avoid TS strict null checks failing build
             const profile = data as any;
             if (profile?.role === 'admin') setIsAdmin(true);
+
+            // FALLBACK: Hardcode admin email just in case DB role isn't set yet
+            if (user.email === 'admin@gibborcenter.com') setIsAdmin(true);
         }
     };
 
