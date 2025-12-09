@@ -599,6 +599,55 @@ app.post("/auto-dialer/connect", (req, res) => {
     res.send(twiml.toString());
 });
 
+// Admin: Create Agent Endpoint
+app.post("/agents", async (req, res) => {
+    try {
+        const { email, password, fullName } = req.body;
+        console.log(`Creating agent: ${email}`);
+
+        // 1. Create Auth User
+        const { data: user, error: authError } = await supabase.auth.admin.createUser({
+            email,
+            password,
+            email_confirm: true // Auto-confirm
+        });
+
+        if (authError) throw authError;
+
+        // 2. Create Profile (Trigger might handle this, but let's be explicit/safe)
+        // Check if profile exists first (handling race condition with trigger)
+        const { data: existingProfile } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', user.user.id)
+            .single();
+
+        if (!existingProfile) {
+            const { error: profileError } = await supabase
+                .from('profiles')
+                .insert({
+                    id: user.user.id,
+                    email: email,
+                    full_name: fullName,
+                    role: 'agent'
+                });
+            if (profileError) console.error("Profile creation error (might be handled by trigger):", profileError);
+        } else {
+            // Update name if trigger created it empty
+            await supabase
+                .from('profiles')
+                .update({ full_name: fullName, role: 'agent' })
+                .eq('id', user.user.id);
+        }
+
+        res.json({ message: "Agent created successfully", user: user.user });
+
+    } catch (e) {
+        console.error("Error creating agent:", e);
+        res.status(500).json({ error: e.message });
+    }
+});
+
 // Auto Dialer Status Callback (Optional for now, good for debugging)
 app.post("/auto-dialer/status", (req, res) => {
     const { CallSid, CallStatus, AnsweredBy } = req.body;
