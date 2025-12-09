@@ -6,6 +6,8 @@ import { useState, useEffect } from 'react';
 import { Phone, Clock, MessageSquare, Settings, User, BarChart3, Activity, LogOut, Shield } from 'lucide-react';
 import { supabase } from '@/utils/supabaseClient';
 
+import { usePresence } from '@/hooks/usePresence';
+
 interface SidebarProps {
     currentView?: string;
     onViewChange?: (view: string) => void;
@@ -14,6 +16,10 @@ interface SidebarProps {
 export default function Sidebar({ currentView, onViewChange }: SidebarProps) {
     const router = useRouter();
     const [isAdmin, setIsAdmin] = useState(false);
+    const [user, setUser] = useState<any>(null);
+
+    // Broadcast Presence
+    usePresence(user);
 
     useEffect(() => {
         checkUserRole();
@@ -22,6 +28,7 @@ export default function Sidebar({ currentView, onViewChange }: SidebarProps) {
     const checkUserRole = async () => {
         const { data: { user } } = await supabase.auth.getUser();
         if (user) {
+            setUser(user);
             const { data } = await supabase
                 .from('profiles')
                 .select('role')
