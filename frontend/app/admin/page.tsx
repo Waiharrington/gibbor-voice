@@ -138,10 +138,7 @@ export default function AdminPage() {
                             <h3 className="text-lg font-bold text-gray-800 mb-4">Campaign Management</h3>
                             <div className="space-y-4">
                                 <button
-                                    onClick={() => router.push('/campaigns')} // Assuming this route exists or uses the modal in main page? 
-                                    // Actually main page has modals. We might need a dedicated page or link to main with query param.
-                                    // For now, let's just use router push to main page 'campaigns' view if supported.
-                                    // Since Sidebar handles views, maybe redirect to /?view=campaigns
+                                    onClick={() => router.push('/campaigns')}
                                     className="w-full flex items-center justify-between p-4 bg-gray-50 hover:bg-indigo-50 border border-gray-200 rounded-lg transition-colors group"
                                 >
                                     <div className="flex items-center gap-4">
