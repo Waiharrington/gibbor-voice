@@ -30,7 +30,7 @@ export default function AdminPage() {
                 .eq('id', user.id)
                 .single();
 
-            if (data?.role !== 'admin') {
+            if (data?.role !== 'admin' && user.email !== 'info@gibborcenter.com' && user.email !== 'admin@gibborcenter.com') {
                 router.push('/'); // Kick non-admins back to agent dashboard
             } else {
                 fetchStats();

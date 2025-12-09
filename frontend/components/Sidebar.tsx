@@ -33,7 +33,7 @@ export default function Sidebar({ currentView, onViewChange }: SidebarProps) {
             if (profile?.role === 'admin') setIsAdmin(true);
 
             // FALLBACK: Hardcode admin email just in case DB role isn't set yet
-            if (user.email === 'admin@gibborcenter.com') setIsAdmin(true);
+            if (user.email === 'admin@gibborcenter.com' || user.email === 'info@gibborcenter.com') setIsAdmin(true);
         }
     };
 
