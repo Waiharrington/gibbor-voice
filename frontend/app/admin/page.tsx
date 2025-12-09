@@ -40,14 +40,23 @@ export default function AdminPage() {
     }, []);
 
     const fetchStats = async () => {
-        // Fetch Real Stats (Mocking/Fetching mix for MVP)
-        // In a real scenario, we'd hit /reports/stats or similar
-        setStats({
-            totalCalls: 1250, // Placeholder
-            totalSales: 45,   // Placeholder
-            activeAgents: 3   // Placeholder
-        });
-        setLoading(false);
+        try {
+            const res = await fetch('https://gibbor-voice-production.up.railway.app/reports');
+            if (res.ok) {
+                const data = await res.json();
+                setStats({
+                    totalCalls: data.total_calls || 0,
+                    // Assuming 'status_counts' has keys like 'Sale', 'Completed' etc. 
+                    // Adjust based on your actual disposition values in DB (e.g., 'Venta', 'Cita')
+                    totalSales: (data.status_counts['Sale'] || 0) + (data.status_counts['Venta'] || 0) + (data.status_counts['Cita'] || 0),
+                    activeAgents: 3 // Still mock for now as we don't have online status yet
+                });
+            }
+        } catch (error) {
+            console.error("Error fetching admin stats:", error);
+        } finally {
+            setLoading(false);
+        }
     };
 
     if (loading) return <div className="flex h-screen items-center justify-center bg-gray-50 text-indigo-600">Loading Admin Panel...</div>;
