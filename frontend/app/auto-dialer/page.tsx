@@ -119,7 +119,8 @@ export default function AutoDialerPage() {
 
                     conn.accept(); // Auto-answer the bridge
                     setActiveConnection(conn);
-                    setCallStatus('Connected');
+                    setCallStatusLocal('Connected');
+                    setGlobalStatus('in-call'); // Update Global Presence
 
                     // If we have a leadId, try to find it in our current lines or fetch it
                     if (leadId && leadId !== 'unknown') {
@@ -133,9 +134,10 @@ export default function AutoDialerPage() {
                 });
 
                 newDevice.on('disconnect', () => {
-                    setCallStatus('Idle');
+                    setCallStatusLocal('Idle');
                     setActiveConnection(null);
                     setConnectedLead(null);
+                    setGlobalStatus('online'); // Reset Global Presence
                 });
 
                 await newDevice.register();
