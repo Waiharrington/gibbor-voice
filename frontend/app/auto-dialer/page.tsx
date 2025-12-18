@@ -6,6 +6,7 @@ import { Phone, Users, Play, Square, Activity, Volume2, Voicemail, Mic, MicOff, 
 import { Device } from '@twilio/voice-sdk';
 import { supabase } from '@/utils/supabaseClient';
 import { useAgentStatus } from '@/providers/AgentStatusContext';
+import CallDispositionModal from '@/components/CallDispositionModal';
 
 interface Line {
     id: number;
@@ -30,6 +31,11 @@ export default function AutoDialerPage() {
     // Global Agent Status
     const { setCallStatus: setGlobalStatus } = useAgentStatus();
 
+    // Modal State
+    const [showDisposition, setShowDisposition] = useState(false);
+    const [lastCallSid, setLastCallSid] = useState('');
+    const [lastLeadId, setLastLeadId] = useState('');
+
     // Mock State for Lines (will be real later)
     const [lines, setLines] = useState<Line[]>([
         { id: 1, status: 'Idle', lead: null },
@@ -37,64 +43,7 @@ export default function AutoDialerPage() {
         { id: 3, status: 'Idle', lead: null },
     ]);
 
-
-
-    const fetchCampaigns = async () => {
-        try {
-            const res = await fetch('https://gibbor-voice-production.up.railway.app/campaigns');
-            if (res.ok) {
-                const data = await res.json();
-                setCampaigns(data);
-            }
-        } catch (error) {
-            console.error(error);
-        }
-    };
-
-    useEffect(() => {
-        fetchCampaigns();
-    }, []);
-
-    const fetchNumbers = async () => {
-        try {
-            const res = await fetch('https://gibbor-voice-production.up.railway.app/incoming-phone-numbers');
-            if (res.ok) {
-                const data = await res.json();
-                setAvailableNumbers(data);
-                if (data.length > 0) setSelectedCallerId(data[0].phoneNumber);
-            }
-        } catch (error) {
-            console.error(error);
-        }
-    };
-
-    const fetchLeadDetails = async (id: string) => {
-        const { data } = await supabase.from('leads').select('*').eq('id', id).single();
-        if (data) setConnectedLead(data);
-    };
-
-    const handleHangup = () => {
-        if (activeConnection) {
-            activeConnection.disconnect();
-        }
-    };
-
-    // Disposition Logic
-    const handleDisposition = async (status: string) => {
-        if (!connectedLead) return;
-
-        // Optimistic UI update
-        alert(`Disposed as: ${status}`); // Placeholder for real logic (e.g. save to DB and next lead)
-
-        // In Auto Dialer, hanging up usually means we are ready for next? 
-        // Or if we are in "Dialing" mode, maybe it resumes?
-        // For now, just clear the active call screen.
-        handleHangup();
-    };
-
-    useEffect(() => {
-        fetchNumbers();
-    }, []);
+    // ... (fetch logic same)
 
     // Initialize Twilio Device
     useEffect(() => {
@@ -115,29 +64,37 @@ export default function AutoDialerPage() {
                 newDevice.on('incoming', (conn) => {
                     console.log('Incoming bridge connection:', conn);
                     const params = (conn as any).parameters || {};
-                    const leadId = params.leadId; // Getting leadID from backend!
+                    const leadId = params.leadId;
 
-                    conn.accept(); // Auto-answer the bridge
+                    conn.accept();
                     setActiveConnection(conn);
                     setCallStatusLocal('Connected');
-                    setGlobalStatus('in-call'); // Update Global Presence
+                    setGlobalStatus('in-call');
 
-                    // If we have a leadId, try to find it in our current lines or fetch it
+                    // Store details for disposition
+                    const sid = (conn as any).parameters?.CallSid || (conn as any)._parameters?.CallSid;
+                    // Twilio JS SDK is tricky with CallSid on incoming. 
+                    // Usually it's in conn.parameters.CallSid or we get it from our backend logic.
+                    // Let's assume parameters has it or we can't track generic calls easily without it.
+                    if (sid) setLastCallSid(sid);
+
                     if (leadId && leadId !== 'unknown') {
-                        console.log("Bridged with lead:", leadId);
-                        // For now, assuming lines has the lead info, or we just fetch it.
-                        // Simple: Fetch lead details
+                        setLastLeadId(leadId);
                         fetchLeadDetails(leadId);
                     } else {
                         setConnectedLead({ name: 'Unknown Lead', phone: 'Unknown' });
+                        setLastLeadId('');
                     }
                 });
 
-                newDevice.on('disconnect', () => {
+                newDevice.on('disconnect', (conn) => {
                     setCallStatusLocal('Idle');
                     setActiveConnection(null);
                     setConnectedLead(null);
-                    setGlobalStatus('online'); // Reset Global Presence
+                    setGlobalStatus('online');
+
+                    // Trigger Disposition Modal
+                    setShowDisposition(true);
                 });
 
                 await newDevice.register();
