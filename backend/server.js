@@ -614,21 +614,35 @@ app.post("/auto-dialer/start", async (req, res) => {
                 statusCallbackEvent: ['initiated', 'ringing', 'answered', 'completed']
             });
             calls.push({ ...lead, callSid: call.sid });
+
+            // LOGGING: Insert into 'calls' table so Monitor can see it
+            // We don't have user_id (agent) yet, so maybe leave null or system id?
+            // Or we assume 'client:agent' belongs to a specific user? 
+            // For now, let's insert with null user_id, or if we passed userId from frontend (which we didn't).
+            await supabase.from('calls').insert({
+                sid: call.sid,
+                direction: 'outbound',
+                status: 'dialing',
+                recipient: lead.phone,
+                // lead_id: lead.id, // Column doesn't exist yet, stored in context manually if needed
+                created_at: new Date()
+            });
+
+            res.json({ message: "Dialing initiated", leads: calls });
+
+        } catch (e) {
+            console.error("Auto Dialer Error:", e);
+            res.status(500).json({ error: e.message });
         }
-
-        res.json({ message: "Dialing initiated", leads: calls });
-
-    } catch (e) {
-        console.error("Auto Dialer Error:", e);
-        res.status(500).json({ error: e.message });
-    }
-});
+    });
 
 // Connected Webhook (Lead Answered) -> Bridge to Agent
-app.post("/auto-dialer/connect", (req, res) => {
+// Connected Webhook (Lead Answered) -> Bridge to Agent via Conference
+app.post("/auto-dialer/connect", async (req, res) => {
     const twiml = new twilio.twiml.VoiceResponse();
     const { leadId } = req.query;
-    const { AnsweredBy } = req.body;
+    const { AnsweredBy, CallSid } = req.body;
+    const baseUrl = process.env.BASE_URL || 'https://gibbor-voice-production.up.railway.app';
 
     console.log(`Auto Dialer: Connect Request for Lead ${leadId}, AnsweredBy: ${AnsweredBy}`);
 
@@ -641,17 +655,46 @@ app.post("/auto-dialer/connect", (req, res) => {
         return;
     }
 
-    // Assuming 'agent' is the connected client identity
+    const roomName = `room_${CallSid}`; // Unique room per lead call
+
+    // 1. Put Lead in Conference
     const dial = twiml.dial();
+    dial.conference({
+        startConferenceOnEnter: true,
+        endConferenceOnExit: true, // End conf when Lead hangs up? Or Agent? Better to let Agent hangup end it? 
+        // If Lead hangs up, agent is alone. 
+        // If Agent hangs up, lead hangs up? 
+        // Let's stick to true for now so it cleans up.
+    }, roomName);
 
-    dial.client({
-        identity: "agent",
-    }).parameter({
-        name: "leadId",
-        value: leadId || "unknown"
-    });
+    // 2. Dial Agent to Join Conference
+    try {
+        await twilioClient.calls.create({
+            to: 'client:agent', // Fixed identity for now
+            from: process.env.TWILIO_PHONE_NUMBER,
+            url: `${baseUrl}/auto-dialer/join-agent?room=${roomName}`,
+        });
+        console.log(`Auto Dialer: Dialing Agent to join ${roomName}`);
+    } catch (e) {
+        console.error("Error dialing agent:", e);
+    }
 
-    console.log(`Auto Dialer: Bridging human to agent`);
+    res.type('text/xml');
+    res.send(twiml.toString());
+});
+
+// Endpoint for Agent to Join Conference
+app.post("/auto-dialer/join-agent", (req, res) => {
+    const twiml = new twilio.twiml.VoiceResponse();
+    const { room } = req.query;
+
+    console.log(`Agent joining conference: ${room}`);
+
+    const dial = twiml.dial();
+    dial.conference({
+        startConferenceOnEnter: true,
+        endConferenceOnExit: true // If agent leaves, end call?
+    }, room);
 
     res.type('text/xml');
     res.send(twiml.toString());
