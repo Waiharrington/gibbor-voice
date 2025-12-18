@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Sidebar from '@/components/Sidebar';
-import { Shield, Users, Phone, BarChart3, Plus, ArrowUpRight, Clock, UserPlus, Loader2, Circle } from 'lucide-react';
+import { Shield, Users, Phone, BarChart3, Plus, ArrowUpRight, Clock, UserPlus, Loader2, Circle, Activity } from 'lucide-react';
 import { supabase } from '@/utils/supabaseClient';
 import { useAgentStatus } from '@/providers/AgentStatusContext';
 
