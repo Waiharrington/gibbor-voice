@@ -262,6 +262,21 @@ export default function AdminPage() {
                                     ))
                                 )}
                             </div>
+                            <button
+                                onClick={() => router.push('/admin/reports')}
+                                className="w-full bg-white p-6 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow flex items-center justify-between group"
+                            >
+                                <div className="flex items-center gap-4">
+                                    <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center text-purple-600 group-hover:scale-110 transition-transform">
+                                        <BarChart3 className="w-6 h-6" />
+                                    </div>
+                                    <div className="text-left">
+                                        <h3 className="font-semibold text-gray-900">Agent Reports</h3>
+                                        <p className="text-sm text-gray-500">View hours, calls, and performance</p>
+                                    </div>
+                                </div>
+                                <Activity className="w-5 h-5 text-gray-400 group-hover:text-purple-600 transition-colors" />
+                            </button>
                         </div>
                     </div>
 

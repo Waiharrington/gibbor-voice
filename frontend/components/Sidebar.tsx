@@ -53,6 +53,9 @@ export default function Sidebar({ currentView, onViewChange }: SidebarProps) {
         if (onViewChange) {
             e.preventDefault();
             onViewChange(view);
+        } else {
+            // If no view handler (e.g. we are in Admin page), navigate to dashboard
+            router.push('/');
         }
     };
 
