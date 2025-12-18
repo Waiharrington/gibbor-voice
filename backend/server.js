@@ -371,6 +371,51 @@ app.get("/reports", async (req, res) => {
     }
 });
 
+// Advanced Agent Reporting
+app.get("/reports/agents", async (req, res) => {
+    try {
+        const { data: profiles } = await supabase.from('profiles').select('id, email, full_name');
+        const { data: sessions } = await supabase.from('agent_sessions').select('*');
+        const { data: calls } = await supabase.from('calls').select('*');
+
+        const report = profiles.map(agent => {
+            const agentSessions = sessions ? sessions.filter(s => s.user_id === agent.id) : [];
+            const totalOnlineSeconds = agentSessions.reduce((acc, s) => {
+                if (s.duration_seconds) return acc + s.duration_seconds;
+                if (s.started_at && !s.ended_at) {
+                    const diff = Math.floor((new Date() - new Date(s.started_at)) / 1000);
+                    return acc + (diff > 0 ? diff : 0);
+                }
+                return acc;
+            }, 0);
+
+            const agentCalls = calls ? calls.filter(c => c.user_id === agent.id) : [];
+            const totalCalls = agentCalls.length;
+            const totalTalkTime = agentCalls.reduce((acc, c) => acc + (c.duration || 0), 0);
+
+            const dispositions = {};
+            agentCalls.forEach(c => {
+                const d = c.disposition || 'No Status';
+                dispositions[d] = (dispositions[d] || 0) + 1;
+            });
+
+            return {
+                agent_name: agent.full_name || agent.email,
+                email: agent.email,
+                total_online_seconds: totalOnlineSeconds,
+                total_calls: totalCalls,
+                total_talk_seconds: totalTalkTime,
+                dispositions
+            };
+        });
+
+        res.json(report);
+    } catch (e) {
+        console.error("Agent Report Error:", e);
+        res.status(500).json({ error: e.message });
+    }
+});
+
 app.get("/campaigns", async (req, res) => {
     try {
         const { data, error } = await supabase
