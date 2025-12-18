@@ -624,12 +624,22 @@ app.post("/auto-dialer/start", async (req, res) => {
 // Connected Webhook (Lead Answered) -> Bridge to Agent
 app.post("/auto-dialer/connect", (req, res) => {
     const twiml = new twilio.twiml.VoiceResponse();
+    const { leadId } = req.query;
+    const { AnsweredBy } = req.body;
+
+    console.log(`Auto Dialer: Connect Request for Lead ${leadId}, AnsweredBy: ${AnsweredBy}`);
+
+    // AMD Logic: Hangup if machine
+    if (AnsweredBy && (AnsweredBy.startsWith('machine') || AnsweredBy === 'fax')) {
+        console.log(`Machine detected (${AnsweredBy}). Hanging up.`);
+        twiml.hangup();
+        res.type('text/xml');
+        res.send(twiml.toString());
+        return;
+    }
+
     // Assuming 'agent' is the connected client identity
     const dial = twiml.dial();
-
-    // Pass Lead ID as a custom parameter to the client
-    // Twilio Client receives this in connection.parameters
-    const { leadId } = req.query;
 
     dial.client({
         identity: "agent",
@@ -638,7 +648,7 @@ app.post("/auto-dialer/connect", (req, res) => {
         value: leadId || "unknown"
     });
 
-    console.log(`Auto Dialer: Lead ${leadId} answered, bridging to agent`);
+    console.log(`Auto Dialer: Bridging human to agent`);
 
     res.type('text/xml');
     res.send(twiml.toString());
