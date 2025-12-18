@@ -429,5 +429,6 @@ export default function AutoDialerPage() {
                     leadId={lastLeadId}
                 />
             </div>
-            );
+        </div>
+    );
 }
