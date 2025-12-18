@@ -5,6 +5,7 @@ import Sidebar from '@/components/Sidebar';
 import { Phone, Users, Play, Square, Activity, Volume2, Voicemail, Mic, MicOff, X, PhoneOff } from 'lucide-react';
 import { Device } from '@twilio/voice-sdk';
 import { supabase } from '@/utils/supabaseClient';
+import { useAgentStatus } from '@/providers/AgentStatusContext';
 
 interface Line {
     id: number;
@@ -23,8 +24,11 @@ export default function AutoDialerPage() {
     const [device, setDevice] = useState<Device | null>(null);
     const [activeConnection, setActiveConnection] = useState<any | null>(null);
     const [connectedLead, setConnectedLead] = useState<any | null>(null);
-    const [callStatus, setCallStatus] = useState('Idle');
+    const [callStatus, setCallStatusLocal] = useState('Idle'); // Renamed to avoid collision
     const [isMuted, setIsMuted] = useState(false);
+
+    // Global Agent Status
+    const { setCallStatus: setGlobalStatus } = useAgentStatus();
 
     // Mock State for Lines (will be real later)
     const [lines, setLines] = useState<Line[]>([
