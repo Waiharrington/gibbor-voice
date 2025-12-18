@@ -586,15 +586,18 @@ app.post("/auto-dialer/start", async (req, res) => {
         const { campaignId, callerId } = req.body;
         console.log(`Starting Auto Dialer for Campaign: ${campaignId}, Caller: ${callerId}`);
 
-        // 1. Fetch 3 pending leads
+        // 1. Fetch 3 pending leads ATOMICALLY (using RPC)
         const { data: leads, error } = await supabase
-            .from('leads')
-            .select('*')
-            .eq('campaign_id', campaignId)
-            .eq('status', 'pending')
-            .limit(3);
+            .rpc('get_next_leads', {
+                p_campaign_id: campaignId,
+                p_limit: 3
+            });
 
-        if (error) throw error;
+        if (error) {
+            console.error("RPC Error:", error);
+            throw error;
+        }
+
         if (!leads || leads.length === 0) return res.json({ message: "No pending leads found", leads: [] });
 
         const baseUrl = process.env.BASE_URL || 'https://gibbor-voice-production.up.railway.app';
