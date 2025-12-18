@@ -21,10 +21,6 @@ export default function Sidebar({ currentView, onViewChange }: SidebarProps) {
     // Broadcast Presence
     usePresence(user);
 
-    useEffect(() => {
-        checkUserRole();
-    }, []);
-
     const checkUserRole = async () => {
         const { data: { user } } = await supabase.auth.getUser();
         if (user) {
@@ -43,6 +39,10 @@ export default function Sidebar({ currentView, onViewChange }: SidebarProps) {
             if (user.email === 'admin@gibborcenter.com' || user.email === 'info@gibborcenter.com') setIsAdmin(true);
         }
     };
+
+    useEffect(() => {
+        checkUserRole();
+    }, []);
 
     const handleLogout = async () => {
         await supabase.auth.signOut();
