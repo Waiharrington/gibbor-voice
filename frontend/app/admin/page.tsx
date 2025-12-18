@@ -5,12 +5,33 @@ import { useRouter } from 'next/navigation';
 import Sidebar from '@/components/Sidebar';
 import { Shield, Users, Phone, BarChart3, Plus, ArrowUpRight, Clock, UserPlus, Loader2, Circle } from 'lucide-react';
 import { supabase } from '@/utils/supabaseClient';
-import { usePresence } from '@/hooks/usePresence';
+import { useAgentStatus } from '@/providers/AgentStatusContext';
+
+function AgentTimer({ startTime }: { startTime: string }) {
+    const [duration, setDuration] = useState("");
+
+    useEffect(() => {
+        const interval = setInterval(() => {
+            const start = new Date(startTime).getTime();
+            const now = new Date().getTime();
+            const diff = Math.floor((now - start) / 1000);
+
+            const h = Math.floor(diff / 3600).toString().padStart(2, '0');
+            const m = Math.floor((diff % 3600) / 60).toString().padStart(2, '0');
+            const s = (diff % 60).toString().padStart(2, '0');
+
+            setDuration(`${h}:${m}:${s}`);
+        }, 1000);
+        return () => clearInterval(interval);
+    }, [startTime]);
+
+    return <span className="font-mono text-gray-500 text-sm ml-2 bg-gray-100 px-2 py-0.5 rounded">{duration}</span>;
+}
 
 export default function AdminPage() {
     const router = useRouter();
     const [user, setUser] = useState<any>(null);
-    const { onlineUsers } = usePresence(user, 'idle');
+    const { onlineUsers } = useAgentStatus(); // Use Global Context
 
     const [stats, setStats] = useState({
         totalCalls: 0,
@@ -226,8 +247,11 @@ export default function AdminPage() {
                                                     {agent.email ? agent.email[0].toUpperCase() : 'U'}
                                                 </div>
                                                 <div>
-                                                    <p className="text-sm font-medium text-gray-900">{agent.email}</p>
-                                                    <p className="text-xs text-gray-500">{new Date(agent.online_at).toLocaleTimeString()}</p>
+                                                    <div className="flex items-center">
+                                                        <p className="text-sm font-medium text-gray-900">{agent.email}</p>
+                                                        {agent.online_at && <AgentTimer startTime={agent.online_at} />}
+                                                    </div>
+                                                    <p className="text-xs text-gray-500">Since {new Date(agent.online_at).toLocaleTimeString()}</p>
                                                 </div>
                                             </div>
                                             <span className={`px-2 py-1 rounded-full text-xs font-semibold ${agent.status === 'in-call' ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'
