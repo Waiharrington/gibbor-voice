@@ -43,7 +43,57 @@ export default function AutoDialerPage() {
         { id: 3, status: 'Idle', lead: null },
     ]);
 
-    // ... (fetch logic same)
+    const fetchCampaigns = async () => {
+        try {
+            const res = await fetch('https://gibbor-voice-production.up.railway.app/campaigns');
+            if (res.ok) {
+                const data = await res.json();
+                setCampaigns(data);
+            }
+        } catch (error) {
+            console.error(error);
+        }
+    };
+
+    useEffect(() => {
+        fetchCampaigns();
+    }, []);
+
+    const fetchNumbers = async () => {
+        try {
+            const res = await fetch('https://gibbor-voice-production.up.railway.app/incoming-phone-numbers');
+            if (res.ok) {
+                const data = await res.json();
+                setAvailableNumbers(data);
+                if (data.length > 0) setSelectedCallerId(data[0].phoneNumber);
+            }
+        } catch (error) {
+            console.error(error);
+        }
+    };
+
+    const fetchLeadDetails = async (id: string) => {
+        const { data } = await supabase.from('leads').select('*').eq('id', id).single();
+        if (data) setConnectedLead(data);
+    };
+
+    const handleHangup = () => {
+        if (activeConnection) {
+            activeConnection.disconnect();
+        }
+    };
+
+    // Disposition Logic
+    const handleDisposition = async (status: string) => {
+        if (!connectedLead) return;
+        // Legacy/Manual Disposition logic if needed
+        alert(`Disposed as: ${status}`);
+        handleHangup();
+    };
+
+    useEffect(() => {
+        fetchNumbers();
+    }, []);
 
     // Initialize Twilio Device
     useEffect(() => {
@@ -371,7 +421,13 @@ export default function AutoDialerPage() {
                     </div>
 
                 </main>
-            </div >
-        </div >
-    );
+                {/* Disposition Modal */}
+                <CallDispositionModal
+                    isOpen={showDisposition}
+                    onClose={() => setShowDisposition(false)}
+                    callSid={lastCallSid}
+                    leadId={lastLeadId}
+                />
+            </div>
+            );
 }
