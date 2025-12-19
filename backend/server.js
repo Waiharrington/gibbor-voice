@@ -43,7 +43,8 @@ console.log("-------------------------");
 app.get("/token", async (req, res) => {
     try {
         // Usamos una identidad fija para que las llamadas entrantes encuentren al usuario
-        const identity = "agent";
+        // Allow dynamic identity (e.g. for Admin monitoring), fallback to 'agent'
+        const identity = req.query.identity || "agent";
 
         const AccessToken = twilio.jwt.AccessToken;
         const VoiceGrant = AccessToken.VoiceGrant;
