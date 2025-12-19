@@ -627,14 +627,15 @@ app.post("/auto-dialer/start", async (req, res) => {
                 // lead_id: lead.id, // Column doesn't exist yet, stored in context manually if needed
                 created_at: new Date()
             });
-
-            res.json({ message: "Dialing initiated", leads: calls });
-
-        } catch (e) {
-            console.error("Auto Dialer Error:", e);
-            res.status(500).json({ error: e.message });
         }
-    });
+
+        res.json({ message: "Dialing initiated", leads: calls });
+
+    } catch (e) {
+        console.error("Auto Dialer Error:", e);
+        res.status(500).json({ error: e.message });
+    }
+});
 
 // Connected Webhook (Lead Answered) -> Bridge to Agent
 // Connected Webhook (Lead Answered) -> Bridge to Agent via Conference
