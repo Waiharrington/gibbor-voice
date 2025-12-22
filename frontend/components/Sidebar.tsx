@@ -69,6 +69,8 @@ export default function Sidebar({ currentView, onViewChange }: SidebarProps) {
                 <button
                     onClick={() => setIsOpen(!isOpen)}
                     className="p-2 bg-white rounded-lg shadow-md border border-gray-200 text-gray-700 mt-2"
+                    aria-label="Toggle Sidebar"
+                    title="Toggle Sidebar"
                 >
                     <div className="space-y-1">
                         <span className={`block w-6 h-0.5 bg-gray-600 transition-transform ${isOpen ? 'rotate-45 translate-y-1.5' : ''}`}></span>

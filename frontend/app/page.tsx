@@ -528,6 +528,7 @@ export default function Home() {
         <button
           onClick={() => setActiveMobileTab('list')}
           className={`flex flex-col items-center p-2 ${activeMobileTab === 'list' ? 'text-cyan-600' : 'text-gray-400'}`}
+          aria-label="Calls Tab"
         >
           <Phone className="w-6 h-6" />
           <span className="text-xs">Calls</span>
@@ -536,6 +537,7 @@ export default function Home() {
           onClick={() => setActiveMobileTab('details')}
           className={`flex flex-col items-center p-2 ${activeMobileTab === 'details' ? 'text-cyan-600' : 'text-gray-400'}`}
           disabled={!selectedCall}
+          aria-label="Details Tab"
         >
           <Info className="w-6 h-6" />
           <span className="text-xs">Details</span>
@@ -543,6 +545,7 @@ export default function Home() {
         <button
           onClick={() => setActiveMobileTab('dialpad')}
           className={`flex flex-col items-center p-2 ${activeMobileTab === 'dialpad' ? 'text-cyan-600' : 'text-gray-400'}`}
+          aria-label="Dialpad Tab"
         >
           <div className="w-10 h-10 bg-cyan-600 rounded-full flex items-center justify-center text-white -mt-6 shadow-lg border-4 border-white">
             <div className="grid grid-cols-3 gap-0.5 w-4 h-4">
@@ -774,12 +777,12 @@ export default function Home() {
               {/* Status Indicator */}
               <div className="mb-8 text-center">
                 <div className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${callStatus === 'Ready' ? 'bg-green-100 text-green-700' :
-                    callStatus.includes('Error') ? 'bg-red-100 text-red-700' :
-                      'bg-blue-100 text-blue-700'
+                  callStatus.includes('Error') ? 'bg-red-100 text-red-700' :
+                    'bg-blue-100 text-blue-700'
                   }`}>
                   <div className={`w-2 h-2 rounded-full mr-2 ${callStatus === 'Ready' ? 'bg-green-500' :
-                      callStatus.includes('Error') ? 'bg-red-500' :
-                        'bg-blue-500 animate-pulse'
+                    callStatus.includes('Error') ? 'bg-red-500' :
+                      'bg-blue-500 animate-pulse'
                     }`} />
                   {callStatus}
                 </div>
