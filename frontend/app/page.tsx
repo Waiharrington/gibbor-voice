@@ -554,7 +554,7 @@ export default function Home() {
                           {call.direction === 'outbound' ? call.to : call.from}
                         </h3>
                         <span className="text-xs text-gray-400 shrink-0 ml-2">
-                          {call.created_at && format(new Date(call.created_at), 'HH:mm')}
+                          {call.created_at && format(new Date(call.created_at), 'dd/MM HH:mm')}
                         </span>
                       </div>
                       <div className="flex items-center text-xs text-gray-500">
