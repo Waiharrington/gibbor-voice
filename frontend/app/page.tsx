@@ -497,18 +497,71 @@ export default function Home() {
     }
   };
 
+  // Mobile Tabs
+  const [activeMobileTab, setActiveMobileTab] = useState<'list' | 'details' | 'dialpad'>('list');
+
+  // Auto-switch to Details on selection (mobile)
+  useEffect(() => {
+    if (selectedCall && window.innerWidth < 768) {
+      setActiveMobileTab('details');
+    }
+  }, [selectedCall]);
+
+  const toggleDialer = () => {
+    if (dialerMode) {
+      setDialerMode(false);
+      setActiveMobileTab('list');
+    } else {
+      setDialerMode(true);
+      // If mobile, switch tab? DialerMode is full screen usually?
+      // This logic depends on existing dialer mode.
+    }
+  };
+
   return (
-    <div className="flex h-screen bg-white overflow-hidden">
+    <div className="flex h-screen bg-white overflow-hidden relative">
       {/* 1. Sidebar */}
       <Sidebar currentView={currentView} onViewChange={handleViewChange} />
+
+      {/* Mobile Tab Bar (Bottom) - Only Visible on Mobile */}
+      <div className="md:hidden fixed bottom-0 left-0 right-0 h-16 bg-white border-t border-gray-200 z-50 flex justify-around items-center">
+        <button
+          onClick={() => setActiveMobileTab('list')}
+          className={`flex flex-col items-center p-2 ${activeMobileTab === 'list' ? 'text-cyan-600' : 'text-gray-400'}`}
+        >
+          <Phone className="w-6 h-6" />
+          <span className="text-xs">Calls</span>
+        </button>
+        <button
+          onClick={() => setActiveMobileTab('details')}
+          className={`flex flex-col items-center p-2 ${activeMobileTab === 'details' ? 'text-cyan-600' : 'text-gray-400'}`}
+          disabled={!selectedCall}
+        >
+          <Info className="w-6 h-6" />
+          <span className="text-xs">Details</span>
+        </button>
+        <button
+          onClick={() => setActiveMobileTab('dialpad')}
+          className={`flex flex-col items-center p-2 ${activeMobileTab === 'dialpad' ? 'text-cyan-600' : 'text-gray-400'}`}
+        >
+          <div className="w-10 h-10 bg-cyan-600 rounded-full flex items-center justify-center text-white -mt-6 shadow-lg border-4 border-white">
+            <div className="grid grid-cols-3 gap-0.5 w-4 h-4">
+              {[...Array(9)].map((_, i) => <div key={i} className="bg-white rounded-full w-0.5 h-0.5" />)}
+            </div>
+          </div>
+        </button>
+      </div>
 
       {currentView === 'calls' && !dialerMode && (
         <>
           {/* 2. Call List (Left) */}
-          <div className="w-80 border-r border-gray-200 flex flex-col bg-white">
+          <div className={`
+              w-full md:w-80 border-r border-gray-200 flex flex-col bg-white
+              ${activeMobileTab === 'list' ? 'flex' : 'hidden md:flex'}
+          `}>
             {/* Search Header */}
-            <div className="p-4 border-b border-gray-100">
-              <div className="relative">
+            <div className="p-4 border-b border-gray-100 flex items-center gap-2">
+              <div className="relative flex-1">
                 <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
                 <input
                   type="text"
@@ -519,7 +572,7 @@ export default function Home() {
             </div>
 
             {/* List */}
-            <div className="flex-1 overflow-y-auto">
+            <div className="flex-1 overflow-y-auto mb-16 md:mb-0">
               {isLoading ? (
                 <div className="flex items-center justify-center h-48 text-gray-400">
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-cyan-500 mr-2"></div>
@@ -535,7 +588,10 @@ export default function Home() {
                 calls.map((call) => (
                   <div
                     key={call.id}
-                    onClick={() => setSelectedCall(call)}
+                    onClick={() => {
+                      setSelectedCall(call);
+                      if (window.innerWidth < 768) setActiveMobileTab('details');
+                    }}
                     className={`p-4 flex items-center cursor-pointer transition-colors border-l-4 ${selectedCall?.id === call.id
                       ? 'bg-cyan-50 border-cyan-500'
                       : 'hover:bg-gray-50 border-transparent'
@@ -576,14 +632,26 @@ export default function Home() {
           </div>
 
           {/* 3. Center Panel (Details) */}
-          <div className="flex-1 flex flex-col bg-white border-r border-gray-200">
+          <div className={`
+             flex-1 flex-col bg-white border-r border-gray-200
+             ${activeMobileTab === 'details' ? 'flex' : 'hidden md:flex'}
+          `}>
+            {/* Note: Added flex above to ensure it displays correctly when active */}
             {selectedCall ? (
-              <div className="flex-1 flex flex-col">
+              <div className="flex-1 flex flex-col mb-16 md:mb-0">
                 {/* Header */}
                 <header className="h-16 border-b border-gray-200 flex justify-between items-center px-6">
-                  <h2 className="text-lg font-medium text-gray-800">
-                    {selectedCall.direction === 'outbound' ? selectedCall.to : selectedCall.from}
-                  </h2>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => setActiveMobileTab('list')}
+                      className="md:hidden p-2 -ml-2 text-gray-500"
+                    >
+                      <ArrowDownLeft className="w-5 h-5 rotate-90" /> {/* Back Icon Hack */}
+                    </button>
+                    <h2 className="text-lg font-medium text-gray-800">
+                      {selectedCall.direction === 'outbound' ? selectedCall.to : selectedCall.from}
+                    </h2>
+                  </div>
                   <div className="flex space-x-2 relative">
                     <button
                       onClick={() => handleGoToMessage(selectedCall.direction === 'outbound' ? selectedCall.to : selectedCall.from)}
@@ -601,93 +669,161 @@ export default function Home() {
                     >
                       <Phone className="w-5 h-5" />
                     </button>
-                    <div className="relative">
-                      <button
-                        onClick={() => setIsMenuOpen(!isMenuOpen)}
-                        className="p-2 hover:bg-gray-100 rounded-full text-gray-500"
-                        title="More options"
-                        aria-label="More options"
-                      >
-                        <MoreVertical className="w-5 h-5" />
-                      </button>
-                      {isMenuOpen && (
-                        <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-10 border border-gray-100">
-                          {selectedCall.recording_url ? (
-                            <a
-                              href={selectedCall.recording_url}
-                              download
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
-                              onClick={() => setIsMenuOpen(false)}
-                            >
-                              <Download className="w-4 h-4 mr-2" /> Download Recording
-                            </a>
-                          ) : (
-                            <span className="block px-4 py-2 text-sm text-gray-400 italic">No recording available</span>
-                          )}
-                        </div>
-                      )}
-                    </div>
+
+                    {/* More Menu */}
+                    <button
+                      className="p-2 hover:bg-gray-100 rounded-full text-gray-500"
+                      title="More options"
+                      aria-label="More options"
+                    >
+                      <MoreVertical className="w-5 h-5" />
+                    </button>
                   </div>
                 </header>
 
-                {/* Content */}
-                <div className="flex-1 p-8 bg-gray-50">
-                  <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100 max-w-2xl">
-                    <div className="flex items-start space-x-4">
-                      <div className="p-2 bg-blue-50 text-blue-500 rounded-lg">
-                        <ArrowUpRight className="w-5 h-5" />
+                <div className="flex-1 overflow-y-auto p-6 space-y-6">
+                  {/* Status Card */}
+                  <div className="bg-gray-50 rounded-2xl p-6 border border-gray-100 flex items-center justify-between">
+                    <div>
+                      <p className="text-sm text-gray-500 mb-1">Status</p>
+                      <div className="flex items-center gap-2">
+                        <span className={`inline-block w-2.5 h-2.5 rounded-full ${selectedCall.status === 'completed' ? 'bg-green-500' : 'bg-gray-400'}`}></span>
+                        <span className="font-medium text-gray-900 capitalize">{selectedCall.status}</span>
                       </div>
-                      <div className="flex-1">
-                        <h4 className="text-sm font-medium text-gray-900">
-                          {selectedCall.direction === 'outbound' ? 'Outbound Call' : 'Inbound Call'}
-                        </h4>
-                        <p className="text-xs text-gray-500 mt-1">
-                          {selectedCall.created_at && format(new Date(selectedCall.created_at), 'PPP p')}
-                        </p>
-                        <p className="text-sm text-gray-600 mt-4">
-                          {selectedCall.duration ? `${selectedCall.duration} seconds` : 'Duration not logged'}
-                        </p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-sm text-gray-500 mb-1">Duration</p>
+                      <span className="font-medium text-gray-900">{selectedCall.duration || 0}s</span>
+                    </div>
+                  </div>
 
-                        {/* Recording Player (Placeholder logic until backend is ready) */}
-                        {selectedCall.recording_url && (
-                          <div className="mt-4 flex items-center space-x-2">
-                            <div className="flex-1">
-                              <AudioPlayer src={selectedCall.recording_url} />
-                            </div>
-                            <a
-                              href={selectedCall.recording_url}
-                              download
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="p-3 bg-gray-100 rounded-full text-gray-600 hover:bg-gray-200 hover:text-cyan-600 transition-colors"
-                              title="Download Recording"
-                              aria-label="Download Recording"
-                            >
-                              <Download className="w-5 h-5" />
-                            </a>
-                          </div>
-                        )}
+                  {/* Recording Player */}
+                  {selectedCall.recording_url ? (
+                    <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
+                      <div className="flex items-center gap-3 mb-4">
+                        <div className="p-2 bg-indigo-50 text-indigo-600 rounded-lg">
+                          <Mic className="w-5 h-5" />
+                        </div>
+                        <h3 className="font-medium text-gray-900">Call Recording</h3>
                       </div>
+                      <AudioPlayer src={selectedCall.recording_url} />
+                      <div className="mt-4 flex justify-end">
+                        <a href={selectedCall.recording_url} download target="_blank" rel="noreferrer" className="text-sm text-indigo-600 hover:text-indigo-700 flex items-center gap-1 font-medium">
+                          <Download className="w-4 h-4" /> Download
+                        </a>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="bg-gray-50 rounded-xl p-8 border border-gray-100 border-dashed text-center text-gray-400">
+                      <MicOff className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                      No recording available for this call.
+                    </div>
+                  )}
+
+                  {/* Details Grid */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="p-4 rounded-xl border border-gray-100 bg-white">
+                      <div className="flex items-center gap-2 text-gray-500 mb-1">
+                        <Clock className="w-4 h-4" />
+                        <span className="text-xs font-medium uppercase tracking-wide">Time</span>
+                      </div>
+                      <p className="font-medium text-gray-900">
+                        {selectedCall.created_at ? format(new Date(selectedCall.created_at), 'PP p') : '-'}
+                      </p>
+                    </div>
+                    <div className="p-4 rounded-xl border border-gray-100 bg-white">
+                      <div className="flex items-center gap-2 text-gray-500 mb-1">
+                        <MapPin className="w-4 h-4" />
+                        <span className="text-xs font-medium uppercase tracking-wide">Location</span>
+                      </div>
+                      <p className="font-medium text-gray-900">
+                        {selectedCall.to_city || '-'}, {selectedCall.to_state || '-'}
+                      </p>
                     </div>
                   </div>
                 </div>
               </div>
             ) : (
-              <div className="flex-1 flex items-center justify-center bg-gray-50 text-gray-400">
-                Select a call to view details
+              <div className="flex-1 flex flex-col items-center justify-center text-gray-400">
+                <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+                  <Phone className="w-8 h-8 text-gray-300" />
+                </div>
+                <p>Select a call to view details</p>
               </div>
             )}
+          </div>
+
+          {/* 4. Dialpad (Right) */}
+          {/* On Desktop: Always Visible? No, previously visible unless hidden by dialerMode logic or width? */}
+          {/* User originally had 3 columns. Let's keep it consistent. */}
+          {/* Mobile: Shown if activeMobileTab === 'dialpad' */}
+
+          <div className={`
+              w-full md:w-96 border-l border-gray-200 bg-gray-50 flex flex-col
+              ${activeMobileTab === 'dialpad' ? 'flex absolute inset-0 z-40 bg-white' : 'hidden md:flex'}
+           `}>
+            {/* Mobile Header for Dialpad to close it */}
+            <div className="md:hidden p-4 flex justify-between items-center border-b border-gray-200">
+              <h2 className="font-bold text-lg">Keypad</h2>
+              <button onClick={() => setActiveMobileTab('list')} className="p-2 bg-gray-100 rounded-full">
+                <ArrowDownLeft className="w-5 h-5 rotate-90" />
+              </button>
+            </div>
+
+            <div className="flex-1 p-8 flex flex-col justify-center max-w-sm mx-auto w-full">
+              {/* Status Indicator */}
+              <div className="mb-8 text-center">
+                <div className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${callStatus === 'Ready' ? 'bg-green-100 text-green-700' :
+                    callStatus.includes('Error') ? 'bg-red-100 text-red-700' :
+                      'bg-blue-100 text-blue-700'
+                  }`}>
+                  <div className={`w-2 h-2 rounded-full mr-2 ${callStatus === 'Ready' ? 'bg-green-500' :
+                      callStatus.includes('Error') ? 'bg-red-500' :
+                        'bg-blue-500 animate-pulse'
+                    }`} />
+                  {callStatus}
+                </div>
+              </div>
+
+              {/* Add Caller ID Selection Here */}
+              {verifiedCallerIds.length > 0 && (
+                <div className="mb-4">
+                  <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1.5 ml-1">
+                    Call From:
+                  </label>
+                  <select
+                    className="w-full bg-white border border-gray-300 text-gray-700 py-2 px-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent text-sm shadow-sm"
+                    value={selectedCallerId}
+                    onChange={(e) => setSelectedCallerId(e.target.value)}
+                    aria-label="Select Caller ID"
+                  >
+                    {verifiedCallerIds.map(num => (
+                      <option key={num} value={num}>{num}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              <Dialpad onCall={(num) => handleCall(num, selectedCallerId)} disabled={status !== 'online'} />
+            </div>
           </div>
         </>
       )}
 
       {currentView === 'messages' && (
-        <MessagesPanel key={initialConvId || 'messages'} initialConversationId={initialConvId} />
+        <MessagesPanel
+          activeCall={activeCall}
+          callStatus={callStatus}
+          handleHangup={handleHangup}
+          toggleMute={toggleMute}
+          isMuted={isMuted}
+          duration={duration}
+          formatDuration={formatDuration}
+          setIsKeypadOpen={setIsKeypadOpen}
+        />
       )}
 
-      {currentView === 'campaigns' && !dialerMode && (
+      {currentView === 'campaigns' && (
         <CampaignManager onStartDialer={handleStartDialer} />
       )}
 
