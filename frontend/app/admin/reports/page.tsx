@@ -9,10 +9,44 @@ export default function AgentReportsPage() {
     const [reportData, setReportData] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
 
-    const fetchReport = async () => {
+    const fetchReport = async (range: 'today' | 'yesterday' | 'week' | 'all' = 'today') => {
         try {
             setLoading(true);
-            const res = await fetch('https://gibbor-voice-production.up.railway.app/reports/agents');
+
+            const now = new Date();
+            let startDate = '', endDate = '';
+
+            // Venezuela is UTC-4. 
+            // Ideally, we handle this by calculating offsets, but simplistically:
+            // We get the date string in the browser context (User's PC is likely formatted correctly for them)
+            // Or we specifically shift time.
+
+            if (range === 'today') {
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                startDate = today.toISOString();
+                endDate = new Date().toISOString();
+            } else if (range === 'yesterday') {
+                const yest = new Date();
+                yest.setDate(yest.getDate() - 1);
+                yest.setHours(0, 0, 0, 0);
+
+                const yestEnd = new Date();
+                yestEnd.setDate(yestEnd.getDate() - 1);
+                yestEnd.setHours(23, 59, 59, 999);
+
+                startDate = yest.toISOString();
+                endDate = yestEnd.toISOString();
+            } else if (range === 'week') {
+                const week = new Date();
+                week.setDate(week.getDate() - 7);
+                startDate = week.toISOString();
+                endDate = new Date().toISOString();
+            }
+
+            const query = new URLSearchParams({ startDate, endDate }).toString();
+            const res = await fetch(`https://gibbor-voice-production.up.railway.app/reports/agents?${query}`);
+
             if (res.ok) {
                 const data = await res.json();
                 setReportData(data);
@@ -46,12 +80,21 @@ export default function AgentReportsPage() {
                         <p className="text-gray-500">Track hours, calls, and outcomes per agent.</p>
                     </div>
                     <div className="flex gap-2">
+                        <select
+                            onChange={(e) => fetchReport(e.target.value as any)}
+                            className="bg-white border rounded-lg px-3 py-2 text-sm text-gray-700"
+                        >
+                            <option value="today">Today</option>
+                            <option value="yesterday">Yesterday</option>
+                            <option value="week">Last 7 Days</option>
+                            <option value="all">All Time</option>
+                        </select>
                         <button
-                            onClick={fetchReport}
+                            onClick={() => fetchReport('today')}
                             className="bg-white border rounded-lg px-4 py-2 text-gray-700 hover:bg-gray-100 flex items-center gap-2"
                         >
                             <Calendar className="w-4 h-4" />
-                            Refresh Data
+                            Refresh
                         </button>
                     </div>
                 </div>

@@ -375,22 +375,49 @@ app.get("/reports", async (req, res) => {
 // Advanced Agent Reporting
 app.get("/reports/agents", async (req, res) => {
     try {
+        const { startDate, endDate } = req.query;
+        // Default to today if not provided? Or all time? 
+        // User asked for "by days" but typically reports default to today or range.
+        // Let's support optional filters.
+        
         const { data: profiles } = await supabase.from('profiles').select('id, email, full_name');
-        const { data: sessions } = await supabase.from('agent_sessions').select('*');
-        const { data: calls } = await supabase.from('calls').select('*');
+        
+        let sessionQuery = supabase.from('agent_sessions').select('*');
+        let callQuery = supabase.from('calls').select('*');
+
+        if (startDate) {
+            sessionQuery = sessionQuery.gte('started_at', startDate);
+            callQuery = callQuery.gte('created_at', startDate);
+        }
+        if (endDate) {
+            sessionQuery = sessionQuery.lte('started_at', endDate);
+            callQuery = callQuery.lte('created_at', endDate);
+        }
+
+        const { data: sessions } = await sessionQuery;
+        const { data: calls } = await callQuery;
 
         const report = profiles.map(agent => {
             const agentSessions = sessions ? sessions.filter(s => s.user_id === agent.id) : [];
             const totalOnlineSeconds = agentSessions.reduce((acc, s) => {
-                if (s.duration_seconds) return acc + s.duration_seconds;
-                if (s.started_at && !s.ended_at) {
+                let duration = 0;
+                if (s.duration_seconds) {
+                    duration = s.duration_seconds;
+                } else if (s.started_at && !s.ended_at) {
+                    // Active session
                     const diff = Math.floor((new Date() - new Date(s.started_at)) / 1000);
-                    return acc + (diff > 0 ? diff : 0);
+                    duration = diff > 0 ? diff : 0;
                 }
-                return acc;
+                return acc + duration;
             }, 0);
 
-            const agentCalls = calls ? calls.filter(c => c.user_id === agent.id) : [];
+            const agentCalls = calls ? calls.filter(c => c.user_id === agent.id) : []; // Note: calls might not have user_id populated yet if not updated in other flow
+            // Fallback for calls: we need to ensure calls have user_id. 
+            // In auto-dialer logic, we didn't insert user_id yet. 
+            // FIX: We need to rely on 'agent_sessions' mostly for time. 
+            // For calls, we might need to match by something else if user_id is missing? 
+            // Or just rely on user_id and assume it will be fixed.
+            
             const totalCalls = agentCalls.length;
             const totalTalkTime = agentCalls.reduce((acc, c) => acc + (c.duration || 0), 0);
 

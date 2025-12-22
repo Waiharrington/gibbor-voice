@@ -91,14 +91,43 @@ export function AgentStatusProvider({ children }: { children: React.ReactNode })
                 user_id: user.id,
                 email: user.email,
                 status: status,
-                online_at: new Date().toISOString(), // Keep original check-in time? Ideally yes, but track updates object.
-                // We might want to persist 'online_at' in state to not reset it?
-                // For now, let's just send current time or keep it simple.
-                // Actually, if we update presence, we replace the object.
-                // Better to store 'online_at' in state.
+                online_at: new Date().toISOString(),
             });
         }
     }, [status]);
+
+    // 4. Inactivity Timer (Auto Logout)
+    useEffect(() => {
+        let timeout: NodeJS.Timeout;
+
+        const resetTimer = () => {
+            if (!user) return;
+            clearTimeout(timeout);
+            // 15 Minutes = 900,000 ms
+            timeout = setTimeout(handleInactivity, 15 * 60 * 1000);
+        };
+
+        const handleInactivity = async () => {
+            console.log("User inactive for 15 mins. Logging out...");
+            if (sessionId) await endSession(sessionId);
+            await supabase.auth.signOut();
+            window.location.href = '/login'; // Force redirect
+        };
+
+        // Listen for events
+        window.addEventListener('mousemove', resetTimer);
+        window.addEventListener('keydown', resetTimer);
+        window.addEventListener('click', resetTimer);
+
+        resetTimer(); // Init
+
+        return () => {
+            clearTimeout(timeout);
+            window.removeEventListener('mousemove', resetTimer);
+            window.removeEventListener('keydown', resetTimer);
+            window.removeEventListener('click', resetTimer);
+        };
+    }, [user, sessionId]);
 
     const startSession = async (userId: string) => {
         // Only start if agent (optional check, or just log everyone)
