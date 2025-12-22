@@ -65,30 +65,32 @@ export default function Sidebar({ currentView, onViewChange }: SidebarProps) {
     return (
         <>
             {/* Mobile Toggle */}
-            <div className="lg:hidden fixed top-0 left-0 p-4 z-50">
-                <button
-                    onClick={() => setIsOpen(!isOpen)}
-                    className="p-2 bg-white rounded-lg shadow-md border border-gray-200 text-gray-700 mt-2"
-                    aria-label="Toggle Sidebar"
-                    title="Toggle Sidebar"
-                >
-                    <div className="space-y-1">
-                        <span className={`block w-6 h-0.5 bg-gray-600 transition-transform ${isOpen ? 'rotate-45 translate-y-1.5' : ''}`}></span>
-                        <span className={`block w-6 h-0.5 bg-gray-600 transition-opacity ${isOpen ? 'opacity-0' : ''}`}></span>
-                        <span className={`block w-6 h-0.5 bg-gray-600 transition-transform ${isOpen ? '-rotate-45 -translate-y-1.5' : ''}`}></span>
-                    </div>
-                </button>
-            </div>
+            {!isControlled && (
+                <div className="lg:hidden fixed top-0 left-0 p-4 z-50">
+                    <button
+                        onClick={handleToggle}
+                        className="p-2 bg-white rounded-lg shadow-md border border-gray-200 text-gray-700 mt-2"
+                        aria-label="Toggle Sidebar"
+                        title="Toggle Sidebar"
+                    >
+                        <div className="space-y-1">
+                            <span className={`block w-6 h-0.5 bg-gray-600 transition-transform ${showSidebar ? 'rotate-45 translate-y-1.5' : ''}`}></span>
+                            <span className={`block w-6 h-0.5 bg-gray-600 transition-opacity ${showSidebar ? 'opacity-0' : ''}`}></span>
+                            <span className={`block w-6 h-0.5 bg-gray-600 transition-transform ${showSidebar ? '-rotate-45 -translate-y-1.5' : ''}`}></span>
+                        </div>
+                    </button>
+                </div>
+            )}
 
             {/* Overlay */}
-            {isOpen && (
+            {showSidebar && (
                 <div
                     className="fixed inset-0 bg-black/50 z-30 lg:hidden"
-                    onClick={() => setIsOpen(false)}
+                    onClick={handleClose}
                 />
             )}
 
-            <aside className={`fixed inset-y-0 left-0 z-40 w-64 bg-gray-50 border-r border-gray-200 h-screen flex flex-col transform transition-transform duration-200 ease-in-out lg:translate-x-0 lg:static ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+            <aside className={`fixed inset-y-0 left-0 z-40 w-64 bg-gray-50 border-r border-gray-200 h-screen flex flex-col transform transition-transform duration-200 ease-in-out lg:translate-x-0 lg:static ${showSidebar ? 'translate-x-0' : '-translate-x-full'}`}>
                 <div className="p-4 flex items-center space-x-2 border-b border-gray-100">
                     <div className="w-8 h-8 bg-cyan-500 rounded-full flex items-center justify-center text-white font-bold">
                         G
