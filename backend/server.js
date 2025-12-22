@@ -217,11 +217,32 @@ app.post("/recording-status", async (req, res) => {
 // Send SMS/MMS
 app.post("/messages", async (req, res) => {
     try {
-        const { to, body, mediaUrl } = req.body;
+        const { to, body, mediaUrl, from } = req.body;
+
+        let sender = from;
+
+        // Smart Reply: If no specific sender provided, try to match the number they texted us at originally
+        if (!sender) {
+            const { data: lastInbound } = await supabase
+                .from('messages')
+                .select('to')
+                .eq('from', to) // Messages FROM the lead
+                .eq('direction', 'inbound')
+                .order('created_at', { ascending: false })
+                .limit(1)
+                .single();
+
+            if (lastInbound && lastInbound.to) {
+                sender = lastInbound.to;
+            }
+        }
+
+        // Fallback
+        if (!sender) sender = process.env.TWILIO_PHONE_NUMBER;
 
         const messageOptions = {
             body: body,
-            from: process.env.TWILIO_PHONE_NUMBER,
+            from: sender,
             to: to
         };
 
@@ -232,7 +253,7 @@ app.post("/messages", async (req, res) => {
         const message = await twilioClient.messages.create(messageOptions);
 
         await supabase.from('messages').insert({
-            from: process.env.TWILIO_PHONE_NUMBER,
+            from: sender,
             to: to,
             body: body,
             media_url: mediaUrl || null,
@@ -379,9 +400,9 @@ app.get("/reports/agents", async (req, res) => {
         // Default to today if not provided? Or all time? 
         // User asked for "by days" but typically reports default to today or range.
         // Let's support optional filters.
-        
+
         const { data: profiles } = await supabase.from('profiles').select('id, email, full_name');
-        
+
         let sessionQuery = supabase.from('agent_sessions').select('*');
         let callQuery = supabase.from('calls').select('*');
 
@@ -417,7 +438,7 @@ app.get("/reports/agents", async (req, res) => {
             // FIX: We need to rely on 'agent_sessions' mostly for time. 
             // For calls, we might need to match by something else if user_id is missing? 
             // Or just rely on user_id and assume it will be fixed.
-            
+
             const totalCalls = agentCalls.length;
             const totalTalkTime = agentCalls.reduce((acc, c) => acc + (c.duration || 0), 0);
 
