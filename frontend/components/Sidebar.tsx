@@ -65,7 +65,7 @@ export default function Sidebar({ currentView, onViewChange }: SidebarProps) {
     return (
         <>
             {/* Mobile Toggle */}
-            <div className="2xl:hidden fixed top-0 left-0 p-4 z-50">
+            <div className="lg:hidden fixed top-0 left-0 p-4 z-50">
                 <button
                     onClick={() => setIsOpen(!isOpen)}
                     className="p-2 bg-white rounded-lg shadow-md border border-gray-200 text-gray-700 mt-2"
@@ -83,12 +83,12 @@ export default function Sidebar({ currentView, onViewChange }: SidebarProps) {
             {/* Overlay */}
             {isOpen && (
                 <div
-                    className="fixed inset-0 bg-black/50 z-30 2xl:hidden"
+                    className="fixed inset-0 bg-black/50 z-30 lg:hidden"
                     onClick={() => setIsOpen(false)}
                 />
             )}
 
-            <aside className={`fixed inset-y-0 left-0 z-40 w-64 bg-gray-50 border-r border-gray-200 h-screen flex flex-col transform transition-transform duration-200 ease-in-out 2xl:translate-x-0 2xl:static ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+            <aside className={`fixed inset-y-0 left-0 z-40 w-64 bg-gray-50 border-r border-gray-200 h-screen flex flex-col transform transition-transform duration-200 ease-in-out lg:translate-x-0 lg:static ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}>
                 <div className="p-4 flex items-center space-x-2 border-b border-gray-100">
                     <div className="w-8 h-8 bg-cyan-500 rounded-full flex items-center justify-center text-white font-bold">
                         G
