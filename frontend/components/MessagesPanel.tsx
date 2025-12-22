@@ -103,8 +103,9 @@ export default function MessagesPanel({ initialConversationId }: MessagesPanelPr
                 body: JSON.stringify({ to: selectedConversationId, body }),
             });
             setBody('');
-        } catch (error) {
+        } catch (error: any) {
             console.error('Error sending:', error);
+            alert(`Error: ${error.message || 'Failed to send SMS'}`);
         } finally {
             setIsSending(false);
         }
