@@ -502,7 +502,7 @@ export default function Home() {
 
   // Auto-switch to Details on selection (mobile)
   useEffect(() => {
-    if (selectedCall && window.innerWidth < 768) {
+    if (selectedCall && window.innerWidth < 1024) {
       setActiveMobileTab('details');
     }
   }, [selectedCall]);
@@ -524,7 +524,7 @@ export default function Home() {
       <Sidebar currentView={currentView} onViewChange={handleViewChange} />
 
       {/* Mobile Tab Bar (Bottom) - Only Visible on Mobile */}
-      <div className="md:hidden fixed bottom-0 left-0 right-0 h-16 bg-white border-t border-gray-200 z-50 flex justify-around items-center">
+      <div className="lg:hidden fixed bottom-0 left-0 right-0 h-16 bg-white border-t border-gray-200 z-50 flex justify-around items-center">
         <button
           onClick={() => setActiveMobileTab('list')}
           className={`flex flex-col items-center p-2 ${activeMobileTab === 'list' ? 'text-cyan-600' : 'text-gray-400'}`}
@@ -559,8 +559,8 @@ export default function Home() {
         <>
           {/* 2. Call List (Left) */}
           <div className={`
-              w-full md:w-80 border-r border-gray-200 flex flex-col bg-white
-              ${activeMobileTab === 'list' ? 'flex' : 'hidden md:flex'}
+              w-full lg:w-80 border-r border-gray-200 flex flex-col bg-white
+              ${activeMobileTab === 'list' ? 'flex' : 'hidden lg:flex'}
           `}>
             {/* Search Header */}
             <div className="p-4 border-b border-gray-100 flex items-center gap-2">
@@ -575,7 +575,7 @@ export default function Home() {
             </div>
 
             {/* List */}
-            <div className="flex-1 overflow-y-auto mb-16 md:mb-0">
+            <div className="flex-1 overflow-y-auto mb-16 lg:mb-0">
               {isLoading ? (
                 <div className="flex items-center justify-center h-48 text-gray-400">
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-cyan-500 mr-2"></div>
@@ -593,7 +593,7 @@ export default function Home() {
                     key={call.id}
                     onClick={() => {
                       setSelectedCall(call);
-                      if (window.innerWidth < 768) setActiveMobileTab('details');
+                      if (window.innerWidth < 1024) setActiveMobileTab('details');
                     }}
                     className={`p-4 flex items-center cursor-pointer transition-colors border-l-4 ${selectedCall?.id === call.id
                       ? 'bg-cyan-50 border-cyan-500'
@@ -637,17 +637,17 @@ export default function Home() {
           {/* 3. Center Panel (Details) */}
           <div className={`
              flex-1 flex-col bg-white border-r border-gray-200
-             ${activeMobileTab === 'details' ? 'flex' : 'hidden md:flex'}
+             ${activeMobileTab === 'details' ? 'flex' : 'hidden lg:flex'}
           `}>
             {/* Note: Added flex above to ensure it displays correctly when active */}
             {selectedCall ? (
-              <div className="flex-1 flex flex-col mb-16 md:mb-0">
+              <div className="flex-1 flex flex-col mb-16 lg:mb-0">
                 {/* Header */}
                 <header className="h-16 border-b border-gray-200 flex justify-between items-center px-6">
                   <div className="flex items-center gap-2">
                     <button
                       onClick={() => setActiveMobileTab('list')}
-                      className="md:hidden p-2 -ml-2 text-gray-500"
+                      className="lg:hidden p-2 -ml-2 text-gray-500"
                     >
                       <ArrowDownLeft className="w-5 h-5 rotate-90" /> {/* Back Icon Hack */}
                     </button>
@@ -762,11 +762,11 @@ export default function Home() {
           {/* Mobile: Shown if activeMobileTab === 'dialpad' */}
 
           <div className={`
-              w-full md:w-96 border-l border-gray-200 bg-gray-50 flex flex-col
-              ${activeMobileTab === 'dialpad' ? 'flex absolute inset-0 z-40 bg-white' : 'hidden md:flex'}
+              w-full lg:w-96 border-l border-gray-200 bg-gray-50 flex flex-col
+              ${activeMobileTab === 'dialpad' ? 'flex absolute inset-0 z-40 bg-white' : 'hidden lg:flex'}
            `}>
             {/* Mobile Header for Dialpad to close it */}
-            <div className="md:hidden p-4 flex justify-between items-center border-b border-gray-200">
+            <div className="lg:hidden p-4 flex justify-between items-center border-b border-gray-200">
               <h2 className="font-bold text-lg">Keypad</h2>
               <button onClick={() => setActiveMobileTab('list')} className="p-2 bg-gray-100 rounded-full">
                 <ArrowDownLeft className="w-5 h-5 rotate-90" />
