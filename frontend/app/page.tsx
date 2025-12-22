@@ -502,7 +502,7 @@ export default function Home() {
 
   // Auto-switch to Details on selection (mobile)
   useEffect(() => {
-    if (selectedCall && window.innerWidth < 1024) {
+    if (selectedCall && window.innerWidth < 1280) {
       setActiveMobileTab('details');
     }
   }, [selectedCall]);
@@ -524,7 +524,7 @@ export default function Home() {
       <Sidebar currentView={currentView} onViewChange={handleViewChange} />
 
       {/* Mobile Tab Bar (Bottom) - Only Visible on Mobile */}
-      <div className="lg:hidden fixed bottom-0 left-0 right-0 h-16 bg-white border-t border-gray-200 z-50 flex justify-around items-center">
+      <div className="xl:hidden fixed bottom-0 left-0 right-0 h-16 bg-white border-t border-gray-200 z-50 flex justify-around items-center">
         <button
           onClick={() => setActiveMobileTab('list')}
           className={`flex flex-col items-center p-2 ${activeMobileTab === 'list' ? 'text-cyan-600' : 'text-gray-400'}`}
@@ -559,8 +559,8 @@ export default function Home() {
         <>
           {/* 2. Call List (Left) */}
           <div className={`
-              w-full lg:w-80 border-r border-gray-200 flex flex-col bg-white
-              ${activeMobileTab === 'list' ? 'flex' : 'hidden lg:flex'}
+              w-full xl:w-80 border-r border-gray-200 flex flex-col bg-white
+              ${activeMobileTab === 'list' ? 'flex' : 'hidden xl:flex'}
           `}>
             {/* Search Header */}
             <div className="p-4 border-b border-gray-100 flex items-center gap-2">
@@ -575,7 +575,7 @@ export default function Home() {
             </div>
 
             {/* List */}
-            <div className="flex-1 overflow-y-auto mb-16 lg:mb-0">
+            <div className="flex-1 overflow-y-auto mb-16 xl:mb-0">
               {isLoading ? (
                 <div className="flex items-center justify-center h-48 text-gray-400">
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-cyan-500 mr-2"></div>
@@ -593,7 +593,7 @@ export default function Home() {
                     key={call.id}
                     onClick={() => {
                       setSelectedCall(call);
-                      if (window.innerWidth < 1024) setActiveMobileTab('details');
+                      if (window.innerWidth < 1280) setActiveMobileTab('details');
                     }}
                     className={`p-4 flex items-center cursor-pointer transition-colors border-l-4 ${selectedCall?.id === call.id
                       ? 'bg-cyan-50 border-cyan-500'
@@ -762,11 +762,11 @@ export default function Home() {
           {/* Mobile: Shown if activeMobileTab === 'dialpad' */}
 
           <div className={`
-              w-full lg:w-96 border-l border-gray-200 bg-gray-50 flex flex-col
-              ${activeMobileTab === 'dialpad' ? 'flex absolute inset-0 z-40 bg-white' : 'hidden lg:flex'}
+              w-full xl:w-96 border-l border-gray-200 bg-gray-50 flex flex-col
+              ${activeMobileTab === 'dialpad' ? 'flex absolute inset-0 z-40 bg-white' : 'hidden xl:flex'}
            `}>
             {/* Mobile Header for Dialpad to close it */}
-            <div className="lg:hidden p-4 flex justify-between items-center border-b border-gray-200">
+            <div className="xl:hidden p-4 flex justify-between items-center border-b border-gray-200">
               <h2 className="font-bold text-lg">Keypad</h2>
               <button onClick={() => setActiveMobileTab('list')} className="p-2 bg-gray-100 rounded-full">
                 <ArrowDownLeft className="w-5 h-5 rotate-90" />
