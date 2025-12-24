@@ -548,7 +548,7 @@ export default function Home() {
       <div className="flex-1 flex flex-col pt-16 lg:pt-0 h-full">
 
         {/* Mobile Bottom Nav (Google Voice Style) */}
-        <div className="lg:hidden fixed bottom-0 left-0 right-0 h-20 bg-[#1e1e1e] border-t border-gray-800 z-50 flex justify-around items-center pb-2 text-gray-400">
+        <div className="2xl:hidden fixed bottom-0 left-0 right-0 h-20 bg-[#1e1e1e] border-t border-gray-800 z-50 flex justify-around items-center pb-2 text-gray-400">
           <button
             onClick={() => { setActiveMobileTab('calls'); handleViewChange('calls'); }}
             className={`flex flex-col items-center justify-center w-full h-full ${activeMobileTab === 'calls' ? 'text-blue-400' : ''}`}
@@ -593,7 +593,7 @@ export default function Home() {
         {/* Floating Action Button (FAB) */}
         <button
           onClick={() => setDialerMode(true)}
-          className="lg:hidden fixed bottom-24 right-4 w-14 h-14 bg-cyan-600 rounded-xl shadow-lg flex items-center justify-center text-white z-50 hover:bg-cyan-500 transition-colors"
+          className="2xl:hidden fixed bottom-24 right-4 w-14 h-14 bg-cyan-600 rounded-xl shadow-lg flex items-center justify-center text-white z-50 hover:bg-cyan-500 transition-colors"
         >
           <div className="grid grid-cols-3 gap-1 p-1">
             {[...Array(9)].map((_, i) => <div key={i} className="w-1 h-1 bg-white rounded-full"></div>)}
