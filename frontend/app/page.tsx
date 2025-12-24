@@ -525,7 +525,7 @@ export default function Home() {
       />
 
       {/* Top Mobile Header (Google Voice Style) */}
-      <div className="lg:hidden fixed top-0 left-0 right-0 h-16 bg-gray-900 text-white flex items-center px-4 z-50 shadow-md">
+      <div className="2xl:hidden fixed top-0 left-0 right-0 h-16 bg-gray-900 text-white flex items-center px-4 z-50 shadow-md">
         <button className="p-2 mr-2 text-gray-300">
           <MoreVertical className="w-6 h-6 rotate-90" /> {/* Hamburger Approximation */}
         </button>
