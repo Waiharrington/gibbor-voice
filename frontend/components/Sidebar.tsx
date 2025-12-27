@@ -11,12 +11,35 @@ import { usePresence } from '@/hooks/usePresence';
 interface SidebarProps {
     currentView?: string;
     onViewChange?: (view: string) => void;
+    isOpen?: boolean;
+    onClose?: () => void;
 }
 
-export default function Sidebar({ currentView, onViewChange }: SidebarProps) {
+export default function Sidebar({ currentView, onViewChange, isOpen: externalIsOpen, onClose }: SidebarProps) {
     const router = useRouter();
     const [isAdmin, setIsAdmin] = useState(false);
     const [user, setUser] = useState<any>(null);
+    const [internalIsOpen, setInternalIsOpen] = useState(false);
+
+    // Determine if controlled or uncontrolled
+    const isControlled = typeof externalIsOpen !== 'undefined';
+    const showSidebar = isControlled ? externalIsOpen : internalIsOpen;
+
+    const handleToggle = () => {
+        if (isControlled) {
+            if (onClose) onClose();
+        } else {
+            setInternalIsOpen(!internalIsOpen);
+        }
+    };
+    
+    const handleClose = () => {
+        if (isControlled) {
+             if (onClose) onClose();
+        } else {
+            setInternalIsOpen(false);
+        }
+    };
 
     // Broadcast Presence
     usePresence(user);
@@ -53,14 +76,15 @@ export default function Sidebar({ currentView, onViewChange }: SidebarProps) {
         if (onViewChange) {
             e.preventDefault();
             onViewChange(view);
-            setIsOpen(false); // Close mobile menu
+             // Close on nav click if mobile
+            if (window.innerWidth < 1536) {
+                 handleClose();
+            }
         } else {
             // If no view handler (e.g. we are in Admin page), navigate to dashboard
             router.push('/');
         }
     };
-
-    const [isOpen, setIsOpen] = useState(false);
 
     return (
         <>

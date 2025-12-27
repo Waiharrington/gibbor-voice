@@ -499,6 +499,7 @@ export default function Home() {
 
   // Mobile Tabs - Extended to match Google Voice
   const [activeMobileTab, setActiveMobileTab] = useState<'calls' | 'contacts' | 'messages' | 'voicemail'>('calls');
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   // Auto-switch to Details on selection (mobile)
   useEffect(() => {
@@ -518,15 +519,16 @@ export default function Home() {
       <Sidebar
         currentView={currentView}
         onViewChange={handleViewChange}
-        isOpen={activeMobileTab === 'contacts'} // Hack to reuse existing prop or we need a new isOpen state lifted up
-      // Actually Sidebar handles its own open state internally for mobile overlay usually, 
-      // but let's assume we need to trigger it from the Header.
-      // We might need to pass a ref or control state from here.
+        isOpen={isSidebarOpen}
+        onClose={() => setIsSidebarOpen(false)}
       />
 
       {/* Top Mobile Header (Google Voice Style) */}
       <div className="2xl:hidden fixed top-0 left-0 right-0 h-16 bg-gray-900 text-white flex items-center px-4 z-50 shadow-md">
-        <button className="p-2 mr-2 text-gray-300">
+        <button
+          className="p-2 mr-2 text-gray-300"
+          onClick={() => setIsSidebarOpen(true)}
+        >
           <MoreVertical className="w-6 h-6 rotate-90" /> {/* Hamburger Approximation */}
         </button>
 
