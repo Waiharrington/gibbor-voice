@@ -130,6 +130,9 @@ export default function Home() {
   const [currentLead, setCurrentLead] = useState<any | null>(null);
   const [dialerMode, setDialerMode] = useState(false);
 
+  // --- API Configuration ---
+  const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://gibbor-voice-production.up.railway.app';
+
   // Reset selected statuses when currentLead changes
   useEffect(() => {
     if (currentLead?.status) {
@@ -166,7 +169,7 @@ export default function Home() {
   useEffect(() => {
     async function fetchNumbers() {
       try {
-        const res = await fetch(`https://gibbor-voice-production.up.railway.app/incoming-phone-numbers`);
+        const res = await fetch(`${API_BASE_URL}/phone-numbers`);
         if (res.ok) {
           const nums = await res.json();
           setAvailableNumbers(nums);
@@ -216,8 +219,8 @@ export default function Home() {
       const excludeParam = uniqueExcludes.length > 0 ? uniqueExcludes.join(',') : '';
 
       const url = excludeParam
-        ? `https://gibbor-voice-production.up.railway.app/campaigns/${campaignId}/next-lead?exclude_id=${excludeParam}`
-        : `https://gibbor-voice-production.up.railway.app/campaigns/${campaignId}/next-lead`;
+        ? `${API_BASE_URL}/campaigns/${campaignId}/next-lead?exclude_id=${excludeParam}`
+        : `${API_BASE_URL}/campaigns/${campaignId}/next-lead`;
 
       const res = await fetch(url);
       if (!res.ok) throw new Error("Failed to fetch next lead");
@@ -272,7 +275,7 @@ export default function Home() {
       // Update local state immediately for UI responsiveness
       setCurrentLead((prev: any) => prev ? { ...prev, status: statusString } : null);
 
-      await fetch(`https://gibbor-voice-production.up.railway.app/leads/${currentLead.id}/update`, {
+      await fetch(`${API_BASE_URL}/leads/${currentLead.id}/update`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: statusString, notes })
