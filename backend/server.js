@@ -105,9 +105,9 @@ app.get("/phone-numbers", async (req, res) => {
 app.post("/incoming-call", async (req, res) => {
     const twiml = new twilio.twiml.VoiceResponse();
     // callerId is passed from frontend device.connect params (renamed to appCallerId to avoid conflict)
-    const { To, From, CallSid, appCallerId } = req.body;
+    const { To, From, CallSid, appCallerId, appUserId } = req.body;
 
-    console.log("Webhook hit. To:", To, "CallSid:", CallSid, "Custom CallerId:", appCallerId);
+    console.log("Webhook hit. To:", To, "CallSid:", CallSid, "Custom CallerId:", appCallerId, "UserID:", appUserId);
 
     // Determine direction based on caller
     // If From starts with 'client:', it's an outbound call FROM the browser.
@@ -116,13 +116,16 @@ app.post("/incoming-call", async (req, res) => {
 
     // Log incoming call to Supabase
     try {
-        await supabase.from('calls').insert({
+        const payload = {
             from: From,
             to: To,
             direction: direction,
             status: 'ringing',
             sid: CallSid
-        });
+        };
+        if (appUserId) payload.user_id = appUserId;
+
+        await supabase.from('calls').insert(payload);
     } catch (e) {
         console.error("Error logging incoming call:", e);
     }
@@ -296,10 +299,19 @@ app.post("/incoming-message", async (req, res) => {
 // History Endpoints
 app.get("/history/calls", async (req, res) => {
     try {
-        const { data, error } = await supabase
+        const { userId, role } = req.query;
+        let query = supabase
             .from('calls')
             .select('*')
             .order('created_at', { ascending: false });
+
+        // Isolation Logic:
+        // If provided userId and NOT admin, filter by user_id
+        if (userId && role !== 'admin') {
+            query = query.eq('user_id', userId);
+        }
+
+        const { data, error } = await query;
 
         if (error) throw error;
         res.json(data);
