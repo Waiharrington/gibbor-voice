@@ -149,6 +149,7 @@ export default function Home() {
 
   // Auth Protection
   const [user, setUser] = useState<any>(null);
+  const [userRole, setUserRole] = useState<string | null>(null);
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -157,6 +158,18 @@ export default function Home() {
         router.push('/login');
       } else {
         setUser(user);
+        // Fetch Role
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', user.id)
+          .single();
+        if (profile) setUserRole(profile.role);
+
+        // Fallback for hardcoded admin
+        if (user.email === 'admin@gibborcenter.com' || user.email === 'info@gibborcenter.com') {
+          setUserRole('admin');
+        }
       }
     };
     checkAuth();
@@ -365,10 +378,11 @@ export default function Home() {
         setIdentity(tokenData.identity);
 
         // 2. Get History (Filtered by User)
-        // Check for admin role? For now, server handles logic if we pass userId.
-        // We'll pass userId. Server logic: if userId matches call.user_id OR role is admin.
-        // We need to pass the current user's ID.
-        const historyRes = await fetch(`${API_BASE_URL}/history/calls?userId=${user.id}`);
+        // Pass userId and role if available
+        let historyUrl = `${API_BASE_URL}/history/calls?userId=${user.id}`;
+        if (userRole) historyUrl += `&role=${userRole}`;
+
+        const historyRes = await fetch(historyUrl);
         if (!historyRes.ok) throw new Error('Failed to fetch history');
         const historyData = await historyRes.json();
         setCalls(historyData);
