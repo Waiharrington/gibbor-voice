@@ -148,15 +148,19 @@ export default function Home() {
   const [initialConvId, setInitialConvId] = useState<string | null>(null);
 
   // Auth Protection
+  const [user, setUser] = useState<any>(null);
+
   useEffect(() => {
     const checkAuth = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
         router.push('/login');
+      } else {
+        setUser(user);
       }
     };
     checkAuth();
-  }, []);
+  }, [router]);
 
   // History Stack for Back functionality
   const [leadHistory, setLeadHistory] = useState<any[]>([]);
@@ -343,18 +347,28 @@ export default function Home() {
 
   // Fetch token & History
   useEffect(() => {
+    if (!user) return; // Wait for user
+
     const init = async () => {
       try {
         setIsLoading(true);
-        // 1. Get Token
-        const tokenRes = await fetch('https://gibbor-voice-production.up.railway.app/token');
+        // 1. Get Token (Pass identity for better tracking)
+        // const identity = user.email || 'agent';
+        // const tokenRes = await fetch(`${API_BASE_URL}/token?identity=${encodeURIComponent(identity)}`);
+        // Reverting identity change to avoid breaking existing token logic if not updated on backend fully yet.
+        // But we DO need to pass user info for history.
+
+        const tokenRes = await fetch(`${API_BASE_URL}/token`);
         if (!tokenRes.ok) throw new Error('Failed to fetch token');
         const tokenData = await tokenRes.json();
         setToken(tokenData.token);
         setIdentity(tokenData.identity);
 
-        // 2. Get History
-        const historyRes = await fetch('https://gibbor-voice-production.up.railway.app/history/calls');
+        // 2. Get History (Filtered by User)
+        // Check for admin role? For now, server handles logic if we pass userId.
+        // We'll pass userId. Server logic: if userId matches call.user_id OR role is admin.
+        // We need to pass the current user's ID.
+        const historyRes = await fetch(`${API_BASE_URL}/history/calls?userId=${user.id}`);
         if (!historyRes.ok) throw new Error('Failed to fetch history');
         const historyData = await historyRes.json();
         setCalls(historyData);
@@ -451,6 +465,7 @@ export default function Home() {
       const params: any = { To: number };
       // Use appCallerId to avoid potential Twilio param conflicts
       if (callerId) params.appCallerId = callerId;
+      if (user?.id) params.appUserId = user.id; // Pass User ID for isolation tracking
       console.log("[Client] Connecting with params:", params);
 
       const call = await device.connect({ params });
