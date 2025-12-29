@@ -306,9 +306,18 @@ app.get("/history/calls", async (req, res) => {
             .order('created_at', { ascending: false });
 
         // Isolation Logic:
-        // If provided userId and NOT admin, filter by user_id
-        if (userId && role !== 'admin') {
+        // STRICT: Default to showing NOTHING if not admin and no userId provided.
+
+        if (role === 'admin') {
+            // Admin sees all - no filter needed
+        } else if (userId) {
+            // Agent sees only their own calls
             query = query.eq('user_id', userId);
+        } else {
+            // Fallback: No role (guest?) or agent without ID -> Return empty or error
+            // Let's return empty array to avoid breaking UI, but secure.
+            // OR filter by a non-existent ID
+            query = query.eq('user_id', '00000000-0000-0000-0000-000000000000');
         }
 
         const { data, error } = await query;
