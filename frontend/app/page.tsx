@@ -893,14 +893,14 @@ export default function Home() {
                       onChange={(e) => setSelectedCallerId(e.target.value)}
                       aria-label="Select Caller ID"
                     >
-                      {verifiedCallerIds.map(num => (
-                        <option key={num} value={num}>{num}</option>
+                      {availableNumbers.map(num => (
+                        <option key={num.phoneNumber} value={num.phoneNumber}>{num.phoneNumber} {num.friendlyName ? `(${num.friendlyName})` : ''}</option>
                       ))}
                     </select>
                   </div>
                 )}
 
-                <Dialpad onCall={(num) => handleCall(num, selectedCallerId)} disabled={status !== 'online'} />
+                <Dialpad onCall={(num) => handleCall(num, selectedCallerId)} />
               </div>
             </div>
           </>
