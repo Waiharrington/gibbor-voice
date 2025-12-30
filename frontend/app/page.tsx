@@ -1312,6 +1312,7 @@ export default function Home() {
             </>
           ) : 'No User'}
         </div>
-      </div >
-      );
+      </div>
+    </div>
+  );
 }
