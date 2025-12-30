@@ -163,21 +163,21 @@ export default function Home() {
 
   useEffect(() => {
     const checkAuth = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
+      const { data: { user: currentUser } } = await supabase.auth.getUser();
+      if (!currentUser) {
         router.push('/login');
       } else {
-        setUser(user);
+        setUser(currentUser);
         // Fetch Role
         const { data: profile } = await supabase
           .from('profiles')
           .select('role')
-          .eq('id', user.id)
+          .eq('id', currentUser.id)
           .single();
         if (profile) setUserRole(profile.role);
 
         // Fallback for hardcoded admin
-        if (user.email === 'admin@gibborcenter.com' || user.email === 'info@gibborcenter.com') {
+        if (currentUser.email === 'admin@gibborcenter.com' || currentUser.email === 'info@gibborcenter.com') {
           setUserRole('admin');
         }
       }
