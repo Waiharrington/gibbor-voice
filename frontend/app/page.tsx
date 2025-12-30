@@ -548,7 +548,7 @@ export default function Home() {
   };
 
   // Mobile Tabs - Extended to match Google Voice
-  const [activeMobileTab, setActiveMobileTab] = useState<'calls' | 'contacts' | 'messages' | 'voicemail'>('calls');
+  const [activeMobileTab, setActiveMobileTab] = useState<'calls' | 'contacts' | 'messages' | 'voicemail' | 'details'>('calls');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   // Auto-switch to Details on selection (mobile)
@@ -744,7 +744,11 @@ export default function Home() {
                   <header className="h-16 border-b border-gray-200 flex justify-between items-center px-6">
                     <div className="flex items-center gap-2">
                       <button
-                        onClick={() => setActiveMobileTab('list')}
+                        onClick={() => {
+                          setSelectedCall(null);
+                          // If we were in details, go back to calls tab effectively
+                          setActiveMobileTab('calls');
+                        }}
                         className="lg:hidden p-2 -ml-2 text-gray-500"
                       >
                         <ArrowDownLeft className="w-5 h-5 rotate-90" /> {/* Back Icon Hack */}
