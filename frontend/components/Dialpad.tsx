@@ -4,44 +4,11 @@ import { useState, useEffect } from 'react';
 import { Phone, Delete, ChevronDown } from 'lucide-react';
 
 export default function Dialpad({
-    onCall,
-    availableNumbers,
-    selectedCallerId,
-    onCallerIdChange
+    onCall
 }: {
-    onCall: (number: string, callerId?: string) => void,
-    availableNumbers: any[],
-    selectedCallerId: string,
-    onCallerIdChange: (id: string) => void
+    onCall: (number: string) => void
 }) {
     const [number, setNumber] = useState('');
-    const [localNumbers, setLocalNumbers] = useState<any[]>([]);
-
-    const displayedNumbers = availableNumbers.length > 0 ? availableNumbers : localNumbers;
-
-    // Fallback fetch if props are empty (reliability)
-    useEffect(() => {
-        if (availableNumbers.length === 0) {
-            const fetchNumbers = async () => {
-                try {
-                    // Try the new endpoint first, then fallback to old if needed?
-                    // Let's stick to the one we know works for page.tsx:
-                    const res = await fetch('https://gibbor-voice-production.up.railway.app/incoming-phone-numbers');
-                    if (res.ok) {
-                        const data = await res.json();
-                        setLocalNumbers(data);
-                        // If we have data and no selectedCallerId, auto-select first
-                        if (data.length > 0 && !selectedCallerId) {
-                            onCallerIdChange(data[0].phoneNumber);
-                        }
-                    }
-                } catch (e) {
-                    console.error("Dialpad fallback fetch failed", e);
-                }
-            };
-            fetchNumbers();
-        }
-    }, [availableNumbers.length, selectedCallerId, onCallerIdChange]);
 
     const handlePress = (digit: string) => {
         setNumber((prev) => prev + digit);
@@ -53,7 +20,7 @@ export default function Dialpad({
 
     const handleCall = () => {
         if (number) {
-            onCall(number, selectedCallerId);
+            onCall(number);
         }
     };
 
@@ -66,34 +33,6 @@ export default function Dialpad({
 
     return (
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 w-80 p-6 flex flex-col items-center">
-            {/* From Selector */}
-            <div className="w-full mb-4">
-                <label className="block text-xs font-medium text-gray-500 mb-1 ml-1">Call From:</label>
-                <div className="relative">
-                    <select
-                        value={selectedCallerId}
-                        onChange={(e) => onCallerIdChange(e.target.value)}
-                        className="w-full appearance-none bg-gray-50 border border-gray-200 text-gray-700 py-2 px-3 pr-8 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-green-500"
-                        title="Select Caller ID"
-                        aria-label="Select Caller ID"
-                    >
-                        {displayedNumbers.length > 0 ? (
-                            displayedNumbers.map((n) => (
-                                <option key={n.phoneNumber} value={n.phoneNumber}>
-                                    {n.friendlyName || n.phoneNumber} {n.type === 'Verified' ? '(Verified)' : ''}
-                                </option>
-                            ))
-                        ) : (
-                            <option value="">Loading numbers...</option>
-                        )}
-                        <option value="client:agent">Browser (Testing)</option>
-                    </select>
-                    <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-500">
-                        <ChevronDown className="h-4 w-4" />
-                    </div>
-                </div>
-            </div>
-
             <div className="w-full mb-6 relative">
                 <input
                     type="text"
@@ -136,6 +75,6 @@ export default function Dialpad({
                     <Delete className="w-6 h-6" />
                 </button>
             </div>
-        </div >
+        </div>
     );
 }
