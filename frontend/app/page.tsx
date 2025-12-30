@@ -1297,6 +1297,17 @@ export default function Home() {
             )}
           </div>
         )}
+        {/* Debug Badge */}
+        <div className="fixed bottom-2 right-2 bg-red-600 text-white text-xs p-2 rounded z-[9999] opacity-90 pointer-events-none">
+          DEBUG:
+          {user ? (
+            <>
+              <div>ID: {user.id}</div>
+              <div>Email: {user.email}</div>
+              <div>Role: {userRole || 'NULL'}</div>
+            </>
+          ) : 'No User'}
+        </div>
       </div >
       );
 }
