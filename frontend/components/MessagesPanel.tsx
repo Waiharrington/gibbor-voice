@@ -97,7 +97,7 @@ export default function MessagesPanel({ initialConversationId }: MessagesPanelPr
 
         setIsSending(true);
         try {
-            await fetch('https://gibbor-voice-production.up.railway.app/messages', {
+            const response = await fetch('https://gibbor-voice-production.up.railway.app/messages', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ to: selectedConversationId, body }),
