@@ -907,16 +907,7 @@ export default function Home() {
         )}
 
         {currentView === 'messages' && (
-          <MessagesPanel
-            activeCall={activeCall}
-            callStatus={callStatus}
-            handleHangup={handleHangup}
-            toggleMute={toggleMute}
-            isMuted={isMuted}
-            duration={duration}
-            formatDuration={formatDuration}
-            setIsKeypadOpen={setIsKeypadOpen}
-          />
+          <MessagesPanel initialConversationId={initialConvId} />
         )}
 
         {currentView === 'campaigns' && (
