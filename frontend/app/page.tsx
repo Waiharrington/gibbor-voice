@@ -866,12 +866,12 @@ export default function Home() {
 
             <div className={`
               w-full xl:w-96 border-l border-gray-200 bg-gray-50 flex flex-col
-              ${activeMobileTab === 'dialpad' ? 'flex absolute inset-0 z-40 bg-white' : 'hidden xl:flex'}
+              ${dialerMode ? 'flex absolute inset-0 z-40 bg-white' : 'hidden xl:flex'}
            `}>
               {/* Mobile Header for Dialpad to close it */}
               <div className="xl:hidden p-4 flex justify-between items-center border-b border-gray-200">
                 <h2 className="font-bold text-lg">Keypad</h2>
-                <button onClick={() => setActiveMobileTab('list')} className="p-2 bg-gray-100 rounded-full">
+                <button onClick={() => setDialerMode(false)} className="p-2 bg-gray-100 rounded-full">
                   <ArrowDownLeft className="w-5 h-5 rotate-90" />
                 </button>
               </div>
