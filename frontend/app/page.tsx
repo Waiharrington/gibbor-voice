@@ -99,6 +99,16 @@ function AudioPlayer({ src }: { src: string }) {
       <span className="text-xs text-gray-500 font-medium tabular-nums min-w-[32px]">
         {formatTime(duration)}
       </span>
+      {/* Debug Badge - Temporary for troubleshooting */}
+      <div className="fixed bottom-2 right-2 bg-black/80 text-white text-xs p-2 rounded z-[100] opacity-50 hover:opacity-100 pointer-events-none">
+        {user ? (
+          <>
+            <div>ID: {user.id.slice(0, 8)}...</div>
+            <div>Email: {user.email}</div>
+            <div>Role: {userRole || 'FETCHING...'}</div>
+          </>
+        ) : 'No Auth'}
+      </div>
     </div>
   );
 }

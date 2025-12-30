@@ -105,9 +105,17 @@ app.get("/phone-numbers", async (req, res) => {
 app.post("/incoming-call", async (req, res) => {
     const twiml = new twilio.twiml.VoiceResponse();
     // callerId is passed from frontend device.connect params (renamed to appCallerId to avoid conflict)
-    const { To, From, CallSid, appCallerId, appUserId } = req.body;
+    // Twilio custom params can come in body OR query depending on setup
+    const body = req.body || {};
+    const query = req.query || {};
 
-    console.log("Webhook hit. To:", To, "CallSid:", CallSid, "Custom CallerId:", appCallerId, "UserID:", appUserId);
+    const To = body.To || query.To;
+    const From = body.From || query.From;
+    const CallSid = body.CallSid || query.CallSid;
+    const appCallerId = body.appCallerId || query.appCallerId;
+    const appUserId = body.appUserId || query.appUserId;
+
+    console.log("Webhook hit. To:", To, "UserID:", appUserId);
 
     // Determine direction based on caller
     // If From starts with 'client:', it's an outbound call FROM the browser.
