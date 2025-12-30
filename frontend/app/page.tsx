@@ -882,7 +882,7 @@ export default function Home() {
                 </div>
 
                 {/* Add Caller ID Selection Here */}
-                {verifiedCallerIds.length > 0 && (
+                {availableNumbers.length > 0 && (
                   <div className="mb-4">
                     <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1.5 ml-1">
                       Call From:
