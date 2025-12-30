@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { Phone, Delete, ChevronDown } from 'lucide-react';
+import { useState } from 'react';
+import { Phone, Delete } from 'lucide-react';
 
 export default function Dialpad({
     onCall
