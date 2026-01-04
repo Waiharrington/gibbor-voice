@@ -1174,10 +1174,35 @@ export default function Home() {
                 </div>
               </div>
             </div>
+          ) : (
+            <div className="flex-1 flex flex-col items-center justify-center p-8 bg-gray-50/30">
+                <div className="text-center mb-8">
+                  <p className="text-xs font-medium text-gray-400 uppercase tracking-wider mb-1">Make a Call</p>
+                  <p className="text-sm text-gray-500">Calling as {identity || '...'}</p>
+                </div>
+                {availableNumbers.length > 0 && (
+                  <div className="mb-4 text-left w-full max-w-xs">
+                    <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1.5 ml-1">
+                      Call From:
+                    </label>
+                    <select
+                      className="w-full bg-white border border-gray-300 text-gray-700 py-2 px-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent text-sm shadow-sm"
+                      value={selectedCallerId}
+                      onChange={(e) => setSelectedCallerId(e.target.value)}
+                      aria-label="Select Caller ID"
+                    >
+                      {availableNumbers.map(num => (
+                        <option key={num.phoneNumber} value={num.phoneNumber}>{num.phoneNumber} {num.friendlyName ? `(${num.friendlyName})` : ''}</option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+                <Dialpad onCall={(num) => handleCall(num, selectedCallerId)} />
+            </div>
           )
         ) : (
           // Default Right Panel (Dialpad/Active Call) - ONLY SHOW IF NOT IN DIALER MODE
-          <div className="w-96 bg-white flex flex-col p-8">
+          <div className="w-96 bg-white flex flex-col p-8 items-center border-l border-gray-100 shadow-sm">
             {activeCall ? (
               <div className="flex-1 flex flex-col items-center justify-center text-center space-y-8 animate-in fade-in zoom-in duration-300">
                 <div className="w-24 h-24 bg-cyan-100 text-cyan-600 rounded-full flex items-center justify-center text-3xl font-bold shadow-sm">
