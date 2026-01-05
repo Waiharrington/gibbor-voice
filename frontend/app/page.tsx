@@ -517,6 +517,7 @@ export default function Home() {
       setCallStatus('Dialing...'); // Immediate UI update
       // Set active call immediately to show UI controls (including Keypad)
       setActiveCall(call);
+      setDialerMode(true); // Force visibility on mobile immediately
 
       call.on('accept', () => {
         setCallStatus('In Call');
