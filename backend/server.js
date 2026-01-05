@@ -822,17 +822,63 @@ app.post("/auto-dialer/join-agent", (req, res) => {
     res.send(twiml.toString());
 });
 
-// Admin: List Users (Bypass RLS)
+// Admin: List Users (Bypass RLS) + Metrics
 app.get("/users", async (req, res) => {
     try {
-        const { data, error } = await supabase
+        // 1. Get Profiles
+        const { data: profiles, error } = await supabase
             .from('profiles')
             .select('*')
             .order('created_at', { ascending: false });
 
         if (error) throw error;
-        res.json(data);
+
+        // 2. Enrich with Today's Stats
+        const todayStart = new Date();
+        todayStart.setHours(0, 0, 0, 0);
+        const todayISO = todayStart.toISOString();
+
+        const enrichedProfiles = await Promise.all(profiles.map(async (user) => {
+            // A. Count Calls Today
+            const { count: callsToday } = await supabase
+                .from('calls') // Ensure this table exists and has user_id
+                .select('id', { count: 'exact', head: true })
+                .eq('user_id', user.id)
+                .gte('created_at', todayISO);
+
+            // B. Calculate Online Time Today (Seconds)
+            const { data: sessions } = await supabase
+                .from('agent_sessions')
+                .select('*')
+                .eq('user_id', user.id)
+                .gte('started_at', todayISO);
+
+            let secondsOnline = 0;
+            if (sessions) {
+                sessions.forEach(s => {
+                    if (s.duration_seconds) {
+                        secondsOnline += s.duration_seconds;
+                    } else if (s.started_at && !s.ended_at) {
+                        // Ongoing session
+                        const start = new Date(s.started_at).getTime();
+                        const now = Date.now();
+                        secondsOnline += Math.floor((now - start) / 1000);
+                    }
+                });
+            }
+
+            return {
+                ...user,
+                stats: {
+                    callsToday: callsToday || 0,
+                    secondsOnline: secondsOnline
+                }
+            };
+        }));
+
+        res.json(enrichedProfiles);
     } catch (e) {
+        console.error("Error fetching users metrics:", e);
         res.status(500).json({ error: e.message });
     }
 });

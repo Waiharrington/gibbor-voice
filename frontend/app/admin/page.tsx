@@ -7,6 +7,15 @@ import { Shield, Users, Phone, BarChart3, Plus, ArrowUpRight, Clock, UserPlus, L
 import { supabase } from '@/utils/supabaseClient';
 import { useAgentStatus } from '@/providers/AgentStatusContext';
 
+// Helper to format seconds to HH:MM:SS
+function formatDuration(seconds: number) {
+    if (!seconds) return '00:00:00';
+    const h = Math.floor(seconds / 3600).toString().padStart(2, '0');
+    const m = Math.floor((seconds % 3600) / 60).toString().padStart(2, '0');
+    const s = (seconds % 60).toString().padStart(2, '0');
+    return `${h}:${m}:${s}`;
+}
+
 function AgentTimer({ startTime }: { startTime: string }) {
     const [duration, setDuration] = useState("");
 
@@ -221,6 +230,8 @@ export default function AdminPage() {
                                         <th className="px-6 py-3">Name</th>
                                         <th className="px-6 py-3">Email</th>
                                         <th className="px-6 py-3">Role</th>
+                                        <th className="px-6 py-3 text-center">Calls Today</th>
+                                        <th className="px-6 py-3 text-center">Time Online</th>
                                         <th className="px-6 py-3">Status</th>
                                         <th className="px-6 py-3">Joined</th>
                                     </tr>
@@ -245,6 +256,12 @@ export default function AdminPage() {
                                                     <span className={`px-2 py-1 rounded-full text-xs font-semibold ${u.role === 'admin' ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'}`}>
                                                         {u.role || 'agent'}
                                                     </span>
+                                                </td>
+                                                <td className="px-6 py-4 text-center font-mono text-gray-700">
+                                                    {u.stats?.callsToday || 0}
+                                                </td>
+                                                <td className="px-6 py-4 text-center font-mono text-gray-700">
+                                                    {formatDuration(u.stats?.secondsOnline || 0)}
                                                 </td>
                                                 <td className="px-6 py-4">
                                                     {onlineUsers.find(on => on.email === u.email) ? (
