@@ -653,7 +653,7 @@ export default function Home() {
             {/* 2. Call List (Left) - Adjusted for Mobile */}
             <div className={`
               w-full lg:w-80 border-r border-gray-200 flex flex-col bg-white
-              ${activeMobileTab === 'calls' ? 'flex' : 'hidden lg:flex'}
+              ${activeMobileTab === 'calls' ? 'flex' : 'hidden md:flex'}
           `}>
               {/* Desktop Search Header (Keep existing) */}
               <div className="hidden lg:flex p-4 border-b border-gray-100 items-center gap-2">
@@ -730,7 +730,7 @@ export default function Home() {
             {/* 3. Center Panel (Details) */}
             <div className={`
              flex-1 flex-col bg-white border-r border-gray-200
-             ${activeMobileTab === 'details' ? 'flex' : 'hidden lg:flex'}
+             ${activeMobileTab === 'details' ? 'flex' : 'hidden md:flex'}
           `}>
               {/* Note: Added flex above to ensure it displays correctly when active */}
               {selectedCall ? (
@@ -858,7 +858,7 @@ export default function Home() {
 
         {/* 4. Dialpad (Right) */}
         <div className={`
-              w-full lg:w-96 border-l border-gray-200 bg-gray-50 flex flex-col
+              w-full md:w-96 border-l border-gray-200 bg-gray-50 flex flex-col
               ${dialerMode ? 'flex absolute inset-0 z-40 bg-white' : 'hidden md:flex'}
            `}>
           {/* Mobile Header for Dialpad to close it */}
