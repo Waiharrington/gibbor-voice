@@ -51,7 +51,12 @@ export default function MessagesPanel({ initialConversationId, userId, userRole,
 
                 const response = await fetch(url);
                 const data = await response.json();
-                setMessages(data);
+                if (Array.isArray(data)) {
+                    setMessages(data);
+                } else {
+                    console.error('Expected array of messages, got:', data);
+                    setMessages([]);
+                }
             } catch (error) {
                 console.error('Error fetching messages:', error);
             }
@@ -287,7 +292,7 @@ export default function MessagesPanel({ initialConversationId, userId, userRole,
                                                 {msg.body}
                                             </div>
                                         )}
-                                        <span className="text-[10px] text-gray-400 mt-1 px-1">
+                                        <span className="text-[10px] text-gray-400 mt-1 px-1" suppressHydrationWarning>
                                             {new Date(msg.created_at).toLocaleString([], { month: 'short', day: 'numeric', hour: 'numeric', minute: 'numeric' })}
                                         </span>
                                     </div>
