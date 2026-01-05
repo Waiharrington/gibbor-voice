@@ -902,7 +902,7 @@ export default function Home() {
 
         {/* 4. Dialpad (Right) */}
         <div
-          style={{ width: (dialerMode || activeCall) ? '100%' : '24rem', flexShrink: 0 }}
+          style={{ flexShrink: 0 }}
           className={`
               w-full md:w-96 border-l border-gray-200 bg-gray-50 flex-col shrink-0
               ${(dialerMode || activeCall) ? 'flex absolute inset-0 z-40 bg-white md:static md:bg-gray-50 md:z-auto' : 'hidden md:flex'}
