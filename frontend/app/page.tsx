@@ -559,7 +559,7 @@ export default function Home() {
   };
 
   return (
-    <div className="flex h-screen bg-white overflow-hidden relative font-sans">
+    <div className="flex h-screen bg-white overflow-x-auto relative font-sans">
       {/* 1. Sidebar (Desktop: Fixed | Mobile: Drawer via Hamburger) */}
       <Sidebar
         currentView={currentView}
@@ -657,9 +657,6 @@ export default function Home() {
               w-full md:w-80 border-r border-gray-200 flex flex-col bg-white
               ${activeMobileTab === 'calls' ? 'flex' : 'hidden md:flex'}
           `}>
-              <div className="bg-green-600 text-white text-xs font-bold text-center py-1">
-                LAYOUT RESTORED - CONFIRMED
-              </div>
               {/* Desktop Search Header (Keep existing) */}
               <div className="hidden lg:flex p-4 border-b border-gray-100 items-center gap-2">
                 <div className="relative flex-1">
@@ -867,7 +864,7 @@ export default function Home() {
         <div
           style={{ width: dialerMode ? '100%' : '24rem', flexShrink: 0 }}
           className={`
-              w-full md:w-96 border-l border-gray-200 bg-gray-50 flex flex-col shrink-0
+              w-full md:w-96 border-l border-gray-200 bg-blue-100 flex flex-col shrink-0
               ${dialerMode ? 'flex absolute inset-0 z-40 bg-white' : 'flex'}
            `}>
           {/* Mobile Header for Dialpad to close it */}
