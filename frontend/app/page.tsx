@@ -1200,7 +1200,7 @@ export default function Home() {
             )}
             <Dialpad onCall={(num) => handleCall(num, selectedCallerId)} />
           </div>
-        )
+        )}
         ) : (
         // Default Right Panel (Dialpad/Active Call) - ONLY SHOW IF NOT IN DIALER MODE
         <div className="w-96 bg-white flex flex-col p-8 items-center border-l border-gray-100 shadow-sm">
