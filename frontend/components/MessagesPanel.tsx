@@ -329,17 +329,17 @@ export default function MessagesPanel({ initialConversationId, userId, userRole 
                                 </button>
                             </div>
                         </div>
-                    </div>
+                    </>
                 ) : (
-                // Empty State for Center Panel
-                <div className="flex-1 flex flex-col items-center justify-center bg-white text-gray-500 border-r border-gray-200">
-                    <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mb-4">
-                        <ImageIcon className="w-10 h-10 text-gray-300" />
+                    // Empty State for Center Panel
+                    <div className="flex-1 flex flex-col items-center justify-center bg-white text-gray-500 border-r border-gray-200">
+                        <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+                            <ImageIcon className="w-10 h-10 text-gray-300" />
+                        </div>
+                        <h3 className="text-xl font-medium text-gray-700 mb-2">Select a conversation</h3>
+                        <p className="max-w-xs text-center text-sm">Choose from the list on the left to start chatting.</p>
                     </div>
-                    <h3 className="text-xl font-medium text-gray-700 mb-2">Select a conversation</h3>
-                    <p className="max-w-xs text-center text-sm">Choose from the list on the left to start chatting.</p>
-                </div>
-            )}
+                )}
             </div>
             );
 }
