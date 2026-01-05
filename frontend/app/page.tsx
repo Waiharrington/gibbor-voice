@@ -145,7 +145,7 @@ export default function Home() {
   }, [currentLead?.id]); // Only reset when ID changes
 
   // View Navigation State (Persistent Call)
-  const [currentView, setCurrentView] = useState<'calls' | 'messages' | 'campaigns'>('calls');
+  const [currentView, setCurrentView] = useState<'calls' | 'messages' | 'campaigns' | 'contacts' | 'voicemail'>('calls');
   const [initialConvId, setInitialConvId] = useState<string | null>(null);
 
   // Auth Protection
