@@ -551,7 +551,13 @@ export default function Home() {
     }
   };
 
-  const handleHangup = () => activeCall?.disconnect();
+  const handleHangup = () => {
+    if (activeCall) {
+      activeCall.disconnect();
+    } else {
+      device?.disconnectAll();
+    }
+  };
   const toggleMute = () => {
     if (activeCall) {
       const newMuted = !isMuted;
@@ -1080,7 +1086,7 @@ export default function Home() {
                 <div className="p-5 border-b border-gray-100 bg-gray-50 flex flex-col items-center">
 
                   {/* Active Call State or Start Call Button */}
-                  {activeCall ? (
+                  {(activeCall || (callStatus !== 'Ready' && callStatus !== 'Incoming Call...' && !callStatus.includes('Error'))) ? (
                     <div className="w-full flex flex-col items-center space-y-4 animate-in fade-in slide-in-from-top-4 duration-300">
                       <div className="text-center">
                         <span className="inline-flex h-3 w-3 relative">
@@ -1111,7 +1117,7 @@ export default function Home() {
                           {['1', '2', '3', '4', '5', '6', '7', '8', '9', '*', '0', '#'].map((digit) => (
                             <button
                               key={digit}
-                              onClick={() => activeCall.sendDigits(digit)}
+                              onClick={() => activeCall?.sendDigits(digit)}
                               className="h-10 rounded-lg bg-white border border-gray-200 hover:bg-gray-50 flex items-center justify-center text-lg font-bold text-gray-700 transition-colors"
                             >
                               {digit}
