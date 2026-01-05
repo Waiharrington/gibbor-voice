@@ -237,11 +237,11 @@ export default function MessagesPanel({ initialConversationId, userId, userRole,
             </div>
 
             {/* 2. Active Chat (Center Panel) - Full Width on Mobile if Selected, Hidden if not */}
-            <div className={`flex-1 flex-col bg-white min-w-0 min-h-0 border-r border-gray-200 ${selectedConversationId ? 'flex' : 'hidden md:flex'}`}>
+            <div className={`flex-1 flex-col bg-white min-w-0 min-h-0 h-full border-r border-gray-200 ${selectedConversationId ? 'flex' : 'hidden md:flex'}`}>
                 {selectedConversationId ? (
                     <>
                         {/* Header */}
-                        <header className="h-16 border-b border-gray-200 flex justify-between items-center px-4 md:px-6">
+                        <header className="h-16 border-b border-gray-200 flex justify-between items-center px-4 md:px-6 flex-shrink-0">
                             <div className="flex items-center gap-2">
                                 <button
                                     onClick={() => setSelectedConversationId(null)}
