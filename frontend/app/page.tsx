@@ -648,7 +648,7 @@ export default function Home() {
         </button>
 
         {/* Existing Content Rendering Logic (Modified to fit new container) */}
-        {(currentView === 'calls' || (currentView === 'contacts') || activeMobileTab === 'calls') && !dialerMode && (
+        {(currentView === 'calls' || currentView === 'contacts') && !dialerMode && (
           <>
             {/* 2. Call List (Left) - Adjusted for Mobile */}
             <div
