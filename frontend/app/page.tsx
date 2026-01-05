@@ -907,13 +907,7 @@ export default function Home() {
               w-full md:w-96 border-l border-gray-200 bg-gray-50 flex-col shrink-0
               ${(dialerMode || activeCall) ? 'flex absolute inset-0 z-40 bg-white md:static md:bg-gray-50 md:z-auto' : 'hidden md:flex'}
            `}>
-          {/* Mobile Header for Dialpad to close it */}
-          <div className="md:hidden p-4 flex justify-between items-center border-b border-gray-200">
-            <h2 className="font-bold text-lg">Keypad</h2>
-            <button onClick={() => setDialerMode(false)} className="p-2 bg-gray-100 rounded-full">
-              <X className="w-6 h-6 text-gray-900" />
-            </button>
-          </div>
+
 
           <div className="flex-1 p-8 flex flex-col justify-center max-w-sm mx-auto w-full">
 
@@ -961,7 +955,7 @@ export default function Home() {
             ) : (
               <>
                 {/* Status Indicator (Only for Idle) */}
-                <div className="mb-8 text-center">
+                <div className="mb-8 text-center flex items-center justify-center gap-2 relative">
                   <div className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${callStatus === 'Ready' ? 'bg-green-100 text-green-700' :
                     callStatus.includes('Error') ? 'bg-red-100 text-red-700' :
                       'bg-blue-100 text-blue-700'
@@ -972,6 +966,11 @@ export default function Home() {
                       }`} />
                     {callStatus}
                   </div>
+
+                  {/* Close Button for Mobile (Next to Status) */}
+                  <button onClick={() => setDialerMode(false)} className="p-1.5 bg-gray-100 rounded-full md:hidden text-gray-500 hover:text-gray-700 hover:bg-gray-200" title="Close Dialpad">
+                    <X className="w-4 h-4" />
+                  </button>
                 </div>
 
                 {/* Add Caller ID Selection Here */}
