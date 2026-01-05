@@ -410,7 +410,12 @@ export default function Home() {
         const historyRes = await fetch(historyUrl);
         if (!historyRes.ok) throw new Error('Failed to fetch history');
         const historyData = await historyRes.json();
-        setCalls(historyData);
+        if (Array.isArray(historyData)) {
+          setCalls(historyData);
+        } else {
+          console.error('Expected array of calls, got:', historyData);
+          setCalls([]);
+        }
       } catch (error: any) {
         console.error('Error initializing:', error);
         setError(error.message || 'Failed to connect to server');
