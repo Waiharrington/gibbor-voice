@@ -652,7 +652,7 @@ export default function Home() {
           <>
             {/* 2. Call List (Left) - Adjusted for Mobile */}
             <div className={`
-              w-full lg:w-80 border-r border-gray-200 flex flex-col bg-white
+              w-full md:w-80 border-r border-gray-200 flex flex-col bg-white
               ${activeMobileTab === 'calls' ? 'flex' : 'hidden md:flex'}
           `}>
               {/* Desktop Search Header (Keep existing) */}
@@ -729,7 +729,7 @@ export default function Home() {
 
             {/* 3. Center Panel (Details) */}
             <div className={`
-             flex-1 flex-col bg-white border-r border-gray-200
+             flex-1 flex-col bg-white border-r border-gray-200 min-w-0
              ${activeMobileTab === 'details' ? 'flex' : 'hidden md:flex'}
           `}>
               {/* Note: Added flex above to ensure it displays correctly when active */}
