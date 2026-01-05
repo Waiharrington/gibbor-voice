@@ -8,7 +8,7 @@ import Dialpad from '@/components/Dialpad';
 import MessagesPanel from '@/components/MessagesPanel';
 import CampaignManager from '@/components/CampaignManager';
 import { Device } from '@twilio/voice-sdk';
-import { Phone, PhoneOff, Mic, MicOff, Search, ArrowUpRight, ArrowDownLeft, MoreVertical, Download, MessageSquare, Copy, MapPin, Building, Info, FileText, Send, Clock } from 'lucide-react';
+import { Phone, PhoneOff, Mic, MicOff, Search, ArrowUpRight, ArrowDownLeft, MoreVertical, Download, MessageSquare, Copy, MapPin, Building, Info, FileText, Send, Clock, X } from 'lucide-react';
 import { format } from 'date-fns';
 import { supabase } from '@/utils/supabaseClient';
 import { CALL_STATUSES } from '@/constants/statuses';
@@ -899,13 +899,13 @@ export default function Home() {
           style={{ width: dialerMode ? '100%' : '24rem', flexShrink: 0 }}
           className={`
               w-full md:w-96 border-l border-gray-200 bg-gray-50 flex-col shrink-0
-              ${dialerMode ? 'flex absolute inset-0 z-40 bg-white' : 'hidden md:flex'}
+              ${dialerMode ? 'flex absolute inset-0 z-40 bg-white md:static md:bg-gray-50 md:z-auto' : 'hidden md:flex'}
            `}>
           {/* Mobile Header for Dialpad to close it */}
-          <div className="xl:hidden p-4 flex justify-between items-center border-b border-gray-200">
+          <div className="md:hidden p-4 flex justify-between items-center border-b border-gray-200">
             <h2 className="font-bold text-lg">Keypad</h2>
             <button onClick={() => setDialerMode(false)} className="p-2 bg-gray-100 rounded-full">
-              <ArrowDownLeft className="w-5 h-5 rotate-90" />
+              <X className="w-6 h-6 text-gray-900" />
             </button>
           </div>
 
