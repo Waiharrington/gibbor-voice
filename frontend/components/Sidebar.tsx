@@ -32,10 +32,10 @@ export default function Sidebar({ currentView, onViewChange, isOpen: externalIsO
             setInternalIsOpen(!internalIsOpen);
         }
     };
-    
+
     const handleClose = () => {
         if (isControlled) {
-             if (onClose) onClose();
+            if (onClose) onClose();
         } else {
             setInternalIsOpen(false);
         }
@@ -76,9 +76,9 @@ export default function Sidebar({ currentView, onViewChange, isOpen: externalIsO
         if (onViewChange) {
             e.preventDefault();
             onViewChange(view);
-             // Close on nav click if mobile
+            // Close on nav click if mobile
             if (window.innerWidth < 1536) {
-                 handleClose();
+                handleClose();
             }
         } else {
             // If no view handler (e.g. we are in Admin page), navigate to dashboard
@@ -109,12 +109,12 @@ export default function Sidebar({ currentView, onViewChange, isOpen: externalIsO
             {/* Overlay */}
             {showSidebar && (
                 <div
-                    className="fixed inset-0 bg-black/50 z-30 2xl:hidden"
+                    className="fixed inset-0 bg-black/50 z-50 2xl:hidden"
                     onClick={handleClose}
                 />
             )}
 
-            <aside className={`fixed inset-y-0 left-0 z-40 w-64 bg-gray-50 border-r border-gray-200 h-screen flex flex-col transform transition-transform duration-200 ease-in-out 2xl:translate-x-0 2xl:static ${showSidebar ? 'translate-x-0' : '-translate-x-full'}`}>
+            <aside className={`fixed inset-y-0 left-0 z-[60] w-64 bg-gray-50 border-r border-gray-200 h-screen flex flex-col transform transition-transform duration-200 ease-in-out 2xl:translate-x-0 2xl:static ${showSidebar ? 'translate-x-0' : '-translate-x-full'}`}>
                 <div className="p-4 flex items-center space-x-2 border-b border-gray-100">
                     <div className="w-8 h-8 bg-cyan-500 rounded-full flex items-center justify-center text-white font-bold">
                         G
