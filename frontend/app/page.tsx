@@ -1175,12 +1175,37 @@ export default function Home() {
               </div>
             </div>
           ) : (
-        ): (
-            // Default Right Panel (Dialpad/Active Call) - ONLY SHOW IF NOT IN DIALER MODE
-            <div className = "w-96 bg-white flex flex-col p-8 items-center border-l border-gray-100 shadow-sm">
-            {
-              activeCall?(
-              <div className = "flex-1 flex flex-col items-center justify-center text-center space-y-8 animate-in fade-in zoom-in duration-300" >
+          <div className="flex-1 flex flex-col items-center justify-center p-8 bg-gray-50/30">
+            <div className="text-center mb-8">
+              <p className="text-xs font-medium text-gray-400 uppercase tracking-wider mb-1">Make a Call</p>
+              <p className="text-sm text-gray-500">Calling as {identity || '...'}</p>
+            </div>
+            {availableNumbers.length > 0 && (
+              <div className="mb-4 text-left w-full max-w-xs">
+                <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1.5 ml-1">
+                  Call From:
+                </label>
+                <select
+                  className="w-full bg-white border border-gray-300 text-gray-700 py-2 px-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent text-sm shadow-sm"
+                  value={selectedCallerId}
+                  onChange={(e) => setSelectedCallerId(e.target.value)}
+                  aria-label="Select Caller ID"
+                >
+                  {availableNumbers.map(num => (
+                    <option key={num.phoneNumber} value={num.phoneNumber}>{num.phoneNumber} {num.friendlyName ? `(${num.friendlyName})` : ''}</option>
+                  ))}
+                </select>
+              </div>
+            )}
+            <Dialpad onCall={(num) => handleCall(num, selectedCallerId)} />
+          </div>
+        )
+        ) : (
+        // Default Right Panel (Dialpad/Active Call) - ONLY SHOW IF NOT IN DIALER MODE
+        <div className="w-96 bg-white flex flex-col p-8 items-center border-l border-gray-100 shadow-sm">
+          {
+            activeCall ? (
+              <div className="flex-1 flex flex-col items-center justify-center text-center space-y-8 animate-in fade-in zoom-in duration-300" >
                 <div className="w-24 h-24 bg-cyan-100 text-cyan-600 rounded-full flex items-center justify-center text-3xl font-bold shadow-sm">
                   {/* Initials or Icon */}
                   <Phone className="w-10 h-10" />
@@ -1247,67 +1272,67 @@ export default function Home() {
                   )}
                 </div>
 
-                {/* In-Call Keypad Overlay */ }
-                { isKeypadOpen && (
-        <div className="mt-8 grid grid-cols-3 gap-4 animate-in slide-in-from-bottom-5 fade-in duration-300">
-          {['1', '2', '3', '4', '5', '6', '7', '8', '9', '*', '0', '#'].map((digit) => (
-            <button
-              key={digit}
-              onClick={() => {
-                if (activeCall) {
-                  activeCall.sendDigits(digit);
-                  setDuration((prev) => prev); // Force re-render if needed? No, just visual feedback
-                }
-              }}
-              className="w-14 h-14 rounded-full bg-gray-50 hover:bg-gray-100 flex items-center justify-center text-xl font-medium text-gray-700 transition-colors active:bg-gray-200"
-            >
-              {digit}
-            </button>
-          ))}
-        </div>
+                {/* In-Call Keypad Overlay */}
+                {isKeypadOpen && (
+                  <div className="mt-8 grid grid-cols-3 gap-4 animate-in slide-in-from-bottom-5 fade-in duration-300">
+                    {['1', '2', '3', '4', '5', '6', '7', '8', '9', '*', '0', '#'].map((digit) => (
+                      <button
+                        key={digit}
+                        onClick={() => {
+                          if (activeCall) {
+                            activeCall.sendDigits(digit);
+                            setDuration((prev) => prev); // Force re-render if needed? No, just visual feedback
+                          }
+                        }}
+                        className="w-14 h-14 rounded-full bg-gray-50 hover:bg-gray-100 flex items-center justify-center text-xl font-medium text-gray-700 transition-colors active:bg-gray-200"
+                      >
+                        {digit}
+                      </button>
+                    ))}
+                  </div>
                 )}
 
-      </div>
-      ) : (
-      <div className="flex-1 flex flex-col">
-        <div className="text-center mb-8">
-          <p className="text-xs font-medium text-gray-400 uppercase tracking-wider mb-1">Make a Call</p>
-          <p className="text-sm text-gray-500">Calling as {identity || '...'}</p>
-        </div>
-        {availableNumbers.length > 0 && (
-          <div className="mb-4 text-left">
-            <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1.5 ml-1">
-              Call From:
-            </label>
-            <select
-              className="w-full bg-white border border-gray-300 text-gray-700 py-2 px-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent text-sm shadow-sm"
-              value={selectedCallerId}
-              onChange={(e) => setSelectedCallerId(e.target.value)}
-              aria-label="Select Caller ID"
-            >
-              {availableNumbers.map(num => (
-                <option key={num.phoneNumber} value={num.phoneNumber}>{num.phoneNumber} {num.friendlyName ? `(${num.friendlyName})` : ''}</option>
-              ))}
-            </select>
-          </div>
-        )}
-        <Dialpad onCall={(num) => handleCall(num, selectedCallerId)} />
-      </div>
+              </div>
+            ) : (
+              <div className="flex-1 flex flex-col">
+                <div className="text-center mb-8">
+                  <p className="text-xs font-medium text-gray-400 uppercase tracking-wider mb-1">Make a Call</p>
+                  <p className="text-sm text-gray-500">Calling as {identity || '...'}</p>
+                </div>
+                {availableNumbers.length > 0 && (
+                  <div className="mb-4 text-left">
+                    <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1.5 ml-1">
+                      Call From:
+                    </label>
+                    <select
+                      className="w-full bg-white border border-gray-300 text-gray-700 py-2 px-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent text-sm shadow-sm"
+                      value={selectedCallerId}
+                      onChange={(e) => setSelectedCallerId(e.target.value)}
+                      aria-label="Select Caller ID"
+                    >
+                      {availableNumbers.map(num => (
+                        <option key={num.phoneNumber} value={num.phoneNumber}>{num.phoneNumber} {num.friendlyName ? `(${num.friendlyName})` : ''}</option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+                <Dialpad onCall={(num) => handleCall(num, selectedCallerId)} />
+              </div>
             )}
-    </div>
-  )
+        </div>
+        )
 }
-{/* Debug Badge */ }
-<div className="fixed bottom-2 right-2 bg-red-600 text-white text-xs p-2 rounded z-[9999] opacity-90 pointer-events-none">
-  DEBUG:
-  {user ? (
-    <>
-      <div>ID: {user.id}</div>
-      <div>Email: {user.email}</div>
-      <div>Role: {userRole || 'NULL'}</div>
-    </>
-  ) : 'No User'}
-</div>
+        {/* Debug Badge */}
+        <div className="fixed bottom-2 right-2 bg-red-600 text-white text-xs p-2 rounded z-[9999] opacity-90 pointer-events-none">
+          DEBUG:
+          {user ? (
+            <>
+              <div>ID: {user.id}</div>
+              <div>Email: {user.email}</div>
+              <div>Role: {userRole || 'NULL'}</div>
+            </>
+          ) : 'No User'}
+        </div>
       </div >
     </div >
   );
