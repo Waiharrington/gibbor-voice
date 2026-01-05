@@ -651,13 +651,12 @@ export default function Home() {
         {(currentView === 'calls' || activeMobileTab === 'calls') && !dialerMode && (
           <>
             {/* 2. Call List (Left) - Adjusted for Mobile */}
-            <div className={`
+            <div
+              style={{ width: '20rem', flexShrink: 0 }}
+              className={`
               w-full md:w-80 border-r border-gray-200 flex flex-col bg-white
               ${activeMobileTab === 'calls' ? 'flex' : 'hidden md:flex'}
           `}>
-              <div className="bg-red-600 text-white text-xs font-bold text-center py-1">
-                DEBUG RELOADED v4.0 - CHECK RIGHT PANEL
-              </div>
               {/* Desktop Search Header (Keep existing) */}
               <div className="hidden lg:flex p-4 border-b border-gray-100 items-center gap-2">
                 <div className="relative flex-1">
@@ -731,7 +730,9 @@ export default function Home() {
             </div>
 
             {/* 3. Center Panel (Details) */}
-            <div className={`
+            <div
+              style={{ minWidth: 0, flexGrow: 1 }}
+              className={`
              flex-1 flex-col bg-white border-r border-gray-200 min-w-0
              ${activeMobileTab === 'details' ? 'flex' : 'hidden md:flex'}
           `}>
@@ -860,7 +861,9 @@ export default function Home() {
         )}
 
         {/* 4. Dialpad (Right) */}
-        <div className={`
+        <div
+          style={{ width: dialerMode ? '100%' : '24rem', flexShrink: 0 }}
+          className={`
               w-full md:w-96 border-l border-gray-200 bg-gray-50 flex flex-col shrink-0
               ${dialerMode ? 'flex absolute inset-0 z-40 bg-white' : 'flex'}
            `}>
