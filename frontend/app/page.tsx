@@ -711,7 +711,7 @@ export default function Home() {
                       key={call.id}
                       onClick={() => {
                         setSelectedCall(call);
-                        // In Google Voice, details is probably a separate screen or modal
+                        setActiveMobileTab('details'); // Switch to details view on mobile/tablet
                       }}
                       className={`p-4 flex items-center cursor-pointer transition-colors border-l-4 ${selectedCall?.id === call.id
                         ? 'bg-cyan-50 border-cyan-500'
