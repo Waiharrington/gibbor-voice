@@ -822,6 +822,21 @@ app.post("/auto-dialer/join-agent", (req, res) => {
     res.send(twiml.toString());
 });
 
+// Admin: List Users (Bypass RLS)
+app.get("/users", async (req, res) => {
+    try {
+        const { data, error } = await supabase
+            .from('profiles')
+            .select('*')
+            .order('created_at', { ascending: false });
+
+        if (error) throw error;
+        res.json(data);
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
 // Admin: Create Agent Endpoint
 app.post("/agents", async (req, res) => {
     try {

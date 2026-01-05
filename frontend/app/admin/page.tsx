@@ -83,13 +83,12 @@ export default function AdminPage() {
                 });
             }
 
-            // Fetch Users
-            const { data: profiles } = await supabase
-                .from('profiles')
-                .select('*')
-                .order('created_at', { ascending: false });
-
-            if (profiles) setUsersList(profiles);
+            // Fetch Users (from Backend to bypass RLS)
+            const usersRes = await fetch('https://gibbor-voice-production.up.railway.app/users');
+            if (usersRes.ok) {
+                const profiles = await usersRes.json();
+                setUsersList(profiles);
+            }
         } catch (error) {
             console.error("Error fetching admin stats:", error);
         } finally {
