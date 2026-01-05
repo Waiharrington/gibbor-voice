@@ -1199,10 +1199,15 @@ export default function Home() {
             )}
             <Dialpad onCall={(num) => handleCall(num, selectedCallerId)} />
           </div>
-        )
+        )}
       </div>
     </>
-  ) : (
+  )
+}
+
+{/* Right Panel (Dialpad/Active Call) - Desktop 3rd Column */ }
+{
+  (currentView === 'calls' || activeMobileTab === 'calls') && !dialerMode && (
     // Default Right Panel (Dialpad/Active Call) - ONLY SHOW IF NOT IN DIALER MODE
     <div className="w-96 bg-white flex flex-col p-8 items-center border-l border-gray-100 shadow-sm">
       {
