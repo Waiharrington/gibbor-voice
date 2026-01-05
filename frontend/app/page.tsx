@@ -729,7 +729,7 @@ export default function Home() {
              ${activeMobileTab === 'details' ? 'flex' : 'hidden lg:flex'}
           `}>
               {/* Note: Added flex above to ensure it displays correctly when active */}
-              {selectedCall ? (
+              {selectedCall && (
                 <div className="flex-1 flex flex-col mb-16 lg:mb-0">
                   {/* Header */}
                   <header className="h-16 border-b border-gray-200 flex justify-between items-center px-6">
@@ -840,12 +840,12 @@ export default function Home() {
                   </div>
                 </div>
               ) : (
-                <div className="flex-1 flex flex-col items-center justify-center text-gray-400">
-                  <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
-                    <Phone className="w-8 h-8 text-gray-300" />
-                  </div>
-                  <p>Select a call to view details</p>
+              <div className="flex-1 flex flex-col items-center justify-center text-gray-400">
+                <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+                  <Phone className="w-8 h-8 text-gray-300" />
                 </div>
+                <p>Select a call to view details</p>
+              </div>
               )}
             </div>
 
