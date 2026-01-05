@@ -521,7 +521,7 @@ export default function Home() {
 
       call.on('accept', () => {
         setCallStatus('In Call');
-        // setActiveCall(call); // Already set
+        setActiveCall(call); // Re-set to ensure state persistence
       });
 
       call.on('disconnect', () => {
