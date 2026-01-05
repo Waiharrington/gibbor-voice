@@ -1177,33 +1177,7 @@ export default function Home() {
               </div>
             </div>
           )
-        ) : (
-        <div className="flex-1 flex flex-col items-center justify-center p-8 bg-gray-50/30">
-          <div className="text-center mb-8">
-            <p className="text-xs font-medium text-gray-400 uppercase tracking-wider mb-1">Make a Call</p>
-            <p className="text-sm text-gray-500">Calling as {identity || '...'}</p>
-          </div>
-          {availableNumbers.length > 0 && (
-            <div className="mb-4 text-left w-full max-w-xs">
-              <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1.5 ml-1">
-                Call From:
-              </label>
-              <select
-                className="w-full bg-white border border-gray-300 text-gray-700 py-2 px-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent text-sm shadow-sm"
-                value={selectedCallerId}
-                onChange={(e) => setSelectedCallerId(e.target.value)}
-                aria-label="Select Caller ID"
-              >
-                {availableNumbers.map(num => (
-                  <option key={num.phoneNumber} value={num.phoneNumber}>{num.phoneNumber} {num.friendlyName ? `(${num.friendlyName})` : ''}</option>
-                ))}
-              </select>
-            </div>
-          )}
-          <Dialpad onCall={(num) => handleCall(num, selectedCallerId)} />
-        </div>
-        )}
+
       </div>
       )
 }
-
