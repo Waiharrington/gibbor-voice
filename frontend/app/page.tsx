@@ -559,7 +559,7 @@ export default function Home() {
   };
 
   return (
-    <div className="flex h-screen bg-white overflow-x-auto relative font-sans">
+    <div className="flex h-screen bg-white overflow-hidden relative font-sans">
       {/* 1. Sidebar (Desktop: Fixed | Mobile: Drawer via Hamburger) */}
       <Sidebar
         currentView={currentView}
@@ -648,7 +648,7 @@ export default function Home() {
         </button>
 
         {/* Existing Content Rendering Logic (Modified to fit new container) */}
-        {(currentView === 'calls' || activeMobileTab === 'calls') && !dialerMode && (
+        {(currentView === 'calls' || (currentView === 'contacts') || activeMobileTab === 'calls') && !dialerMode && (
           <>
             {/* 2. Call List (Left) - Adjusted for Mobile */}
             <div
@@ -860,11 +860,24 @@ export default function Home() {
           </>
         )}
 
+        {/* Dynamic Content Views */}
+        {currentView === 'messages' && (
+          <div style={{ minWidth: 0, flexGrow: 1 }} className="flex-1 flex-col bg-white border-r border-gray-200 min-w-0">
+            <MessagesPanel initialConversationId={initialConvId} />
+          </div>
+        )}
+
+        {currentView === 'campaigns' && (
+          <div style={{ minWidth: 0, flexGrow: 1 }} className="flex-1 flex-col bg-white border-r border-gray-200 min-w-0">
+            <CampaignManager onStartDialer={handleStartDialer} />
+          </div>
+        )}
+
         {/* 4. Dialpad (Right) */}
         <div
           style={{ width: dialerMode ? '100%' : '24rem', flexShrink: 0 }}
           className={`
-              w-full md:w-96 border-l border-gray-200 bg-blue-100 flex flex-col shrink-0
+              w-full md:w-96 border-l border-gray-200 bg-gray-50 flex flex-col shrink-0
               ${dialerMode ? 'flex absolute inset-0 z-40 bg-white' : 'flex'}
            `}>
           {/* Mobile Header for Dialpad to close it */}
@@ -914,13 +927,7 @@ export default function Home() {
         </div>
 
 
-        {currentView === 'messages' && (
-          <MessagesPanel initialConversationId={initialConvId} />
-        )}
-
-        {currentView === 'campaigns' && (
-          <CampaignManager onStartDialer={handleStartDialer} />
-        )}
+        {/* Removed Duplicate View Content Blocks from here */}
 
         {/* DIALER MODE LAYOUT */}
         {dialerMode && (
