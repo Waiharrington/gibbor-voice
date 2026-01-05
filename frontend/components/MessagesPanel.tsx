@@ -71,7 +71,7 @@ export default function MessagesPanel({ initialConversationId, userId, userRole,
         return () => {
             supabase.removeChannel(channel);
         };
-    }, []);
+    }, [userId, userRole]);
 
     // Scroll to bottom when messages change
     useEffect(() => {
