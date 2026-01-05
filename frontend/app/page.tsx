@@ -1116,7 +1116,7 @@ export default function Home() {
                             {availableNumbers.length > 0 ? (
                               availableNumbers.map(num => (
                                 <option key={num.phoneNumber} value={num.phoneNumber}>
-                                  {num.friendlyName || num.phoneNumber}
+                                  {formatCallerID(num.phoneNumber)}
                                 </option>
                               ))
                             ) : (
