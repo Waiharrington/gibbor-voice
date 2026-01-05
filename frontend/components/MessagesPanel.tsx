@@ -11,9 +11,11 @@ const getConversationId = (msg: any) => {
 
 interface MessagesPanelProps {
     initialConversationId?: string | null;
+    userId?: string | null;
+    userRole?: string | null;
 }
 
-export default function MessagesPanel({ initialConversationId }: MessagesPanelProps) {
+export default function MessagesPanel({ initialConversationId, userId, userRole }: MessagesPanelProps) {
     // State
     const [messages, setMessages] = useState<any[]>([]);
     const [selectedConversationId, setSelectedConversationId] = useState<string | null>(initialConversationId || null);
@@ -34,7 +36,14 @@ export default function MessagesPanel({ initialConversationId }: MessagesPanelPr
     useEffect(() => {
         const fetchHistory = async () => {
             try {
-                const response = await fetch('https://gibbor-voice-production.up.railway.app/history/messages');
+                let url = 'https://gibbor-voice-production.up.railway.app/history/messages';
+                const params = new URLSearchParams();
+                if (userId) params.append('userId', userId);
+                if (userRole) params.append('role', userRole);
+
+                if (params.toString()) url += `?${params.toString()}`;
+
+                const response = await fetch(url);
                 const data = await response.json();
                 setMessages(data);
             } catch (error) {
@@ -100,7 +109,11 @@ export default function MessagesPanel({ initialConversationId }: MessagesPanelPr
             const response = await fetch('https://gibbor-voice-production.up.railway.app/messages', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ to: selectedConversationId, body }),
+                body: JSON.stringify({
+                    to: selectedConversationId,
+                    body,
+                    userId: userId // Pass User ID
+                }),
             });
 
             if (!response.ok) {
@@ -149,7 +162,8 @@ export default function MessagesPanel({ initialConversationId }: MessagesPanelPr
                 body: JSON.stringify({
                     to: selectedConversationId,
                     body: '',
-                    mediaUrl: mediaUrl
+                    mediaUrl: mediaUrl,
+                    userId: userId // Pass User ID
                 }),
             });
 

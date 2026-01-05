@@ -863,7 +863,11 @@ export default function Home() {
         {/* Dynamic Content Views */}
         {currentView === 'messages' && (
           <div style={{ minWidth: 0, flexGrow: 1 }} className="flex-1 flex-col bg-white border-r border-gray-200 min-w-0">
-            <MessagesPanel initialConversationId={initialConvId} />
+            <MessagesPanel
+              initialConversationId={initialConvId}
+              userId={user?.id}
+              userRole={userRole}
+            />
           </div>
         )}
 

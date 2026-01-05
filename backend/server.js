@@ -251,6 +251,10 @@ app.post("/messages", async (req, res) => {
         // Fallback
         if (!sender) sender = process.env.TWILIO_PHONE_NUMBER;
 
+        // Check if userId is passed (from frontend)
+        const userId = req.body.userId || null;
+
+
         const messageOptions = {
             body: body,
             from: sender,
@@ -268,7 +272,8 @@ app.post("/messages", async (req, res) => {
             to: to,
             body: body,
             media_url: mediaUrl || null,
-            direction: 'outbound'
+            direction: 'outbound',
+            user_id: userId // Save User ID
         });
 
         res.json(message);
@@ -288,13 +293,36 @@ app.post("/incoming-message", async (req, res) => {
         console.log(`Media received: ${MediaUrl0}`);
     }
 
+    // Logic to inherit User ID from previous conversation
+    let attachedUserId = null;
+    try {
+        const { data: lastOutbound } = await supabase
+            .from('messages')
+            .select('user_id')
+            .eq('to', From) // Messages SENT TO this number
+            .eq('direction', 'outbound')
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .maybeSingle();
+
+        if (lastOutbound && lastOutbound.user_id) {
+            attachedUserId = lastOutbound.user_id;
+            console.log(`Associating incoming message from ${From} with User ${attachedUserId}`);
+        }
+    } catch (err) {
+        console.error("Error finding parent conversation:", err);
+    }
+
+
     try {
         await supabase.from('messages').insert({
             from: From,
             to: To,
             body: Body,
+            body: Body,
             media_url: MediaUrl0 || null,
-            direction: 'inbound'
+            direction: 'inbound',
+            user_id: attachedUserId
         });
     } catch (e) {
         console.error("Error logging incoming message:", e);
@@ -339,11 +367,26 @@ app.get("/history/calls", async (req, res) => {
 
 app.get("/history/messages", async (req, res) => {
     try {
-        const { data, error } = await supabase
+        const { userId, role } = req.query;
+        let query = supabase
             .from('messages')
             .select('*')
-            .order('created_at', { ascending: true }); // Chat order
+            .order('created_at', { ascending: true });
 
+        // Isolation Logic
+        if (role === 'admin') {
+            // Admin sees all
+        } else if (userId) {
+            // Agent sees own messages AND incoming messages assigned to them
+            // OR incoming messages that don't have a user_id? (Shared?)
+            // Simple version: only matches user_id
+            query = query.eq('user_id', userId);
+        } else {
+            // Safe fallback
+            query = query.eq('user_id', '00000000-0000-0000-0000-000000000000');
+        }
+
+        const { data, error } = await query;
         if (error) throw error;
         res.json(data);
     } catch (e) {
