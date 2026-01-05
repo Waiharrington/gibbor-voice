@@ -592,7 +592,7 @@ export default function Home() {
       </div>
 
       {/* Main Content Area adjustments for Mobile Header padding */}
-      <div className="flex-1 flex flex-col pt-16 lg:pt-0 h-full">
+      <div className="flex-1 flex flex-col md:flex-row pt-16 lg:pt-0 h-full">
 
         {/* Mobile Bottom Nav (Google Voice Style) */}
         <div className="2xl:hidden fixed bottom-0 left-0 right-0 h-20 bg-[#1e1e1e] border-t border-gray-800 z-50 flex justify-around items-center pb-2 text-gray-400">
