@@ -898,8 +898,8 @@ export default function Home() {
         <div
           style={{ width: dialerMode ? '100%' : '24rem', flexShrink: 0 }}
           className={`
-              w-full md:w-96 border-l border-gray-200 bg-gray-50 flex flex-col shrink-0
-              ${dialerMode ? 'flex absolute inset-0 z-40 bg-white' : 'flex'}
+              w-full md:w-96 border-l border-gray-200 bg-gray-50 flex-col shrink-0
+              ${dialerMode ? 'flex absolute inset-0 z-40 bg-white' : 'hidden md:flex'}
            `}>
           {/* Mobile Header for Dialpad to close it */}
           <div className="xl:hidden p-4 flex justify-between items-center border-b border-gray-200">
