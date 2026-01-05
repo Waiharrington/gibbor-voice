@@ -833,10 +833,21 @@ app.get("/users", async (req, res) => {
 
         if (error) throw error;
 
-        // 2. Enrich with Today's Stats
-        const todayStart = new Date();
-        todayStart.setHours(0, 0, 0, 0);
-        const todayISO = todayStart.toISOString();
+        // 2. Enrich with Today's Stats (Venezuela Timezone: UTC-4)
+        // Midnight in VZ is 04:00:00 UTC
+        const formatter = new Intl.DateTimeFormat('en-US', {
+            timeZone: 'America/Caracas',
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit'
+        });
+        const parts = formatter.formatToParts(new Date());
+        const year = parts.find(p => p.type === 'year').value;
+        const month = parts.find(p => p.type === 'month').value;
+        const day = parts.find(p => p.type === 'day').value;
+
+        // VZ Midnight is 04:00 UTC of the same day (since offset is -04:00)
+        const todayISO = `${year}-${month}-${day}T04:00:00.000Z`;
 
         const enrichedProfiles = await Promise.all(profiles.map(async (user) => {
             // A. Count Calls Today
@@ -846,7 +857,7 @@ app.get("/users", async (req, res) => {
                 .eq('user_id', user.id)
                 .gte('created_at', todayISO);
 
-            // B. Calculate Online Time Today (Seconds)
+            // B. Calculate Online Time Today (Seconds) with Interval Merging
             const { data: sessions } = await supabase
                 .from('agent_sessions')
                 .select('*')
@@ -854,24 +865,47 @@ app.get("/users", async (req, res) => {
                 .gte('started_at', todayISO);
 
             let secondsOnline = 0;
-            if (sessions) {
-                sessions.forEach(s => {
-                    if (s.duration_seconds) {
-                        secondsOnline += s.duration_seconds;
-                    } else if (s.started_at && !s.ended_at) {
-                        // Ongoing session
-                        const start = new Date(s.started_at).getTime();
-                        const now = Date.now();
-                        secondsOnline += Math.floor((now - start) / 1000);
-                    }
+            if (sessions && sessions.length > 0) {
+                // 1. Convert to intervals [start, end]
+                const now = Date.now();
+                const intervals = sessions.map(s => {
+                    const start = new Date(s.started_at).getTime();
+                    const end = s.ended_at ? new Date(s.ended_at).getTime() : now;
+                    return [start, end];
                 });
+
+                // 2. Sort by start time
+                intervals.sort((a, b) => a[0] - b[0]);
+
+                // 3. Merge Intervals
+                const merged = [];
+                if (intervals.length > 0) {
+                    let [currentStart, currentEnd] = intervals[0];
+
+                    for (let i = 1; i < intervals.length; i++) {
+                        const [nextStart, nextEnd] = intervals[i];
+                        if (nextStart < currentEnd) {
+                            // Overlap: extend end if needed
+                            currentEnd = Math.max(currentEnd, nextEnd);
+                        } else {
+                            // No overlap: push current, start new
+                            merged.push([currentStart, currentEnd]);
+                            currentStart = nextStart;
+                            currentEnd = nextEnd;
+                        }
+                    }
+                    merged.push([currentStart, currentEnd]);
+                }
+
+                // 4. Sum Durations
+                secondsOnline = merged.reduce((acc, [start, end]) => acc + (end - start), 0) / 1000;
             }
 
             return {
                 ...user,
                 stats: {
                     callsToday: callsToday || 0,
-                    secondsOnline: secondsOnline
+                    secondsOnline: Math.floor(secondsOnline)
                 }
             };
         }));
