@@ -869,41 +869,13 @@ export default function Home() {
             </button>
           </div>
 
-          <div className="flex-1 p-8 flex flex-col justify-center max-w-sm mx-auto w-full">
-            {/* Status Indicator */}
-            <div className="mb-8 text-center">
-              <div className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${callStatus === 'Ready' ? 'bg-green-100 text-green-700' :
-                callStatus.includes('Error') ? 'bg-red-100 text-red-700' :
-                  'bg-blue-100 text-blue-700'
-                }`}>
-                <div className={`w-2 h-2 rounded-full mr-2 ${callStatus === 'Ready' ? 'bg-green-500' :
-                  callStatus.includes('Error') ? 'bg-red-500' :
-                    'bg-blue-500 animate-pulse'
-                  }`} />
-                {callStatus}
-              </div>
-            </div>
-
-            {/* Add Caller ID Selection Here */}
-            {availableNumbers.length > 0 && (
-              <div className="mb-4">
-                <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1.5 ml-1">
-                  Call From:
-                </label>
-                <select
-                  className="w-full bg-white border border-gray-300 text-gray-700 py-2 px-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent text-sm shadow-sm"
-                  value={selectedCallerId}
-                  onChange={(e) => setSelectedCallerId(e.target.value)}
-                  aria-label="Select Caller ID"
-                >
-                  {availableNumbers.map(num => (
-                    <option key={num.phoneNumber} value={num.phoneNumber}>{num.phoneNumber} {num.friendlyName ? `(${num.friendlyName})` : ''}</option>
-                  ))}
-                </select>
-              </div>
-            )}
-
-            <Dialpad onCall={(num) => handleCall(num, selectedCallerId)} />
+          <div className="flex-1 p-8 flex flex-col justify-center items-center">
+            <h1 className="text-2xl font-bold text-red-600">DEBUG MODE ACTIVE</h1>
+            <p>If you see this, the layout works.</p>
+            <p>User Role: {userRole}</p>
+            <p>Selected Call: {selectedCall ? selectedCall.id : 'None'}</p>
+            <p>Dialer Mode: {dialerMode ? 'True' : 'False'}</p>
+            <p>Screen Width: {typeof window !== 'undefined' ? window.innerWidth : 'Server'}</p>
           </div>
         </div>
 
