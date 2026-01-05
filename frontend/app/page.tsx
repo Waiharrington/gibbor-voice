@@ -104,6 +104,23 @@ function AudioPlayer({ src }: { src: string }) {
   );
 }
 
+
+
+const formatCallerID = (phoneNumber: string) => {
+  // Determine if we have a messy combined string or just a number
+  // Simplest approach: strip non-digits, take last 10, format as (XXX) XXX-XXXX
+  const cleaned = phoneNumber.replace(/\D/g, '');
+  const match = cleaned.match(/^(\d{1})?(\d{3})(\d{3})(\d{4})$/);
+  if (match) {
+    return `(${match[2] || cleaned.slice(0, 3)}) ${match[3] || cleaned.slice(3, 6)}-${match[4] || cleaned.slice(6)}`;
+  }
+  // Fallback for non-matching (e.g. short codes)
+  if (cleaned.length === 10) {
+    return `(${cleaned.slice(0, 3)}) ${cleaned.slice(3, 6)}-${cleaned.slice(6)}`;
+  }
+  return phoneNumber;
+};
+
 export default function Home() {
   const router = useRouter();
   const [device, setDevice] = useState<Device | null>(null);
