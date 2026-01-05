@@ -23,6 +23,7 @@ export function AgentStatusProvider({ children }: { children: React.ReactNode })
     const [sessionId, setSessionId] = useState<string | null>(null);
     const [onlineUsers, setOnlineUsers] = useState<any[]>([]);
     const [channel, setChannel] = useState<any>(null);
+    const [sessionStartTime, setSessionStartTime] = useState<number | null>(null);
 
     // 1. Check Auth & Start Session
     useEffect(() => {
@@ -138,11 +139,37 @@ export function AgentStatusProvider({ children }: { children: React.ReactNode })
                 .select()
                 .single();
 
-            if (data) setSessionId(data.id);
+            if (data) {
+                setSessionId(data.id);
+                setSessionStartTime(new Date(data.created_at).getTime()); // Capture start time
+            }
         } catch (e) {
             console.error("Error starting session", e);
         }
     };
+
+    // 5. Heartbeat: Update Duration every minute to prevent zombie sessions
+    useEffect(() => {
+        if (!sessionId || !sessionStartTime) return;
+
+        const interval = setInterval(async () => {
+            const now = Date.now();
+            const duration = Math.floor((now - sessionStartTime) / 1000);
+
+            try {
+                // Update duration_seconds in DB. 
+                // This ensures that if the browser crashes, the "Time Online" stops counting at the last heartbeat.
+                await supabase
+                    .from('agent_sessions')
+                    .update({ duration_seconds: duration }) // Update duration
+                    .eq('id', sessionId);
+            } catch (err) {
+                console.error("Heartbeat error:", err);
+            }
+        }, 60 * 1000); // Every 60 seconds
+
+        return () => clearInterval(interval);
+    }, [sessionId, sessionStartTime]);
 
     const endSession = async (sid: string) => {
         try {
