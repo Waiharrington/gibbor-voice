@@ -920,40 +920,86 @@ export default function Home() {
           </div>
 
           <div className="flex-1 p-8 flex flex-col justify-center max-w-sm mx-auto w-full">
-            {/* Status Indicator */}
-            <div className="mb-8 text-center">
-              <div className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${callStatus === 'Ready' ? 'bg-green-100 text-green-700' :
-                callStatus.includes('Error') ? 'bg-red-100 text-red-700' :
-                  'bg-blue-100 text-blue-700'
-                }`}>
-                <div className={`w-2 h-2 rounded-full mr-2 ${callStatus === 'Ready' ? 'bg-green-500' :
-                  callStatus.includes('Error') ? 'bg-red-500' :
-                    'bg-blue-500 animate-pulse'
-                  }`} />
-                {callStatus}
-              </div>
-            </div>
 
-            {/* Add Caller ID Selection Here */}
-            {availableNumbers.length > 0 && (
-              <div className="mb-4">
-                <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1.5 ml-1">
-                  Call From:
-                </label>
-                <select
-                  className="w-full bg-white border border-gray-300 text-gray-700 py-2 px-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent text-sm shadow-sm"
-                  value={selectedCallerId}
-                  onChange={(e) => setSelectedCallerId(e.target.value)}
-                  aria-label="Select Caller ID"
-                >
-                  {availableNumbers.map(num => (
-                    <option key={num.phoneNumber} value={num.phoneNumber}>{num.phoneNumber} {num.friendlyName ? `(${num.friendlyName})` : ''}</option>
-                  ))}
-                </select>
+            {/* Active Call UI or Dialpad */}
+            {(activeCall || (callStatus !== 'Ready' && callStatus !== 'Incoming Call...' && !callStatus.includes('Error'))) ? (
+              <div className="w-full flex flex-col items-center space-y-4 animate-in fade-in slide-in-from-top-4 duration-300">
+                <div className="text-center">
+                  <span className="inline-flex h-3 w-3 relative">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
+                  </span>
+                  <span className="ml-2 font-mono text-xl font-bold text-gray-800">{formatDuration(duration)}</span>
+                  <p className="text-xs text-gray-500 uppercase tracking-wider mt-1 font-semibold">{callStatus}</p>
+                </div>
+
+                <div className="grid grid-cols-3 gap-3 w-full">
+                  <button onClick={toggleMute} className={`flex flex-col items-center justify-center h-14 rounded-xl transition-all border ${isMuted ? 'bg-gray-800 text-white border-gray-800' : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'}`}>
+                    {isMuted ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
+                  </button>
+                  <button onClick={() => setIsKeypadOpen(!isKeypadOpen)} className={`flex flex-col items-center justify-center h-14 rounded-xl transition-all border ${isKeypadOpen ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'}`}>
+                    <div className="grid grid-cols-3 gap-0.5 w-4 h-4">
+                      {[...Array(9)].map((_, i) => <div key={i} className={`w-1 h-1 rounded-full ${isKeypadOpen ? 'bg-white' : 'bg-gray-400'}`} />)}
+                    </div>
+                  </button>
+                  <button onClick={handleHangup} className="col-span-1 flex flex-col items-center justify-center h-14 rounded-xl bg-red-500 text-white hover:bg-red-600 shadow-md transition-all active:scale-95">
+                    <PhoneOff className="w-6 h-6" />
+                  </button>
+                </div>
+
+                {/* In-Call Keypad */}
+                {isKeypadOpen && (
+                  <div className="grid grid-cols-3 gap-2 w-full pt-2">
+                    {['1', '2', '3', '4', '5', '6', '7', '8', '9', '*', '0', '#'].map((digit) => (
+                      <button
+                        key={digit}
+                        onClick={() => activeCall?.sendDigits(digit)}
+                        className="h-10 rounded-lg bg-white border border-gray-200 hover:bg-gray-50 flex items-center justify-center text-lg font-bold text-gray-700 transition-colors"
+                      >
+                        {digit}
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
+            ) : (
+              <>
+                {/* Status Indicator (Only for Idle) */}
+                <div className="mb-8 text-center">
+                  <div className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${callStatus === 'Ready' ? 'bg-green-100 text-green-700' :
+                    callStatus.includes('Error') ? 'bg-red-100 text-red-700' :
+                      'bg-blue-100 text-blue-700'
+                    }`}>
+                    <div className={`w-2 h-2 rounded-full mr-2 ${callStatus === 'Ready' ? 'bg-green-500' :
+                      callStatus.includes('Error') ? 'bg-red-500' :
+                        'bg-blue-500 animate-pulse'
+                      }`} />
+                    {callStatus}
+                  </div>
+                </div>
+
+                {/* Add Caller ID Selection Here */}
+                {availableNumbers.length > 0 && (
+                  <div className="mb-4">
+                    <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1.5 ml-1">
+                      Call From:
+                    </label>
+                    <select
+                      className="w-full bg-white border border-gray-300 text-gray-700 py-2 px-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent text-sm shadow-sm"
+                      value={selectedCallerId}
+                      onChange={(e) => setSelectedCallerId(e.target.value)}
+                      aria-label="Select Caller ID"
+                    >
+                      {availableNumbers.map(num => (
+                        <option key={num.phoneNumber} value={num.phoneNumber}>{num.phoneNumber} {num.friendlyName ? `(${num.friendlyName})` : ''}</option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+
+                <Dialpad onCall={(num) => handleCall(num, selectedCallerId)} />
+              </>
             )}
-
-            <Dialpad onCall={(num) => handleCall(num, selectedCallerId)} />
           </div>
         </div>
 
