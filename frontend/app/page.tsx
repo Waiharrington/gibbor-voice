@@ -1174,7 +1174,8 @@ export default function Home() {
                 </div>
               </div>
             </div>
-          ) : (
+          )}
+        {!selectedCall && (
           <div className="flex-1 flex flex-col items-center justify-center p-8 bg-gray-50/30">
             <div className="text-center mb-8">
               <p className="text-xs font-medium text-gray-400 uppercase tracking-wider mb-1">Make a Call</p>
