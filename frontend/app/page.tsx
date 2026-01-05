@@ -844,12 +844,22 @@ export default function Home() {
                   </div>
                 </div>
               ) : (
-                <div className="flex-1 flex flex-col items-center justify-center text-gray-400">
-                  <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
-                    <Phone className="w-8 h-8 text-gray-300" />
+                userRole === 'admin' ? (
+                  <div className="flex-1 flex flex-col items-center justify-center bg-gray-50">
+                    <div className="w-full max-w-sm bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+                      <h2 className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-4 text-center">Admin Dialer</h2>
+                      {/* Pass selectedCallerId if needed, otherwise it uses default */}
+                      <Dialpad onCall={(num) => handleCall(num, selectedCallerId)} />
+                    </div>
                   </div>
-                  <p>Select a call to view details</p>
-                </div>
+                ) : (
+                  <div className="flex-1 flex flex-col items-center justify-center text-gray-400">
+                    <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+                      <Phone className="w-8 h-8 text-gray-300" />
+                    </div>
+                    <p>Select a call to view details</p>
+                  </div>
+                )
               )}
             </div>
 
