@@ -655,6 +655,9 @@ export default function Home() {
               w-full md:w-80 border-r border-gray-200 flex flex-col bg-white
               ${activeMobileTab === 'calls' ? 'flex' : 'hidden md:flex'}
           `}>
+              <div className="bg-red-600 text-white text-xs font-bold text-center py-1">
+                DEBUG RELOADED v4.0 - CHECK RIGHT PANEL
+              </div>
               {/* Desktop Search Header (Keep existing) */}
               <div className="hidden lg:flex p-4 border-b border-gray-100 items-center gap-2">
                 <div className="relative flex-1">
