@@ -233,6 +233,9 @@ export default function Home() {
     setCurrentView('messages');
   };
 
+  // State to track if message detail is open on mobile
+  const [isMessageDetailOpen, setIsMessageDetailOpen] = useState(false);
+
   // --- Campaign & Dialer Logic ---
 
   const fetchNextLead = async (campaignId: string, excludeId?: string, leadToArchive?: any) => {
@@ -617,8 +620,8 @@ export default function Home() {
       {/* Main Content Area adjustments for Mobile Header padding */}
       <div className="flex-1 flex flex-col md:flex-row pt-16 lg:pt-0 h-full">
 
-        {/* Mobile Bottom Nav (Google Voice Style) - Hidden during Call/Dialpad */}
-        <div className={`2xl:hidden fixed bottom-0 left-0 right-0 h-20 bg-[#1e1e1e] border-t border-gray-800 z-50 flex justify-around items-center pb-2 text-gray-400 ${(dialerMode || activeCall) ? 'hidden' : ''}`}>
+        {/* Mobile Bottom Nav (Google Voice Style) - Hidden during Call/Dialpad/MessageDetail */}
+        <div className={`2xl:hidden fixed bottom-0 left-0 right-0 h-20 bg-[#1e1e1e] border-t border-gray-800 z-50 flex justify-around items-center pb-2 text-gray-400 ${(dialerMode || activeCall || isMessageDetailOpen) ? 'hidden' : ''}`}>
           <button
             onClick={() => { setActiveMobileTab('calls'); handleViewChange('calls'); }}
             className={`flex flex-col items-center justify-center w-full h-full ${activeMobileTab === 'calls' ? 'text-blue-400' : ''}`}
@@ -890,6 +893,7 @@ export default function Home() {
               initialConversationId={initialConvId}
               userId={user?.id}
               userRole={userRole}
+              onConversationSelect={(id) => setIsMessageDetailOpen(!!id)}
             />
           </div>
         )}

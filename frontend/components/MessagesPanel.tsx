@@ -13,9 +13,10 @@ interface MessagesPanelProps {
     initialConversationId?: string | null;
     userId?: string | null;
     userRole?: string | null;
+    onConversationSelect?: (id: string | null) => void;
 }
 
-export default function MessagesPanel({ initialConversationId, userId, userRole }: MessagesPanelProps) {
+export default function MessagesPanel({ initialConversationId, userId, userRole, onConversationSelect }: MessagesPanelProps) {
     // State
     const [messages, setMessages] = useState<any[]>([]);
     const [selectedConversationId, setSelectedConversationId] = useState<string | null>(initialConversationId || null);
@@ -24,6 +25,11 @@ export default function MessagesPanel({ initialConversationId, userId, userRole 
 
     // Auto-scroll ref
     const messagesEndRef = useRef<HTMLDivElement>(null);
+
+    // Update parent when selection changes
+    useEffect(() => {
+        onConversationSelect?.(selectedConversationId);
+    }, [selectedConversationId, onConversationSelect]);
 
     // Update selected conversation if prop changes
     useEffect(() => {
