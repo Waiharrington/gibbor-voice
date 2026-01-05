@@ -858,7 +858,7 @@ export default function Home() {
 
         {/* 4. Dialpad (Right) */}
         <div className={`
-              w-full xl:w-96 border-l border-gray-200 bg-gray-50 flex flex-col
+              w-full lg:w-96 border-l border-gray-200 bg-gray-50 flex flex-col
               ${dialerMode ? 'flex absolute inset-0 z-40 bg-white' : 'hidden md:flex'}
            `}>
           {/* Mobile Header for Dialpad to close it */}
