@@ -848,6 +848,7 @@ export default function Home() {
                 </div>
               )}
             </div>
+          )}
 
             {/* 4. Dialpad (Right) */}
             {/* On Desktop: Always Visible? No, previously visible unless hidden by dialerMode logic or width? */}
