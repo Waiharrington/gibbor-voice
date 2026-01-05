@@ -517,7 +517,6 @@ export default function Home() {
       setCallStatus('Dialing...'); // Immediate UI update
       // Set active call immediately to show UI controls (including Keypad)
       setActiveCall(call);
-      setDialerMode(true); // Force visibility on mobile immediately
 
       call.on('accept', () => {
         setCallStatus('In Call');
@@ -584,9 +583,6 @@ export default function Home() {
 
   return (
     <div className="flex h-screen bg-white overflow-hidden relative font-sans">
-      <div className="fixed bottom-0 left-0 bg-black text-white p-2 z-50 text-xs font-mono opacity-80 pointer-events-none">
-        DEBUG: Status='{callStatus}' | ActiveCall={activeCall ? 'YES' : 'NO'} | Dialer={dialerMode ? 'YES' : 'NO'}
-      </div>
       {/* 1. Sidebar (Desktop: Fixed | Mobile: Drawer via Hamburger) */}
       <Sidebar
         currentView={currentView}
