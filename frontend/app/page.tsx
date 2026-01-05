@@ -168,8 +168,12 @@ export default function Home() {
         if (profile) setUserRole(profile.role);
 
         // Fallback for hardcoded admin
-        if (currentUser.email === 'admin@gibborcenter.com' || currentUser.email === 'info@gibborcenter.com') {
+        const email = currentUser.email?.toLowerCase() || '';
+        if (email === 'admin@gibborcenter.com' || email === 'info@gibborcenter.com') {
           setUserRole('admin');
+        } else if (!profile) {
+          // Default to agent/user if no profile found
+          setUserRole('agent');
         }
       }
     };
