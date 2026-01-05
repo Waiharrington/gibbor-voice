@@ -547,9 +547,14 @@ export default function Home() {
         setDialedNumber('');
       });
 
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error making call:', error);
-      setCallStatus('Error making call');
+      if (error.name === 'NotAllowedError' || error.message?.includes('Permission denied') || error.code === 31208) {
+        setCallStatus('Mic Access Denied');
+        alert("Please allow microphone access in your browser settings to make calls.");
+      } else {
+        setCallStatus('Error making call');
+      }
     }
   };
 
