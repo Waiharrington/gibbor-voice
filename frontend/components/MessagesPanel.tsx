@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useMemo, useRef } from 'react';
-import { Send, Image as ImageIcon, Phone, MoreVertical, Search, Info } from 'lucide-react';
+import { Send, Image as ImageIcon, Phone, MoreVertical, Search, Info, ArrowLeft } from 'lucide-react';
 import { supabase } from '@/utils/supabaseClient';
 
 // Helper to group messages into conversations
@@ -241,7 +241,7 @@ export default function MessagesPanel({ initialConversationId, userId, userRole 
                                     onClick={() => setSelectedConversationId(null)}
                                     className="md:hidden p-2 -ml-2 text-gray-500 hover:text-gray-700"
                                 >
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-arrow-left"><path d="m12 19-7-7 7-7" /><path d="M19 12H5" /></svg>
+                                    <ArrowLeft className="w-5 h-5" />
                                 </button>
                                 <h2 className="text-lg font-medium text-gray-800">{selectedConversationId}</h2>
                             </div>
@@ -341,5 +341,6 @@ export default function MessagesPanel({ initialConversationId, userId, userRole 
                     </div>
                 )}
             </div>
-            );
+        </div>
+    );
 }
