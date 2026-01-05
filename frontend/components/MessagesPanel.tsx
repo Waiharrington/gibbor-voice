@@ -240,8 +240,8 @@ export default function MessagesPanel({ initialConversationId, userId, userRole,
             <div className={`flex-1 flex-col bg-white min-w-0 min-h-0 h-full border-r border-gray-200 ${selectedConversationId ? 'flex' : 'hidden md:flex'}`}>
                 {selectedConversationId ? (
                     <>
-                        {/* Header */}
-                        <header className="h-16 border-b border-gray-200 flex justify-between items-center px-4 md:px-6 flex-shrink-0">
+                        {/* Header - Sticky to ensure visibility even if parent scrolls */}
+                        <header className="sticky top-0 z-10 bg-white h-16 border-b border-gray-200 flex justify-between items-center px-4 md:px-6 flex-shrink-0 shadow-sm">
                             <div className="flex items-center gap-2">
                                 <button
                                     onClick={() => setSelectedConversationId(null)}
