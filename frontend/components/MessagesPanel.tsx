@@ -176,11 +176,11 @@ export default function MessagesPanel({ initialConversationId, userId, userRole 
         }
     };
 
-    // Render 2-Column Layout (List | Chat) meant to fit into the parent's Left+Center slot
+    // Render 2-Column Layout (List | Chat)
     return (
         <div className="flex flex-1 h-full overflow-hidden">
-            {/* 1. Conversations List (Left Panel of Messaging View) */}
-            <div className="w-80 border-r border-gray-200 flex flex-col bg-white">
+            {/* 1. Conversations List (Left Panel) - Hidden on Mobile if Conversation Selected */}
+            <div className={`w-full md:w-80 border-r border-gray-200 flex flex-col bg-white ${selectedConversationId ? 'hidden md:flex' : 'flex'}`}>
                 <div className="p-4 border-b border-gray-100">
                     <div className="relative">
                         <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
@@ -230,100 +230,107 @@ export default function MessagesPanel({ initialConversationId, userId, userRole 
                 </div>
             </div>
 
-            {/* 2. Active Chat (Center Panel of Messaging View - Takes remaining space) */}
-            {selectedConversationId ? (
-                <div className="flex-1 flex flex-col bg-white min-w-0 border-r border-gray-200">
-                    {/* Header */}
-                    <header className="h-16 border-b border-gray-200 flex justify-between items-center px-6">
-                        <div className="flex items-center">
-                            <h2 className="text-lg font-medium text-gray-800">{selectedConversationId}</h2>
-                        </div>
-                        <div className="flex items-center space-x-4">
-                            <button className="p-2 hover:bg-gray-100 rounded-full text-gray-600">
-                                <Phone className="w-5 h-5" />
-                            </button>
-                            <button className="p-2 hover:bg-gray-100 rounded-full text-gray-600">
-                                <MoreVertical className="w-5 h-5" />
-                            </button>
-                        </div>
-                    </header>
-
-                    {/* Messages Area */}
-                    <div className="flex-1 overflow-y-auto p-6 space-y-6">
-                        {activeMessages.map((msg, idx) => (
-                            <div key={idx} className={`flex ${msg.direction === 'outbound' ? 'justify-end' : 'justify-start'}`}>
-                                <div className={`flex flex-col max-w-[70%] ${msg.direction === 'outbound' ? 'items-end' : 'items-start'}`}>
-                                    {/* Image with improved loading */}
-                                    {msg.media_url && (
-                                        <div className="mb-2">
-                                            <img
-                                                src={msg.media_url}
-                                                alt="MMS"
-                                                className="rounded-xl border border-gray-200 max-h-64 object-cover cursor-pointer hover:opacity-90 transition-opacity"
-                                                referrerPolicy="no-referrer"
-                                                onClick={() => window.open(msg.media_url, '_blank')}
-                                            />
-                                        </div>
-                                    )}
-                                    {/* Text Bubble */}
-                                    {msg.body && (
-                                        <div className={`px-4 py-2 rounded-2xl text-sm leading-relaxed shadow-sm ${msg.direction === 'outbound'
-                                            ? 'bg-cyan-500 text-white rounded-tr-sm'
-                                            : 'bg-gray-100 text-gray-800 rounded-tl-sm'
-                                            }`}>
-                                            {msg.body}
-                                        </div>
-                                    )}
-                                    <span className="text-[10px] text-gray-400 mt-1 px-1">
-                                        {new Date(msg.created_at).toLocaleString([], { month: 'short', day: 'numeric', hour: 'numeric', minute: 'numeric' })}
-                                    </span>
-                                </div>
+            {/* 2. Active Chat (Center Panel) - Full Width on Mobile if Selected, Hidden if not */}
+            <div className={`flex-1 flex-col bg-white min-w-0 border-r border-gray-200 ${selectedConversationId ? 'flex' : 'hidden md:flex'}`}>
+                {selectedConversationId ? (
+                    <>
+                        {/* Header */}
+                        <header className="h-16 border-b border-gray-200 flex justify-between items-center px-4 md:px-6">
+                            <div className="flex items-center gap-2">
+                                <button
+                                    onClick={() => setSelectedConversationId(null)}
+                                    className="md:hidden p-2 -ml-2 text-gray-500 hover:text-gray-700"
+                                >
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-arrow-left"><path d="m12 19-7-7 7-7" /><path d="M19 12H5" /></svg>
+                                </button>
+                                <h2 className="text-lg font-medium text-gray-800">{selectedConversationId}</h2>
                             </div>
-                        ))}
-                        <div ref={messagesEndRef} />
-                    </div>
+                            <div className="flex items-center space-x-2">
+                                <button className="p-2 hover:bg-gray-100 rounded-full text-gray-600">
+                                    <Phone className="w-5 h-5" />
+                                </button>
+                                <button className="p-2 hover:bg-gray-100 rounded-full text-gray-600">
+                                    <MoreVertical className="w-5 h-5" />
+                                </button>
+                            </div>
+                        </header>
 
-                    {/* Input Area */}
-                    <div className="p-4 border-t border-gray-200">
-                        <div className="flex items-end bg-gray-50 rounded-xl border border-gray-200 p-2 focus-within:ring-1 focus-within:ring-cyan-500 transition-all">
-                            {/* Image Upload Button */}
-                            <label className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-200 rounded-full transition-colors cursor-pointer">
-                                <ImageIcon className="w-5 h-5" />
-                                <input
-                                    type="file"
-                                    accept="image/*"
-                                    className="hidden"
-                                    onChange={handleImageUpload}
-                                    disabled={isSending}
+                        {/* Messages Area */}
+                        <div className="flex-1 overflow-y-auto p-6 space-y-6">
+                            {activeMessages.map((msg, idx) => (
+                                <div key={idx} className={`flex ${msg.direction === 'outbound' ? 'justify-end' : 'justify-start'}`}>
+                                    <div className={`flex flex-col max-w-[70%] ${msg.direction === 'outbound' ? 'items-end' : 'items-start'}`}>
+                                        {/* Image with improved loading */}
+                                        {msg.media_url && (
+                                            <div className="mb-2">
+                                                <img
+                                                    src={msg.media_url}
+                                                    alt="MMS"
+                                                    className="rounded-xl border border-gray-200 max-h-64 object-cover cursor-pointer hover:opacity-90 transition-opacity"
+                                                    referrerPolicy="no-referrer"
+                                                    onClick={() => window.open(msg.media_url, '_blank')}
+                                                />
+                                            </div>
+                                        )}
+                                        {/* Text Bubble */}
+                                        {msg.body && (
+                                            <div className={`px-4 py-2 rounded-2xl text-sm leading-relaxed shadow-sm ${msg.direction === 'outbound'
+                                                ? 'bg-cyan-500 text-white rounded-tr-sm'
+                                                : 'bg-gray-100 text-gray-800 rounded-tl-sm'
+                                                }`}>
+                                                {msg.body}
+                                            </div>
+                                        )}
+                                        <span className="text-[10px] text-gray-400 mt-1 px-1">
+                                            {new Date(msg.created_at).toLocaleString([], { month: 'short', day: 'numeric', hour: 'numeric', minute: 'numeric' })}
+                                        </span>
+                                    </div>
+                                </div>
+                            ))}
+                            <div ref={messagesEndRef} />
+                        </div>
+
+                        {/* Input Area */}
+                        <div className="p-4 border-t border-gray-200">
+                            <div className="flex items-end bg-gray-50 rounded-xl border border-gray-200 p-2 focus-within:ring-1 focus-within:ring-cyan-500 transition-all">
+                                {/* Image Upload Button */}
+                                <label className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-200 rounded-full transition-colors cursor-pointer">
+                                    <ImageIcon className="w-5 h-5" />
+                                    <input
+                                        type="file"
+                                        accept="image/*"
+                                        className="hidden"
+                                        onChange={handleImageUpload}
+                                        disabled={isSending}
+                                    />
+                                </label>
+
+                                <textarea
+                                    value={body}
+                                    onChange={(e) => setBody(e.target.value)}
+                                    onKeyDown={(e) => {
+                                        if (e.key === 'Enter' && !e.shiftKey) {
+                                            e.preventDefault();
+                                            handleSend();
+                                        }
+                                    }}
+                                    placeholder="Type a message"
+                                    className="flex-1 bg-transparent border-none focus:ring-0 resize-none max-h-32 text-sm text-gray-700 placeholder-gray-400 py-3 mx-2 h-11"
                                 />
-                            </label>
-
-                            <textarea
-                                value={body}
-                                onChange={(e) => setBody(e.target.value)}
-                                onKeyDown={(e) => {
-                                    if (e.key === 'Enter' && !e.shiftKey) {
-                                        e.preventDefault();
-                                        handleSend();
-                                    }
-                                }}
-                                placeholder="Type a message"
-                                className="flex-1 bg-transparent border-none focus:ring-0 resize-none max-h-32 text-sm text-gray-700 placeholder-gray-400 py-3 mx-2 h-11"
-                            />
-                            <button
-                                onClick={handleSend}
-                                disabled={!body.trim() || isSending}
-                                className={`p-2 rounded-full transition-colors ${body.trim()
-                                    ? 'bg-cyan-500 text-white hover:bg-cyan-600 shadow-md'
-                                    : 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                                    }`}
-                            >
-                                <Send className="w-4 h-4 ml-0.5" />
-                            </button>
+                                <button
+                                    onClick={handleSend}
+                                    disabled={!body.trim() || isSending}
+                                    className={`p-2 rounded-full transition-colors ${body.trim()
+                                        ? 'bg-cyan-500 text-white hover:bg-cyan-600 shadow-md'
+                                        : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                                        }`}
+                                >
+                                    <Send className="w-4 h-4 ml-0.5" />
+                                </button>
+                            </div>
                         </div>
                     </div>
-                </div>
-            ) : (
+                ) : (
                 // Empty State for Center Panel
                 <div className="flex-1 flex flex-col items-center justify-center bg-white text-gray-500 border-r border-gray-200">
                     <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mb-4">
@@ -333,6 +340,6 @@ export default function MessagesPanel({ initialConversationId, userId, userRole 
                     <p className="max-w-xs text-center text-sm">Choose from the list on the left to start chatting.</p>
                 </div>
             )}
-        </div>
-    );
+            </div>
+            );
 }
