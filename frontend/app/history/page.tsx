@@ -13,7 +13,7 @@ export default function History() {
     const [user, setUser] = useState<any>(null);
     const [userRole, setUserRole] = useState<string | null>(null);
 
-    // console.log("HISTORY PAGE VERSION: 1.2 (Hydration Fix)");
+    console.log("HISTORY PAGE VERSION: 1.3 (DEBUG BANNER)");
 
     // 1. Fetch User & Role
     useEffect(() => {
@@ -75,11 +75,14 @@ export default function History() {
         <div className="flex h-screen bg-white">
             <Sidebar />
             <main className="flex-1 flex flex-col bg-gray-50">
-                <header className="h-16 border-b border-gray-200 flex items-center px-8 bg-white">
+                <header className="h-16 border-b border-gray-200 flex items-center px-8 bg-white justify-between">
                     <h1 className="text-xl font-semibold text-gray-800 flex items-center">
                         <Clock className="w-5 h-5 mr-3 text-gray-600" />
-                        Call History v1.2
+                        Call History v1.3
                     </h1>
+                    <div className="bg-red-100 text-red-800 text-xs px-2 py-1 rounded border border-red-200">
+                        DEBUG: v1.3 LOADED
+                    </div>
                 </header>
 
                 <div className="flex-1 p-8 overflow-y-auto">
