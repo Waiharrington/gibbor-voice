@@ -2,15 +2,41 @@
 
 import { useState, useEffect } from 'react';
 import Sidebar from '@/components/Sidebar';
-import { Clock, PhoneIncoming, PhoneOutgoing, PhoneMissed } from 'lucide-react';
+import { Clock, PhoneIncoming, PhoneOutgoing, User } from 'lucide-react';
+import { supabase } from '@/utils/supabaseClient';
+
+const API_BASE_URL = 'https://gibbor-voice-production.up.railway.app';
 
 export default function History() {
     const [calls, setCalls] = useState<any[]>([]);
+    const [user, setUser] = useState<any>(null);
+    const [userRole, setUserRole] = useState<string | null>(null);
 
+    // 1. Fetch User & Role
+    useEffect(() => {
+        const getUser = async () => {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (user) {
+                setUser(user);
+                // Fetch profile for role
+                const { data: profile } = await supabase
+                    .from('profiles')
+                    .select('role')
+                    .eq('id', user.id)
+                    .single();
+                setUserRole(profile?.role || 'agent');
+            }
+        };
+        getUser();
+    }, []);
+
+    // 2. Fetch History once User is known
     useEffect(() => {
         const fetchHistory = async () => {
+            if (!user) return;
+
             try {
-                const response = await fetch('https://gibbor-voice-production.up.railway.app/history/calls');
+                const response = await fetch(`${API_BASE_URL}/history/calls?userId=${user.id}&role=${userRole || 'agent'}`);
                 const data = await response.json();
                 setCalls(data);
             } catch (error) {
@@ -18,15 +44,12 @@ export default function History() {
             }
         };
 
-        fetchHistory();
-    }, []);
+        if (user) {
+            fetchHistory();
+        }
+    }, [user, userRole]);
 
-    const formatDuration = (seconds: number) => {
-        if (!seconds) return '0s';
-        const mins = Math.floor(seconds / 60);
-        const secs = seconds % 60;
-        return `${mins}m ${secs}s`;
-    };
+
 
     const formatDate = (dateString: string) => {
         return new Date(dateString).toLocaleString();
@@ -48,6 +71,9 @@ export default function History() {
                         <table className="min-w-full divide-y divide-gray-200">
                             <thead className="bg-gray-50">
                                 <tr>
+                                    {userRole === 'admin' && (
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Agent</th>
+                                    )}
                                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
                                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">From</th>
                                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">To</th>
@@ -58,6 +84,14 @@ export default function History() {
                             <tbody className="bg-white divide-y divide-gray-200">
                                 {calls.map((call) => (
                                     <tr key={call.id} className="hover:bg-gray-50 transition-colors">
+                                        {userRole === 'admin' && (
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-indigo-600">
+                                                <div className="flex items-center">
+                                                    <User className="w-4 h-4 mr-2 text-gray-400" />
+                                                    {call.agent_name || '—'}
+                                                </div>
+                                            </td>
+                                        )}
                                         <td className="px-6 py-4 whitespace-nowrap">
                                             {call.direction === 'inbound' ? (
                                                 <div className="flex items-center text-blue-600">
@@ -76,8 +110,8 @@ export default function History() {
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{formatDate(call.created_at)}</td>
                                         <td className="px-6 py-4 whitespace-nowrap">
                                             <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${call.status === 'completed' ? 'bg-green-100 text-green-800' :
-                                                    call.status === 'busy' || call.status === 'failed' ? 'bg-red-100 text-red-800' :
-                                                        'bg-yellow-100 text-yellow-800'
+                                                call.status === 'busy' || call.status === 'failed' ? 'bg-red-100 text-red-800' :
+                                                    'bg-yellow-100 text-yellow-800'
                                                 }`}>
                                                 {call.status || 'unknown'}
                                             </span>
@@ -86,9 +120,11 @@ export default function History() {
                                 ))}
                                 {calls.length === 0 && (
                                     <tr>
-                                        <td colSpan={5} className="px-6 py-12 text-center text-gray-500">
-                                            No calls found in history.
-                                        </td>
+                                        <tr>
+                                            <td colSpan={userRole === 'admin' ? 6 : 5} className="px-6 py-12 text-center text-gray-500">
+                                                No calls found in history.
+                                            </td>
+                                        </tr>
                                     </tr>
                                 )}
                             </tbody>

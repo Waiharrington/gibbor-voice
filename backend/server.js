@@ -342,24 +342,36 @@ app.get("/history/calls", async (req, res) => {
             .order('created_at', { ascending: false });
 
         // Isolation Logic:
-        // STRICT: Default to showing NOTHING if not admin and no userId provided.
-
         if (role === 'admin') {
             // Admin sees all - no filter needed
         } else if (userId) {
             // Agent sees only their own calls
             query = query.eq('user_id', userId);
         } else {
-            // Fallback: No role (guest?) or agent without ID -> Return empty or error
-            // Let's return empty array to avoid breaking UI, but secure.
-            // OR filter by a non-existent ID
+            // Fallback
             query = query.eq('user_id', '00000000-0000-0000-0000-000000000000');
         }
 
-        const { data, error } = await query;
-
+        const { data: calls, error } = await query;
         if (error) throw error;
-        res.json(data);
+
+        // Enrich with Agent Names if Admin
+        let enrichedCalls = calls;
+        if (role === 'admin' && calls.length > 0) {
+            const { data: profiles } = await supabase.from('profiles').select('id, full_name, email');
+            const profileMap = {};
+            if (profiles) {
+                profiles.forEach(p => {
+                    profileMap[p.id] = p.full_name || p.email;
+                });
+            }
+            enrichedCalls = calls.map(c => ({
+                ...c,
+                agent_name: c.user_id ? (profileMap[c.user_id] || 'Unknown Agent') : 'System/Auto'
+            }));
+        }
+
+        res.json(enrichedCalls);
     } catch (e) {
         res.status(500).json({ error: e.message });
     }
