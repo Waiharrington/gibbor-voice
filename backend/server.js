@@ -966,6 +966,34 @@ app.post("/agents", async (req, res) => {
     }
 });
 
+// Admin: Delete Agent Endpoint
+app.delete("/agents/:id", async (req, res) => {
+    try {
+        const userId = req.params.id;
+        console.log(`Deleting agent: ${userId}`);
+
+        // 1. Delete from Auth (This invalidates session)
+        const { error: authError } = await supabase.auth.admin.deleteUser(userId);
+        if (authError) throw authError;
+
+        // 2. Cascade delete from Profiles/etc is usually handled by DB Foreign Keys (ON DELETE CASCADE)
+        // If not, we might need to manually clean up 'profiles', 'agent_sessions', etc.
+        // Assuming Supabase RLS policies and FKs handle this or allow orphans. 
+        // Best practice: Delete profile manually if no Cascade.
+        const { error: profileError } = await supabase
+            .from('profiles')
+            .delete()
+            .eq('id', userId);
+
+        if (profileError) console.error("Error deleting profile (might be cascaded):", profileError);
+
+        res.json({ message: "Agent deleted successfully" });
+    } catch (e) {
+        console.error("Error deleting agent:", e);
+        res.status(500).json({ error: e.message });
+    }
+});
+
 // Auto Dialer Status Callback (Optional for now, good for debugging)
 app.post("/auto-dialer/status", (req, res) => {
     const { CallSid, CallStatus, AnsweredBy } = req.body;

@@ -3,9 +3,11 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Sidebar from '@/components/Sidebar';
-import { Shield, Users, Phone, BarChart3, Plus, ArrowUpRight, Clock, UserPlus, Loader2, Circle, Activity } from 'lucide-react';
+import { Shield, Users, Phone, BarChart3, Clock, ArrowUpRight, UserPlus, Loader2, Plus, Trash2 } from 'lucide-react';
 import { supabase } from '@/utils/supabaseClient';
 import { useAgentStatus } from '@/providers/AgentStatusContext';
+
+const API_BASE_URL = 'https://gibbor-voice-production.up.railway.app';
 
 // Helper to format seconds to HH:MM:SS
 function formatDuration(seconds: number) {
@@ -89,7 +91,7 @@ export default function AdminPage() {
 
     const fetchStats = async () => {
         try {
-            const res = await fetch('https://gibbor-voice-production.up.railway.app/reports');
+            const res = await fetch(`${API_BASE_URL}/reports`);
             if (res.ok) {
                 const data = await res.json();
                 setStats({
@@ -100,7 +102,7 @@ export default function AdminPage() {
             }
 
             // Fetch Users (from Backend to bypass RLS)
-            const usersRes = await fetch('https://gibbor-voice-production.up.railway.app/users');
+            const usersRes = await fetch(`${API_BASE_URL}/users`);
             if (usersRes.ok) {
                 const profiles = await usersRes.json();
                 setUsersList(profiles);
@@ -116,22 +118,18 @@ export default function AdminPage() {
         e.preventDefault();
         setCreating(true);
         try {
-            const res = await fetch('https://gibbor-voice-production.up.railway.app/agents', {
+            const res = await fetch(`${API_BASE_URL}/agents`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(newAgent)
             });
-
-            if (res.ok) {
-                alert("Agent created successfully!");
-                setIsAgentModalOpen(false);
-                setNewAgent({ email: '', password: '', fullName: '' });
-            } else {
-                const err = await res.json();
-                alert("Error creating agent: " + err.error);
-            }
-        } catch (error) {
-            alert("Failed to connect to server.");
+            if (!res.ok) throw new Error('Failed to create agent');
+            alert('Agent created successfully');
+            setIsAgentModalOpen(false);
+            setNewAgent({ email: '', password: '', fullName: '' });
+            fetchStats(); // Refresh list
+        } catch (err: any) {
+            alert(err.message);
         } finally {
             setCreating(false);
         }
@@ -240,7 +238,9 @@ export default function AdminPage() {
                                         <th className="px-6 py-3 text-center">Calls Today</th>
                                         <th className="px-6 py-3 text-center">Time Online</th>
                                         <th className="px-6 py-3">Status</th>
+                                        <th className="px-6 py-3">Status</th>
                                         <th className="px-6 py-3">Joined</th>
+                                        <th className="px-6 py-3 text-right">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-gray-100">
@@ -285,6 +285,15 @@ export default function AdminPage() {
                                                 </td>
                                                 <td className="px-6 py-4 text-gray-500 text-xs">
                                                     {new Date(u.created_at || Date.now()).toLocaleDateString()}
+                                                </td>
+                                                <td className="px-6 py-4 text-right">
+                                                    <button
+                                                        onClick={() => handleDeleteAgent(u.id, u.full_name || u.email)}
+                                                        className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                                                        title="Delete User"
+                                                    >
+                                                        <Trash2 className="w-4 h-4" />
+                                                    </button>
                                                 </td>
                                             </tr>
                                         ))
