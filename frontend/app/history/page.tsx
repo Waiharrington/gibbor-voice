@@ -18,13 +18,18 @@ export default function History() {
             const { data: { user } } = await supabase.auth.getUser();
             if (user) {
                 setUser(user);
-                // Fetch profile for role
                 const { data: profile } = await supabase
                     .from('profiles')
                     .select('role')
                     .eq('id', user.id)
                     .single();
-                setUserRole(profile?.role || 'agent');
+
+                // Allow Super Admins even if role logic fails
+                if (user.email === 'info@gibborcenter.com' || user.email === 'admin@gibborcenter.com') {
+                    setUserRole('admin');
+                } else {
+                    setUserRole(profile?.role || 'agent');
+                }
             }
         };
         getUser();
