@@ -562,7 +562,7 @@ export default function Home() {
 
       call.on('error', (error: any) => {
         console.error('Call Error:', error);
-        setCallStatus('Call Error');
+        setCallStatus(`Error: ${error.message || 'Unknown Call Error'}`);
         setActiveCall(null);
         setDialedNumber('');
       });
@@ -573,7 +573,9 @@ export default function Home() {
         setCallStatus('Mic Access Denied');
         alert("Please allow microphone access in your browser settings to make calls.");
       } else {
-        setCallStatus('Error making call');
+        const errMsg = error.message || 'Unknown Connection Error';
+        setCallStatus(`Error: ${errMsg}`);
+        alert(`Call failed: ${errMsg}`); // Also alert for visibility
       }
     }
   };
