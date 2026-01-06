@@ -508,9 +508,24 @@ app.get("/reports/agents", async (req, res) => {
                 let duration = 0;
                 if (s.duration_seconds) {
                     duration = s.duration_seconds;
-                } else if (s.started_at && !s.ended_at) {
-                    // Active session
-                    const diff = Math.floor((new Date() - new Date(s.started_at)) / 1000);
+                } else if (s.started_at) {
+                    // Active session or Zombie session
+                    // If no valid ended_at, user is still online OR session crashed.
+                    // We must calculate duration up to the Report's EndDate (if historical) or Now (if current).
+
+                    const now = new Date();
+                    const sessionStart = new Date(s.started_at);
+
+                    // Determine effective end time
+                    let effectiveEnd = now;
+                    if (endDate) {
+                        const queryEnd = new Date(endDate);
+                        if (queryEnd < now) {
+                            effectiveEnd = queryEnd;
+                        }
+                    }
+
+                    const diff = Math.floor((effectiveEnd - sessionStart) / 1000);
                     duration = diff > 0 ? diff : 0;
                 }
                 return acc + duration;
