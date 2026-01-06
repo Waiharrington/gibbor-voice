@@ -922,14 +922,12 @@ app.get("/users", async (req, res) => {
                 .gte('started_at', todayISO);
 
             let secondsOnline = 0;
+            let firstLoginTime = null;
+            let lastSeen = null;
+            let secondsOffline = 0;
+
             if (sessions && sessions.length > 0) {
-                // 3. Merge Intervals implementation REMOVED - Using duration_seconds + last heartbeat logic
-                // Actually, if we now rely on 'duration_seconds' from heartbeat, we can sum that for today's sessions.
-                // But legacy sessions might not have it.
-                // Let's rely on 'duration_seconds' if present, otherwise fallback to (ended_at - started_at).
-
-                // For currently active session (ended_at is null), duration_seconds is updated by heartbeat.
-
+                // 1. Calculate Seconds Online
                 secondsOnline = sessions.reduce((acc, s) => {
                     let duration = 0;
                     if (s.duration_seconds) {
@@ -937,14 +935,11 @@ app.get("/users", async (req, res) => {
                     } else if (s.ended_at) {
                         duration = (new Date(s.ended_at).getTime() - new Date(s.started_at).getTime()) / 1000;
                     } else {
-                        // Old fallback for sessions without duration_seconds and not ended (should be rare with heartbeat)
-                        // Or just cap it at 0 to avoid the "counting forever" bug.
-                        // For safety, let's treat these as 0 or small value if no heartbeat.
                         duration = 0;
                     }
                     return acc + duration;
                 }, 0);
-                // C. Get First Login Today (for Offline Time calc)
+                // C. Get First Login Today (Separate Query for accuracy)
                 const { data: firstSession } = await supabase
                     .from('agent_sessions')
                     .select('started_at')
@@ -954,7 +949,7 @@ app.get("/users", async (req, res) => {
                     .limit(1)
                     .single();
 
-                const firstLoginTime = firstSession ? firstSession.started_at : null;
+                firstLoginTime = firstSession ? firstSession.started_at : null;
 
                 // D. Get Last Seen (Global - Most recent session)
                 const { data: lastSessionGlobal } = await supabase
@@ -965,7 +960,6 @@ app.get("/users", async (req, res) => {
                     .limit(1)
                     .single();
 
-                let lastSeen = null;
                 if (lastSessionGlobal) {
                     // If ended_at is null, they are currently online => Last seen is "Now"
                     // If ended_at is present, that's when they left.
@@ -973,35 +967,23 @@ app.get("/users", async (req, res) => {
                 }
 
                 // E. Calculate Time Offline
-                // Time Offline = (Now - First Login) - Seconds Online
-                let secondsOffline = 0;
                 if (firstLoginTime) {
                     const now = new Date();
                     const totalTimeSinceFirstLogin = (now - new Date(firstLoginTime)) / 1000;
                     secondsOffline = Math.max(0, totalTimeSinceFirstLogin - secondsOnline);
                 }
-            }
 
-            // D. Calculate Time Offline
-            // Time Offline = (Now - First Login) - Seconds Online
-            let secondsOffline = 0;
-            if (firstLoginTime) {
-                const now = new Date();
-                const totalTimeSinceFirstLogin = (now - firstLoginTime) / 1000;
-                secondsOffline = Math.max(0, totalTimeSinceFirstLogin - secondsOnline);
-            }
-
-            return {
-                ...user,
-                stats: {
-                    callsToday: callsToday || 0,
-                    secondsOnline: Math.floor(secondsOnline),
-                    secondsOffline: Math.floor(secondsOffline),
-                    lastLogin: firstLoginTime,
-                    lastSeen: lastSeen // Add this new field
-                }
-            };
-        }));
+                return {
+                    ...user,
+                    stats: {
+                        callsToday: callsToday || 0,
+                        secondsOnline: Math.floor(secondsOnline),
+                        secondsOffline: Math.floor(secondsOffline),
+                        lastLogin: firstLoginTime,
+                        lastSeen: lastSeen
+                    }
+                };
+            }));
 
         res.json(enrichedProfiles);
     } catch (e) {
