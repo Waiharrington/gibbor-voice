@@ -494,7 +494,7 @@ export default function Home() {
     return () => {
       console.log("Destroying Twilio Device...");
       newDevice.destroy();
-      // setDevice(null); // Optional: avoid state loop if unmounting
+      setDevice(null); // Ensure state is cleared to avoid using destroyed device
     };
   }, [token]); // DEPEND ONLY ON TOKEN
 
