@@ -88,13 +88,15 @@ export default function ReportsPage() {
 
             console.log("Fetching reports with params:", queryObj.toString());
 
-            const res = await fetch(`${API_BASE_URL}/reports?${queryObj.toString()}`);
+            // Correct Endpoint: /reports/agents returns the array of agent stats
+            const res = await fetch(`${API_BASE_URL}/reports/agents?${queryObj.toString()}`);
             if (res.ok) {
                 const data = await res.json(); // Takes ARRAY of reports
                 console.log("Reports Data Received:", data);
                 if (Array.isArray(data)) {
                     setReportsData(data);
                 } else {
+                    console.warn("Expected array but got:", data);
                     setReportsData([]); // Safety fallback
                 }
             } else {
