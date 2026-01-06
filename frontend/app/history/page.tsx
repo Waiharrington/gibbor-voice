@@ -12,6 +12,8 @@ export default function History() {
     const [user, setUser] = useState<any>(null);
     const [userRole, setUserRole] = useState<string | null>(null);
 
+    console.log("HISTORY PAGE VERSION: 1.1 (Recordings)"); // DEBUG LOG
+
     // 1. Fetch User & Role
     useEffect(() => {
         const getUser = async () => {
