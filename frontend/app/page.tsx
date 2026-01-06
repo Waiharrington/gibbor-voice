@@ -390,13 +390,11 @@ export default function Home() {
     const init = async () => {
       try {
         setIsLoading(true);
-        // 1. Get Token (Pass identity for better tracking)
-        // const identity = user.email || 'agent';
-        // const tokenRes = await fetch(`${API_BASE_URL}/token?identity=${encodeURIComponent(identity)}`);
-        // Reverting identity change to avoid breaking existing token logic if not updated on backend fully yet.
-        // But we DO need to pass user info for history.
+        // 1. Get Token (Pass identity for unique session)
+        // Use email as identity (sanitized) to avoid conflicts
+        const identity = user.email || `user_${user.id}`;
+        const tokenRes = await fetch(`${API_BASE_URL}/token?identity=${encodeURIComponent(identity)}`);
 
-        const tokenRes = await fetch(`${API_BASE_URL}/token`);
         if (!tokenRes.ok) throw new Error('Failed to fetch token');
         const tokenData = await tokenRes.json();
         setToken(tokenData.token);

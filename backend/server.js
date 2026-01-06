@@ -142,7 +142,7 @@ app.post("/incoming-call", async (req, res) => {
     const outboundCallerId = appCallerId || process.env.TWILIO_PHONE_NUMBER;
 
     if (To === process.env.TWILIO_PHONE_NUMBER) {
-        twiml.say("Conectando con el agente.");
+        twiml.say("Conectando con el equipo.");
         const dial = twiml.dial({
             record: 'record-from-ringing',
             recordingStatusCallback: `${baseUrl}/recording-status`,
@@ -150,7 +150,25 @@ app.post("/incoming-call", async (req, res) => {
             action: `${baseUrl}/call-status`,
             method: 'POST'
         });
-        dial.client("agent");
+
+        // Backend Simulring: Dial ALL agents found in DB
+        // Query Supabase for users. Ideally only those "online" but for now all valid agents.
+        const { data: agents } = await supabase.from('profiles').select('email').neq('email', null);
+
+        if (agents && agents.length > 0) {
+            console.log(`Simulring to ${agents.length} agents:`, agents.map(a => a.email));
+            agents.forEach(agent => {
+                if (agent.email) {
+                    // Use same identity format as frontend: email
+                    dial.client(agent.email);
+                }
+            });
+            // Also add legacy 'agent' just in case? No, move forward.
+            // dial.client("agent"); 
+        } else {
+            console.log("No agents found in DB. Dialing fallback 'agent'.");
+            dial.client("agent");
+        }
     }
     else if (To) {
         // Outbound calls from browser (TwiML App default URL)
