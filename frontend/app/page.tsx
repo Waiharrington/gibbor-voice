@@ -442,20 +442,26 @@ export default function Home() {
     };
   }, [user, userRole]);
 
+  // New State for Robustness
+  const [isDeviceReady, setIsDeviceReady] = useState(false);
+
   // Initialize Twilio Device
   useEffect(() => {
     if (!token) return;
 
+    console.log("Initializing Twilio Device (v1.6)...");
     const newDevice = new Device(token, { logLevel: 1 });
 
     newDevice.on('registered', () => {
       console.log('Twilio Device Registered');
       setCallStatus('Ready');
+      setIsDeviceReady(true);
     });
 
     newDevice.on('error', (error) => {
       console.error('Twilio Device Error:', error);
       setCallStatus('Error: ' + error.message);
+      setIsDeviceReady(false);
     });
 
     newDevice.on('incoming', (call) => {
@@ -474,11 +480,11 @@ export default function Home() {
     newDevice.on('tokenWillExpire', async () => {
       console.log('Token expiring soon, refreshing...');
       try {
-        const res = await fetch(`${API_BASE_URL}/token`);
+        const idParam = user?.email ? `?identity=${encodeURIComponent(user.email)}` : '';
+        const res = await fetch(`${API_BASE_URL}/token${idParam}`);
         if (res.ok) {
           const data = await res.json();
           newDevice.updateToken(data.token);
-          // setToken(data.token); // DO NOT update state, it triggers cleanup/destroy!
           console.log('Token refreshed successfully (internal)');
         }
       } catch (e) {
@@ -491,10 +497,11 @@ export default function Home() {
 
     return () => {
       console.log("Destroying Twilio Device...");
+      setIsDeviceReady(false);
       newDevice.destroy();
       setDevice(null); // Ensure state is cleared to avoid using destroyed device
     };
-  }, [token]); // DEPEND ONLY ON TOKEN
+  }, [token, user?.email]); // DEPEND ONLY ON TOKEN
 
   const [duration, setDuration] = useState(0);
 
@@ -520,7 +527,23 @@ export default function Home() {
   const [dialedNumber, setDialedNumber] = useState<string>('');
 
   const handleCall = async (number: string, callerId?: string) => {
-    if (!device) return;
+    if (!device) {
+      alert("Phone is initializing... Please wait 3 seconds.");
+      return;
+    }
+    if (!isDeviceReady) {
+      alert("Phone connecting... Please wait for 'Ready' status.");
+      return;
+    }
+
+    // MIC CHECK
+    try {
+      await navigator.mediaDevices.getUserMedia({ audio: true });
+    } catch (e) {
+      alert("Microphone Error: Please allow microphone access in your browser settings.");
+      return;
+    }
+
     setDialedNumber(number); // Store for display
     try {
       setCallStatus('Calling ' + number + '...');

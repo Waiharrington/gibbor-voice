@@ -119,7 +119,10 @@ export default function Sidebar({ currentView, onViewChange, isOpen: externalIsO
                     <div className="w-8 h-8 bg-cyan-500 rounded-full flex items-center justify-center text-white font-bold">
                         G
                     </div>
-                    <span className="text-xl font-semibold text-gray-700">Gibbor Voice</span>
+                    <div className="flex flex-col">
+                        <span className="text-xl font-semibold text-gray-700">Gibbor Voice</span>
+                        <span className="text-xs text-gray-400 font-mono">v1.6 (Stable)</span>
+                    </div>
                 </div>
 
                 <nav className="flex-1 overflow-y-auto py-4">
