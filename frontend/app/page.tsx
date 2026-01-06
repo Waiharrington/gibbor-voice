@@ -597,10 +597,37 @@ export default function Home() {
       const newMuted = !isMuted;
       activeCall.mute(newMuted);
       setIsMuted(newMuted);
+      activeCall.mute(newMuted);
+      setIsMuted(newMuted);
     }
   };
 
-  // Mobile Tabs - Extended to match Google Voice
+  // Heartbeat Logic (Every 60s)
+  useEffect(() => {
+    if (!user?.id) return; // Only if logged in
+
+    const sendHeartbeat = async () => {
+      try {
+        await fetch(`${API_BASE_URL}/heartbeat`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userId: user.id }),
+        });
+        // console.log("Heartbeat sent");
+      } catch (e) {
+        console.error("Heartbeat failed", e);
+      }
+    };
+
+    // Send immediately on mount/login
+    sendHeartbeat();
+
+    // Loop
+    const interval = setInterval(sendHeartbeat, 60000);
+    return () => clearInterval(interval);
+  }, [user]);
+
+  // Handle incoming calls manually if needed (Twilio does this via device.on('incoming'))st [activeMobileTab, setActiveMobileTab] = useState<'calls' | 'contacts' | 'messages' | 'voicemail' | 'details'>('calls');
   const [activeMobileTab, setActiveMobileTab] = useState<'calls' | 'contacts' | 'messages' | 'voicemail' | 'details'>('calls');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 

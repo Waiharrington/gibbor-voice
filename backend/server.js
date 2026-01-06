@@ -822,6 +822,51 @@ app.post("/auto-dialer/join-agent", (req, res) => {
     res.send(twiml.toString());
 });
 
+// Heartbeat Endpoint: Updates duration_seconds for the active session
+app.post("/heartbeat", async (req, res) => {
+    try {
+        const { userId } = req.body;
+        if (!userId) return res.status(400).json({ error: "Missing userId" });
+
+        // Find the most recent open session for this user
+        const { data: session, error: findError } = await supabase
+            .from('agent_sessions')
+            .select('*')
+            .eq('user_id', userId)
+            .is('ended_at', null)
+            .order('started_at', { ascending: false })
+            .limit(1)
+            .single();
+
+        if (findError && findError.code !== 'PGRST116') { // PGRST116 is "No rows found"
+            console.error("Heartbeat find error:", findError);
+            return res.status(500).json({ error: findError.message });
+        }
+
+        if (session) {
+            // Update duration_seconds
+            const now = new Date();
+            const start = new Date(session.started_at);
+            const duration = Math.floor((now - start) / 1000);
+
+            const { error: updateError } = await supabase
+                .from('agent_sessions')
+                .update({ duration_seconds: duration })
+                .eq('id', session.id);
+
+            if (updateError) throw updateError;
+            res.json({ success: true, duration });
+        } else {
+            // No open session? Maybe create one or just ignore. 
+            // For now, ignore to avoid ghostly sessions.
+            res.json({ success: false, message: "No active session found" });
+        }
+    } catch (e) {
+        console.error("Heartbeat error:", e);
+        res.status(500).json({ error: e.message });
+    }
+});
+
 // Admin: List Users (Bypass RLS) + Metrics
 app.get("/users", async (req, res) => {
     try {
@@ -866,46 +911,68 @@ app.get("/users", async (req, res) => {
 
             let secondsOnline = 0;
             if (sessions && sessions.length > 0) {
-                // 1. Convert to intervals [start, end]
-                const now = Date.now();
-                const intervals = sessions.map(s => {
-                    const start = new Date(s.started_at).getTime();
-                    const end = s.ended_at ? new Date(s.ended_at).getTime() : now;
-                    return [start, end];
-                });
+                // 3. Merge Intervals implementation REMOVED - Using duration_seconds + last heartbeat logic
+                // Actually, if we now rely on 'duration_seconds' from heartbeat, we can sum that for today's sessions.
+                // But legacy sessions might not have it.
+                // Let's rely on 'duration_seconds' if present, otherwise fallback to (ended_at - started_at).
 
-                // 2. Sort by start time
-                intervals.sort((a, b) => a[0] - b[0]);
+                // For currently active session (ended_at is null), duration_seconds is updated by heartbeat.
 
-                // 3. Merge Intervals
-                const merged = [];
-                if (intervals.length > 0) {
-                    let [currentStart, currentEnd] = intervals[0];
-
-                    for (let i = 1; i < intervals.length; i++) {
-                        const [nextStart, nextEnd] = intervals[i];
-                        if (nextStart < currentEnd) {
-                            // Overlap: extend end if needed
-                            currentEnd = Math.max(currentEnd, nextEnd);
-                        } else {
-                            // No overlap: push current, start new
-                            merged.push([currentStart, currentEnd]);
-                            currentStart = nextStart;
-                            currentEnd = nextEnd;
-                        }
+                secondsOnline = sessions.reduce((acc, s) => {
+                    let duration = 0;
+                    if (s.duration_seconds) {
+                        duration = s.duration_seconds;
+                    } else if (s.ended_at) {
+                        duration = (new Date(s.ended_at).getTime() - new Date(s.started_at).getTime()) / 1000;
+                    } else {
+                        // Old fallback for sessions without duration_seconds and not ended (should be rare with heartbeat)
+                        // Or just cap it at 0 to avoid the "counting forever" bug.
+                        // For safety, let's treat these as 0 or small value if no heartbeat.
+                        duration = 0;
                     }
-                    merged.push([currentStart, currentEnd]);
-                }
+                    return acc + duration;
+                }, 0);
+            }
 
-                // 4. Sum Durations
-                secondsOnline = merged.reduce((acc, [start, end]) => acc + (end - start), 0) / 1000;
+            // C. Get First Login Today (for Offline Time calc)
+            // Find earliest started_at today
+            let firstLoginTime = null;
+            let lastActivityTime = null;
+
+            // Recent sessions first
+            const { data: allSessionsToday } = await supabase
+                .from('agent_sessions')
+                .select('started_at, ended_at')
+                .eq('user_id', user.id)
+                .gte('started_at', todayISO)
+                .order('started_at', { ascending: true }); // Oldest first
+
+            if (allSessionsToday && allSessionsToday.length > 0) {
+                firstLoginTime = new Date(allSessionsToday[0].started_at);
+                const lastSession = allSessionsToday[allSessionsToday.length - 1];
+                lastActivityTime = lastSession.ended_at || lastSession.started_at;
+                // Ideally last heartbeat would be better but we don't have that column yet, 
+                // we rely on 'duration_seconds' update implicitly or ended_at.
+                // Let's use max(started_at) as "Last Login" as requested.
+                lastActivityTime = lastSession.started_at;
+            }
+
+            // D. Calculate Time Offline
+            // Time Offline = (Now - First Login) - Seconds Online
+            let secondsOffline = 0;
+            if (firstLoginTime) {
+                const now = new Date();
+                const totalTimeSinceFirstLogin = (now - firstLoginTime) / 1000;
+                secondsOffline = Math.max(0, totalTimeSinceFirstLogin - secondsOnline);
             }
 
             return {
                 ...user,
                 stats: {
                     callsToday: callsToday || 0,
-                    secondsOnline: Math.floor(secondsOnline)
+                    secondsOnline: Math.floor(secondsOnline),
+                    secondsOffline: Math.floor(secondsOffline),
+                    lastLogin: lastActivityTime || user.created_at // Fallback to created_at if no session
                 }
             };
         }));

@@ -252,9 +252,9 @@ export default function AdminPage() {
                                         <th className="px-6 py-3">Role</th>
                                         <th className="px-6 py-3 text-center">Calls Today</th>
                                         <th className="px-6 py-3 text-center">Time Online</th>
+                                        <th className="px-6 py-3 text-center">Time Offline</th>
                                         <th className="px-6 py-3">Status</th>
-                                        <th className="px-6 py-3">Status</th>
-                                        <th className="px-6 py-3">Joined</th>
+                                        <th className="px-6 py-3">Last Login</th>
                                         <th className="px-6 py-3 text-right">Actions</th>
                                     </tr>
                                 </thead>
@@ -285,6 +285,9 @@ export default function AdminPage() {
                                                 <td className="px-6 py-4 text-center font-mono text-gray-700">
                                                     {formatDuration(u.stats?.secondsOnline || 0)}
                                                 </td>
+                                                <td className="px-6 py-4 text-center font-mono text-gray-700">
+                                                    {formatDuration(u.stats?.secondsOffline || 0)}
+                                                </td>
                                                 <td className="px-6 py-4">
                                                     {onlineUsers.find(on => on.email === u.email) ? (
                                                         <span className="flex items-center text-green-600 text-xs font-bold">
@@ -299,7 +302,7 @@ export default function AdminPage() {
                                                     )}
                                                 </td>
                                                 <td className="px-6 py-4 text-gray-500 text-xs">
-                                                    {new Date(u.created_at || Date.now()).toLocaleDateString()}
+                                                    {u.stats?.lastLogin ? new Date(u.stats.lastLogin).toLocaleString() : '—'}
                                                 </td>
                                                 <td className="px-6 py-4 text-right">
                                                     <button
