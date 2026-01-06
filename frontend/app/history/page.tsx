@@ -72,7 +72,7 @@ export default function History() {
                 </header>
 
                 <div className="flex-1 p-8 overflow-y-auto">
-                    <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden max-w-4xl mx-auto">
+                    <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden w-full max-w-[95%] mx-auto">
                         <table className="min-w-full divide-y divide-gray-200">
                             <thead className="bg-gray-50">
                                 <tr>
@@ -82,6 +82,7 @@ export default function History() {
                                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
                                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">From</th>
                                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">To</th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Recording</th>
                                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
                                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                                 </tr>
@@ -112,6 +113,15 @@ export default function History() {
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{call.from}</td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{call.to}</td>
+                                        <td className="px-6 py-4 whitespace-nowrap">
+                                            {call.recording_url ? (
+                                                <audio controls src={call.recording_url} className="h-8 w-48" preload="metadata">
+                                                    Your browser does not support the audio element.
+                                                </audio>
+                                            ) : (
+                                                <span className="text-gray-400 text-xs italic">No audio</span>
+                                            )}
+                                        </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{formatDate(call.created_at)}</td>
                                         <td className="px-6 py-4 whitespace-nowrap">
                                             <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${call.status === 'completed' ? 'bg-green-100 text-green-800' :
@@ -126,7 +136,7 @@ export default function History() {
                                 {calls.length === 0 && (
                                     <tr>
                                         <tr>
-                                            <td colSpan={userRole === 'admin' ? 6 : 5} className="px-6 py-12 text-center text-gray-500">
+                                            <td colSpan={userRole === 'admin' ? 7 : 6} className="px-6 py-12 text-center text-gray-500">
                                                 No calls found in history.
                                             </td>
                                         </tr>
