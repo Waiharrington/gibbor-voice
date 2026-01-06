@@ -944,29 +944,42 @@ app.get("/users", async (req, res) => {
                     }
                     return acc + duration;
                 }, 0);
-            }
+                // C. Get First Login Today (for Offline Time calc)
+                const { data: firstSession } = await supabase
+                    .from('agent_sessions')
+                    .select('started_at')
+                    .eq('user_id', user.id)
+                    .gte('started_at', todayISO)
+                    .order('started_at', { ascending: true })
+                    .limit(1)
+                    .single();
 
-            // C. Get First Login Today (for Offline Time calc)
-            // Find earliest started_at today
-            let firstLoginTime = null;
-            let lastActivityTime = null;
+                const firstLoginTime = firstSession ? firstSession.started_at : null;
 
-            // Recent sessions first
-            const { data: allSessionsToday } = await supabase
-                .from('agent_sessions')
-                .select('started_at, ended_at')
-                .eq('user_id', user.id)
-                .gte('started_at', todayISO)
-                .order('started_at', { ascending: true }); // Oldest first
+                // D. Get Last Seen (Global - Most recent session)
+                const { data: lastSessionGlobal } = await supabase
+                    .from('agent_sessions')
+                    .select('started_at, ended_at')
+                    .eq('user_id', user.id)
+                    .order('started_at', { ascending: false })
+                    .limit(1)
+                    .single();
 
-            if (allSessionsToday && allSessionsToday.length > 0) {
-                firstLoginTime = new Date(allSessionsToday[0].started_at);
-                const lastSession = allSessionsToday[allSessionsToday.length - 1];
-                lastActivityTime = lastSession.ended_at || lastSession.started_at;
-                // Ideally last heartbeat would be better but we don't have that column yet, 
-                // we rely on 'duration_seconds' update implicitly or ended_at.
-                // Let's use max(started_at) as "Last Login" as requested.
-                lastActivityTime = lastSession.started_at;
+                let lastSeen = null;
+                if (lastSessionGlobal) {
+                    // If ended_at is null, they are currently online => Last seen is "Now"
+                    // If ended_at is present, that's when they left.
+                    lastSeen = lastSessionGlobal.ended_at ? lastSessionGlobal.ended_at : new Date().toISOString();
+                }
+
+                // E. Calculate Time Offline
+                // Time Offline = (Now - First Login) - Seconds Online
+                let secondsOffline = 0;
+                if (firstLoginTime) {
+                    const now = new Date();
+                    const totalTimeSinceFirstLogin = (now - new Date(firstLoginTime)) / 1000;
+                    secondsOffline = Math.max(0, totalTimeSinceFirstLogin - secondsOnline);
+                }
             }
 
             // D. Calculate Time Offline
@@ -984,7 +997,8 @@ app.get("/users", async (req, res) => {
                     callsToday: callsToday || 0,
                     secondsOnline: Math.floor(secondsOnline),
                     secondsOffline: Math.floor(secondsOffline),
-                    lastLogin: lastActivityTime || user.created_at // Fallback to created_at if no session
+                    lastLogin: firstLoginTime,
+                    lastSeen: lastSeen // Add this new field
                 }
             };
         }));
