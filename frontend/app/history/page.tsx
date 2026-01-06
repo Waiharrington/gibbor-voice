@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import Sidebar from '@/components/Sidebar';
 import { Clock, PhoneIncoming, PhoneOutgoing, User } from 'lucide-react';
 import { supabase } from '@/utils/supabaseClient';
+import { format } from 'date-fns';
 
 const API_BASE_URL = 'https://gibbor-voice-production.up.railway.app';
 
@@ -12,7 +13,7 @@ export default function History() {
     const [user, setUser] = useState<any>(null);
     const [userRole, setUserRole] = useState<string | null>(null);
 
-    console.log("HISTORY PAGE VERSION: 1.1 (Recordings)"); // DEBUG LOG
+    // console.log("HISTORY PAGE VERSION: 1.2 (Hydration Fix)");
 
     // 1. Fetch User & Role
     useEffect(() => {
@@ -20,11 +21,16 @@ export default function History() {
             const { data: { user } } = await supabase.auth.getUser();
             if (user) {
                 setUser(user);
-                const { data: profile } = await supabase
+                // Safe fetch for profile
+                const { data: profile, error } = await supabase
                     .from('profiles')
                     .select('role')
                     .eq('id', user.id)
                     .single();
+
+                if (error) {
+                    console.error("Error fetching profile:", error);
+                }
 
                 // Allow Super Admins even if role logic fails
                 if (user.email === 'info@gibborcenter.com' || user.email === 'admin@gibborcenter.com') {
@@ -43,7 +49,8 @@ export default function History() {
             if (!user) return;
 
             try {
-                const response = await fetch(`${API_BASE_URL}/history/calls?userId=${user.id}&role=${userRole || 'agent'}`);
+                const roleParam = userRole || 'agent';
+                const response = await fetch(`${API_BASE_URL}/history/calls?userId=${user.id}&role=${roleParam}`);
                 const data = await response.json();
                 setCalls(data);
             } catch (error) {
@@ -56,10 +63,12 @@ export default function History() {
         }
     }, [user, userRole]);
 
-
-
     const formatDate = (dateString: string) => {
-        return new Date(dateString).toLocaleString();
+        try {
+            return format(new Date(dateString), 'PPpp'); // Consistent formatting
+        } catch (e) {
+            return dateString;
+        }
     };
 
     return (
@@ -69,7 +78,7 @@ export default function History() {
                 <header className="h-16 border-b border-gray-200 flex items-center px-8 bg-white">
                     <h1 className="text-xl font-semibold text-gray-800 flex items-center">
                         <Clock className="w-5 h-5 mr-3 text-gray-600" />
-                        Call History
+                        Call History v1.2
                     </h1>
                 </header>
 
