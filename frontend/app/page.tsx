@@ -472,6 +472,21 @@ export default function Home() {
         });
       });
 
+      newDevice.on('tokenWillExpire', async () => {
+        console.log('Token expiring soon, refreshing...');
+        try {
+          const res = await fetch(`${API_BASE_URL}/token`);
+          if (res.ok) {
+            const data = await res.json();
+            newDevice.updateToken(data.token);
+            setToken(data.token); // Update state
+            console.log('Token refreshed successfully');
+          }
+        } catch (e) {
+          console.error('Failed to refresh token:', e);
+        }
+      });
+
       newDevice.register();
       setDevice(newDevice);
     }
@@ -1144,7 +1159,49 @@ export default function Home() {
                 <div className="p-5 border-b border-gray-100 bg-gray-50 flex flex-col items-center">
 
                   {/* Active Call State or Start Call Button */}
-                  {(activeCall || (callStatus !== 'Ready' && callStatus !== 'Incoming Call...' && !callStatus.includes('Error'))) ? (
+                  {/* INCOMING CALL UI */}
+                  {callStatus === 'Incoming Call...' && activeCall ? (
+                    <div className="w-full flex flex-col items-center space-y-4 animate-in fade-in slide-in-from-top-4 duration-300">
+                      <div className="text-center mb-2">
+                        <div className="animate-bounce inline-flex p-3 rounded-full bg-blue-100 text-blue-600 mb-2">
+                          <Phone className="w-8 h-8" />
+                        </div>
+                        <h3 className="text-lg font-bold text-gray-900">Incoming Call...</h3>
+                        <p className="text-xl font-mono text-gray-700 mt-1 font-semibold">
+                          {activeCall.parameters.From || 'Unknown Caller'}
+                        </p>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-4 w-full px-4">
+                        <button
+                          onClick={() => {
+                            if (activeCall) {
+                              activeCall.accept();
+                              setCallStatus('In Call');
+                            }
+                          }}
+                          className="flex flex-col items-center justify-center h-20 rounded-2xl bg-green-500 text-white shadow-lg hover:bg-green-600 transition-all hover:-translate-y-1 active:scale-95"
+                        >
+                          <Phone className="w-8 h-8 mb-1" />
+                          <span className="text-xs font-bold uppercase tracking-wider">Answer</span>
+                        </button>
+
+                        <button
+                          onClick={() => {
+                            if (activeCall) {
+                              activeCall.reject();
+                              setActiveCall(null);
+                              setCallStatus('Ready');
+                            }
+                          }}
+                          className="flex flex-col items-center justify-center h-20 rounded-2xl bg-red-500 text-white shadow-lg hover:bg-red-600 transition-all hover:-translate-y-1 active:scale-95"
+                        >
+                          <PhoneOff className="w-8 h-8 mb-1" />
+                          <span className="text-xs font-bold uppercase tracking-wider">Decline</span>
+                        </button>
+                      </div>
+                    </div>
+                  ) : (activeCall || (callStatus !== 'Ready' && !callStatus.includes('Error'))) ? (
                     <div className="w-full flex flex-col items-center space-y-4 animate-in fade-in slide-in-from-top-4 duration-300">
                       <div className="text-center">
                         <span className="inline-flex h-3 w-3 relative">
