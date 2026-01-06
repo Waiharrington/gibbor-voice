@@ -248,13 +248,14 @@ export default function AdminPage() {
                                 <thead className="bg-gray-50 text-gray-500 font-medium border-b border-gray-200">
                                     <tr>
                                         <th className="px-6 py-3">Name</th>
-                                        <th className="px-6 py-3">Last Seen</th>
+                                        <th className="px-6 py-3">Email</th>
                                         <th className="px-6 py-3">Role</th>
                                         <th className="px-6 py-3 text-center">Calls Today</th>
                                         <th className="px-6 py-3 text-center">Time Online</th>
                                         <th className="px-6 py-3 text-center">Time Offline</th>
                                         <th className="px-6 py-3">Status</th>
                                         <th className="px-6 py-3">Last Login</th>
+                                        <th className="px-6 py-3">Last Seen</th>
                                         <th className="px-6 py-3 text-right">Actions</th>
                                     </tr>
                                 </thead>
@@ -272,7 +273,7 @@ export default function AdminPage() {
                                                     {u.full_name || '—'}
                                                 </td>
                                                 <td className="px-6 py-4 text-gray-600 font-mono text-xs">
-                                                    {u.stats?.lastSeen ? new Date(u.stats.lastSeen).toLocaleString() : 'Never'}
+                                                    {u.email}
                                                 </td>
                                                 <td className="px-6 py-4">
                                                     <span className={`px-2 py-1 rounded-full text-xs font-semibold ${u.role === 'admin' ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'}`}>
@@ -303,6 +304,9 @@ export default function AdminPage() {
                                                 </td>
                                                 <td className="px-6 py-4 text-gray-500 text-xs">
                                                     {u.stats?.lastLogin ? new Date(u.stats.lastLogin).toLocaleString() : '—'}
+                                                </td>
+                                                <td className="px-6 py-4 text-gray-500 text-xs">
+                                                    {u.stats?.lastSeen ? new Date(u.stats.lastSeen).toLocaleString() : 'Never'}
                                                 </td>
                                                 <td className="px-6 py-4 text-right">
                                                     <button
