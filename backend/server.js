@@ -973,17 +973,19 @@ app.get("/users", async (req, res) => {
                     secondsOffline = Math.max(0, totalTimeSinceFirstLogin - secondsOnline);
                 }
 
-                return {
-                    ...user,
-                    stats: {
-                        callsToday: callsToday || 0,
-                        secondsOnline: Math.floor(secondsOnline),
-                        secondsOffline: Math.floor(secondsOffline),
-                        lastLogin: firstLoginTime,
-                        lastSeen: lastSeen
-                    }
-                };
-            }));
+            }
+
+            return {
+                ...user,
+                stats: {
+                    callsToday: callsToday || 0,
+                    secondsOnline: Math.floor(secondsOnline),
+                    secondsOffline: Math.floor(secondsOffline),
+                    lastLogin: firstLoginTime,
+                    lastSeen: lastSeen
+                }
+            };
+        }));
 
         res.json(enrichedProfiles);
     } catch (e) {
