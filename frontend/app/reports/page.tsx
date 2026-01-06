@@ -248,13 +248,13 @@ export default function ReportsPage() {
                             </div>
                         </div>
 
-                        {/* Card 2: Total Duration (Online Time) */}
+                        {/* Card 2: Agent Online Time */}
                         <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center transition-all hover:shadow-md">
                             <div className="p-4 bg-purple-50 text-purple-600 rounded-full mr-5">
                                 <Clock className="w-8 h-8" />
                             </div>
                             <div>
-                                <p className="text-gray-500 text-sm font-medium uppercase tracking-wider">Total Duration</p>
+                                <p className="text-gray-500 text-sm font-medium uppercase tracking-wider">Agent Online Time</p>
                                 <h3 className="text-3xl font-extrabold text-gray-900 mt-1">{formatTime(aggregatedStats?.total_duration)}</h3>
                             </div>
                         </div>
