@@ -91,21 +91,25 @@ export default function AdminPage() {
 
     const fetchStats = async () => {
         try {
-            const res = await fetch(`${API_BASE_URL}/reports`);
-            if (res.ok) {
-                const data = await res.json();
-                setStats({
-                    totalCalls: data.total_calls || 0,
-                    totalSales: (data.status_counts['Sale'] || 0) + (data.status_counts['Venta'] || 0) + (data.status_counts['Cita'] || 0),
-                    activeAgents: 0 // Will be updated by presence
-                });
-            }
-
-            // Fetch Users (from Backend to bypass RLS)
+            // 1. Fetch Users & Their specific "Today" stats (from Backend)
+            let calculatedTotalCalls = 0;
             const usersRes = await fetch(`${API_BASE_URL}/users`);
             if (usersRes.ok) {
                 const profiles = await usersRes.json();
                 setUsersList(profiles);
+                // Calculate Total Calls from the accurate per-user "callsToday"
+                calculatedTotalCalls = profiles.reduce((acc: number, user: any) => acc + (user.stats?.callsToday || 0), 0);
+            }
+
+            // 2. Fetch General Reports (for Sales/Leads)
+            const res = await fetch(`${API_BASE_URL}/reports`);
+            if (res.ok) {
+                const data = await res.json();
+                setStats({
+                    totalCalls: calculatedTotalCalls, // Use the summed value
+                    totalSales: (data.status_counts['Sale'] || 0) + (data.status_counts['Venta'] || 0) + (data.status_counts['Cita'] || 0),
+                    activeAgents: 0 // Will be updated by presence
+                });
             }
         } catch (error) {
             console.error("Error fetching admin stats:", error);
