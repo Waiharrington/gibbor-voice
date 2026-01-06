@@ -479,8 +479,8 @@ export default function Home() {
           if (res.ok) {
             const data = await res.json();
             newDevice.updateToken(data.token);
-            setToken(data.token); // Update state
-            console.log('Token refreshed successfully');
+            // setToken(data.token); // DO NOT update state, it triggers cleanup/destroy!
+            console.log('Token refreshed successfully (internal)');
           }
         } catch (e) {
           console.error('Failed to refresh token:', e);
