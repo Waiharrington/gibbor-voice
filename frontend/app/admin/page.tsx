@@ -135,6 +135,21 @@ export default function AdminPage() {
         }
     };
 
+    const handleDeleteAgent = async (agentId: string, agentName: string) => {
+        if (!confirm(`Are you sure you want to delete ${agentName}? This action cannot be undone.`)) return;
+
+        try {
+            const res = await fetch(`${API_BASE_URL}/agents/${agentId}`, {
+                method: 'DELETE',
+            });
+            if (!res.ok) throw new Error('Failed to delete agent');
+            alert('Agent deleted successfully');
+            fetchStats(); // Refresh list
+        } catch (err: any) {
+            alert('Error deleting agent: ' + err.message);
+        }
+    };
+
     if (loading) return <div className="flex h-screen items-center justify-center bg-gray-50 text-indigo-600">Loading Admin Panel...</div>;
 
     const onlineCount = onlineUsers.length;
