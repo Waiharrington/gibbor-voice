@@ -540,6 +540,10 @@ export default function Home() {
 
       console.log("[Client] Connecting with params:", params);
 
+      if (device.state === 'destroyed') {
+        throw new Error("Device is destroyed. Please refresh the page.");
+      }
+
       const call = await device.connect({ params });
 
       setCallStatus('Dialing...'); // Immediate UI update
