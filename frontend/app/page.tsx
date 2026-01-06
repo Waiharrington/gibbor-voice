@@ -446,52 +446,57 @@ export default function Home() {
 
   // Initialize Twilio Device
   useEffect(() => {
-    if (token && !device) {
-      const newDevice = new Device(token, { logLevel: 1 });
+    if (!token) return;
 
-      newDevice.on('registered', () => {
-        console.log('Twilio Device Registered');
+    const newDevice = new Device(token, { logLevel: 1 });
+
+    newDevice.on('registered', () => {
+      console.log('Twilio Device Registered');
+      setCallStatus('Ready');
+    });
+
+    newDevice.on('error', (error) => {
+      console.error('Twilio Device Error:', error);
+      setCallStatus('Error: ' + error.message);
+    });
+
+    newDevice.on('incoming', (call) => {
+      setCallStatus('Incoming Call...');
+      setActiveCall(call);
+      call.on('disconnect', () => {
+        setActiveCall(null);
         setCallStatus('Ready');
       });
-
-      newDevice.on('error', (error) => {
-        console.error('Twilio Device Error:', error);
-        setCallStatus('Error: ' + error.message);
+      call.on('cancel', () => {
+        setActiveCall(null);
+        setCallStatus('Ready');
       });
+    });
 
-      newDevice.on('incoming', (call) => {
-        setCallStatus('Incoming Call...');
-        setActiveCall(call);
-        call.on('disconnect', () => {
-          setActiveCall(null);
-          setCallStatus('Ready');
-        });
-        call.on('cancel', () => {
-          setActiveCall(null);
-          setCallStatus('Ready');
-        });
-      });
-
-      newDevice.on('tokenWillExpire', async () => {
-        console.log('Token expiring soon, refreshing...');
-        try {
-          const res = await fetch(`${API_BASE_URL}/token`);
-          if (res.ok) {
-            const data = await res.json();
-            newDevice.updateToken(data.token);
-            // setToken(data.token); // DO NOT update state, it triggers cleanup/destroy!
-            console.log('Token refreshed successfully (internal)');
-          }
-        } catch (e) {
-          console.error('Failed to refresh token:', e);
+    newDevice.on('tokenWillExpire', async () => {
+      console.log('Token expiring soon, refreshing...');
+      try {
+        const res = await fetch(`${API_BASE_URL}/token`);
+        if (res.ok) {
+          const data = await res.json();
+          newDevice.updateToken(data.token);
+          // setToken(data.token); // DO NOT update state, it triggers cleanup/destroy!
+          console.log('Token refreshed successfully (internal)');
         }
-      });
+      } catch (e) {
+        console.error('Failed to refresh token:', e);
+      }
+    });
 
-      newDevice.register();
-      setDevice(newDevice);
-    }
-    return () => device?.destroy();
-  }, [token, device]);
+    newDevice.register();
+    setDevice(newDevice);
+
+    return () => {
+      console.log("Destroying Twilio Device...");
+      newDevice.destroy();
+      // setDevice(null); // Optional: avoid state loop if unmounting
+    };
+  }, [token]); // DEPEND ONLY ON TOKEN
 
   const [duration, setDuration] = useState(0);
 
