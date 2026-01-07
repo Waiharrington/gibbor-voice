@@ -618,11 +618,42 @@ export default function Home() {
   };
 
   const handleHangup = () => {
+    console.log("Hangup requested. Active call:", activeCall);
+
+    // 1. Try hanging up the known active call
     if (activeCall) {
-      activeCall.disconnect();
-    } else {
-      device?.disconnectAll();
+      if (activeCall.status() === 'open' || activeCall.status() === 'ringing') {
+        activeCall.disconnect(); // Outbound
+      } else {
+        activeCall.reject(); // Inbound if ringing? Twilio logic assumes disconnect works for accepted calls
+      }
     }
+
+    // 2. NUCLEAR OPTION: Terminate ALL connections on the device
+    // This fixes "Ghost Calls" and "Incoming Call" stuck UI
+    if (device) {
+      console.log("Executing Global Disconnect on Device...");
+      device.disconnectAll();
+
+      // Twilio SDK 2.x specific: Try to reject pending invitations
+      // Note: device.connections is an array of Connections
+      /* @ts-ignore */
+      if (device.connections) {
+        /* @ts-ignore */
+        device.connections.forEach(conn => {
+          if (conn.status() === 'pending' || conn.status() === 'ringing') {
+            console.log("Rejecting pending connection:", conn);
+            conn.reject();
+          }
+        });
+      }
+    }
+
+    setCallStatus('Ready');
+    setActiveCall(null);
+    setDialedNumber('');
+    setIsMuted(false);
+    setIsKeypadOpen(false);
   };
   const toggleMute = () => {
     if (activeCall) {
@@ -1226,7 +1257,8 @@ export default function Home() {
 
                   {/* Active Call State or Start Call Button */}
                   {/* INCOMING CALL UI */}
-                  {callStatus === 'Incoming Call...' && activeCall ? (
+                  {/* INCOMING CALL UI: Show this if status is Incoming Call..., regardless of activeCall state strictly */}
+                  {callStatus === 'Incoming Call...' ? (
                     <div className="w-full flex flex-col items-center space-y-4 animate-in fade-in slide-in-from-top-4 duration-300">
                       <div className="text-center mb-2">
                         <div className="animate-bounce inline-flex p-3 rounded-full bg-blue-100 text-blue-600 mb-2">
@@ -1234,7 +1266,7 @@ export default function Home() {
                         </div>
                         <h3 className="text-lg font-bold text-gray-900">Incoming Call...</h3>
                         <p className="text-xl font-mono text-gray-700 mt-1 font-semibold">
-                          {activeCall.parameters.From || 'Unknown Caller'}
+                          {activeCall?.parameters?.From || 'Incoming Call'}
                         </p>
                       </div>
 
@@ -1244,6 +1276,17 @@ export default function Home() {
                             if (activeCall) {
                               activeCall.accept();
                               setCallStatus('In Call');
+                            } else {
+                              // Try to rescue connection
+                              const conn = device?.connections?.[0]; // Twilio SDK v2 legacy or check active
+                              if (conn) {
+                                conn.accept();
+                                setActiveCall(conn);
+                                setCallStatus('In Call');
+                              } else {
+                                console.warn("No active call found to answer");
+                                setCallStatus('Error: Call not found');
+                              }
                             }
                           }}
                           className="flex flex-col items-center justify-center h-20 rounded-2xl bg-green-500 text-white shadow-lg hover:bg-green-600 transition-all hover:-translate-y-1 active:scale-95"
@@ -1256,9 +1299,11 @@ export default function Home() {
                           onClick={() => {
                             if (activeCall) {
                               activeCall.reject();
-                              setActiveCall(null);
-                              setCallStatus('Ready');
+                            } else {
+                              device?.disconnectAll(); // Best effort reject
                             }
+                            setActiveCall(null);
+                            setCallStatus('Ready');
                           }}
                           className="flex flex-col items-center justify-center h-20 rounded-2xl bg-red-500 text-white shadow-lg hover:bg-red-600 transition-all hover:-translate-y-1 active:scale-95"
                         >
@@ -1283,8 +1328,9 @@ export default function Home() {
                           {isMuted ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
                         </button>
                         <button onClick={() => setIsKeypadOpen(!isKeypadOpen)} className={`flex flex-col items-center justify-center h-14 rounded-xl transition-all border ${isKeypadOpen ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'}`}>
-                          <div className="grid grid-cols-3 gap-0.5 w-4 h-4">
-                            {[...Array(9)].map((_, i) => <div key={i} className={`w-1 h-1 rounded-full ${isKeypadOpen ? 'bg-white' : 'bg-gray-400'}`} />)}
+                          <div className="grid grid-cols-3 gap-3 w-4 h-4 items-center justify-center ml-2 mt-1">
+                            {/* Mini grid icon representation */}
+                            {[...Array(9)].map((_, i) => <div key={i} className={`w-0.5 h-0.5 rounded-full ${isKeypadOpen ? 'bg-white' : 'bg-gray-400'}`} />)}
                           </div>
                         </button>
                         <button onClick={handleHangup} className="col-span-1 flex flex-col items-center justify-center h-14 rounded-xl bg-red-500 text-white hover:bg-red-600 shadow-md transition-all active:scale-95">
