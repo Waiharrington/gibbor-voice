@@ -1338,6 +1338,15 @@ export default function Home() {
                           <Phone className="w-5 h-5 mr-2" />
                           Call Lead
                         </button>
+
+                        <button
+                          onClick={() => handleCall('888888', selectedCallerId)}
+                          className="w-full py-2 bg-gray-100 text-gray-600 rounded-lg text-xs font-semibold hover:bg-gray-200 transition-colors flex items-center justify-center"
+                          title="Verify microphone and speakers"
+                        >
+                          <Activity className="w-3 h-3 mr-1" />
+                          Test Audio Loopback
+                        </button>
                       </div>
 
                       {!activeCall && (

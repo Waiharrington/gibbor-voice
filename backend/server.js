@@ -170,6 +170,12 @@ app.post("/incoming-call", async (req, res) => {
             dial.client("agent");
         }
     }
+    else if (To === '888888') { // ECHO TEST SERVICE
+        console.log("Audio Test Requested (Echo)");
+        twiml.say({ voice: 'alice', language: 'es-MX' }, "Prueba de audio Gibbor Voice. Hable después del tono y escuchará su eco.");
+        twiml.pause({ length: 1 });
+        twiml.echo();
+    }
     else if (To) {
         // Outbound calls from browser (TwiML App default URL)
         const dial = twiml.dial({
