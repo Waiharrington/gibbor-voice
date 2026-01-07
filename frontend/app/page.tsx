@@ -458,9 +458,16 @@ export default function Home() {
       setIsDeviceReady(true);
     });
 
-    newDevice.on('error', (error) => {
+    newDevice.on('error', (error: any) => {
       console.error('Twilio Device Error:', error);
-      setCallStatus('Error: ' + error.message);
+
+      let msg = error.message;
+      if (error.code === 31009 || error.code === 31000 || error.code === 31005) {
+        msg = "Network blocked. Please disable VPN/Firewall and refresh.";
+        alert("CRITICAL NETWORK ERROR: Your internet connection is blocking calls. \n\n1. Disable any VPN/Firewall.\n2. Connect to a different WiFi/Hotspot if possible.\n3. Refresh the page.");
+      }
+
+      setCallStatus('Error: ' + msg);
       setIsDeviceReady(false);
     });
 
