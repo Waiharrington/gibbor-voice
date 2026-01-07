@@ -1278,7 +1278,7 @@ export default function Home() {
                               setCallStatus('In Call');
                             } else {
                               // Try to rescue connection
-                              const conn = device?.connections?.[0]; // Twilio SDK v2 legacy or check active
+                              const conn = (device as any)?.connections?.[0]; // Twilio SDK v2 legacy or check active
                               if (conn) {
                                 conn.accept();
                                 setActiveCall(conn);
