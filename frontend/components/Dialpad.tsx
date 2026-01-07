@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Phone, Delete } from 'lucide-react';
+import { Phone, Delete, Activity } from 'lucide-react';
 
 export default function Dialpad({
     onCall
@@ -73,6 +73,16 @@ export default function Dialpad({
                     aria-label="Delete"
                 >
                     <Delete className="w-6 h-6" />
+                </button>
+            </div>
+            <div className="mt-4 w-full px-4">
+                <button
+                    onClick={() => onCall('888888')}
+                    className="w-full py-2 bg-gray-50 text-gray-500 rounded-lg text-xs font-semibold hover:bg-gray-100 hover:text-green-600 transition-colors flex items-center justify-center border border-dashed border-gray-300"
+                    title="Verify microphone and speakers"
+                >
+                    <Activity className="w-3 h-3 mr-1" />
+                    Test Audio (Loopback)
                 </button>
             </div>
         </div>
