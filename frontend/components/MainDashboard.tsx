@@ -605,7 +605,17 @@ export default function MainDashboard() {
         setIsDeviceReady(false);
       } else if (state === 'Registered') {
         // Connection is healthy
-        setIsDeviceReady(true);
+        if (!isDeviceReady) {
+          console.log("🟢 Connection Restored!");
+          setIsDeviceReady(true);
+          setCallStatus('Ready');
+          // AUDIO
+          try {
+            const u = new SpeechSynthesisUtterance("Sistema conectado");
+            u.lang = 'es-ES';
+            window.speechSynthesis.speak(u);
+          } catch (e) { }
+        }
       }
     }, 5000);
 
@@ -626,7 +636,7 @@ export default function MainDashboard() {
       clearInterval(heartbeatInterval);
       window.removeEventListener('focus', handleFocus);
     };
-  }, [device]);
+  }, [device, isDeviceReady]);
 
   const [duration, setDuration] = useState(0);
 
