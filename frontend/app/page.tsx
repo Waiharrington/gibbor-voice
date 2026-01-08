@@ -1348,15 +1348,15 @@ export default function Home() {
                   {/* Active Call State or Start Call Button */}
                   {/* INCOMING CALL UI */}
                   {/* INCOMING CALL UI: Show this if status is Incoming Call..., regardless of activeCall state strictly */}
-                  {/* INCOMING CALL UI: Robust Check */}
-                  {/* Using .toLowerCase() and .includes() to be absolutely sure */}
-                  {(callStatus && callStatus.toLowerCase().includes('incoming')) ? (
+                  {/* INCOMING CALL UI: Robust Check (v2) */}
+                  {/* Priority: Check Twilio Call Status directly if available */}
+                  {((activeCall && (activeCall.status() === 'ringing' || activeCall.status() === 'pending')) || (callStatus && callStatus.toLowerCase().includes('incoming'))) ? (
                     <div className="w-full flex flex-col items-center space-y-4 animate-in fade-in slide-in-from-top-4 duration-300">
                       <div className="text-center mb-2">
                         <div className="animate-bounce inline-flex p-3 rounded-full bg-blue-100 text-blue-600 mb-2">
                           <Phone className="w-8 h-8" />
                         </div>
-                        <h3 className="text-lg font-bold text-gray-900">Incoming Call...</h3>
+                        <h3 className="text-lg font-bold text-gray-900">INCOMING CALL (v2)</h3>
                         <p className="text-xl font-mono text-gray-700 mt-1 font-semibold">
                           {activeCall?.parameters?.From || 'Incoming Call'}
                         </p>
