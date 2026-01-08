@@ -1386,6 +1386,10 @@ export default function MainDashboard() {
               ${(dialerMode || activeCall) ? 'flex absolute inset-0 z-40 bg-white md:static md:bg-gray-50 md:z-auto' : 'hidden md:flex'}
            `}>
 
+          {/* PROMINENT CONNECTION STATUS BAR */}
+          <div className={`w-full py-1 text-center text-[10px] font-bold tracking-wider text-white transition-colors duration-500 ${isDeviceReady ? 'bg-emerald-500' : 'bg-rose-500 animate-pulse'}`}>
+            {isDeviceReady ? '● SISTEMA ONLINE' : '○ DESCONECTADO - RECONECTANDO...'}
+          </div>
 
           <div className="flex-1 p-8 flex flex-col justify-center max-w-sm mx-auto w-full">
 
