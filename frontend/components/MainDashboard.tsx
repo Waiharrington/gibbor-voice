@@ -1494,6 +1494,7 @@ export default function MainDashboard() {
                         </div>
                       )}
                     </div>
+                  )}
                 </div>
 
                 {/* MIDDLE: Status List (Scrollable) */}
