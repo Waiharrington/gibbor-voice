@@ -1075,14 +1075,66 @@ export default function MainDashboard() {
         </div>
       )}
       {/* ------------------------------------ */}
-      {/* 1. Sidebar (Desktop: Fixed | Mobile: Drawer via Hamburger) */}
-      <Sidebar
-        currentView={currentView}
-        userRole={userRole || "agent"}
-        onViewChange={handleViewChange}
-        isOpen={isSidebarOpen}
-        onClose={() => setIsSidebarOpen(false)}
-      />
+      {/* 1. NAVIGATION RAIL (Google Voice Style) */}
+      <div className="w-20 flex flex-col items-center py-4 bg-gray-50 border-r border-gray-200 z-20 shrink-0 hidden md:flex">
+        <button className="p-3 mb-6 hover:bg-gray-200 rounded-full transition-colors text-gray-600">
+          <Menu className="w-6 h-6" />
+        </button>
+
+        <nav className="flex-1 flex flex-col gap-2 w-full px-2 items-center">
+          <NavIcon
+            icon={<Phone className="w-6 h-6" />}
+            label="Llamadas"
+            active={currentView === 'calls' || currentView === 'history'}
+            onClick={() => handleViewChange('calls')}
+          />
+          <NavIcon
+            icon={<MessageSquare className="w-6 h-6" />}
+            label="Mensajes"
+            active={currentView === 'messages'}
+            onClick={() => handleViewChange('messages')}
+          />
+          {userRole === 'admin' && (
+            <NavIcon
+              icon={<BarChart3 className="w-6 h-6" />}
+              label="Reportes"
+              active={currentView === 'reports'}
+              onClick={() => handleViewChange('reports')}
+            />
+          )}
+        </nav>
+
+        {/* User & Status Dot */}
+        <div className="flex flex-col gap-4 pb-4 items-center">
+          <div className="relative group cursor-pointer" title={isDeviceReady ? "Online" : "Disconnected"}>
+            <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-bold transition-all shadow-sm ${isDeviceReady ? 'bg-purple-600' : 'bg-gray-400'}`}>
+              {user?.email?.[0].toUpperCase() || 'G'}
+            </div>
+            <div className={`absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-white ${isDeviceReady ? 'bg-green-500' : 'bg-red-500'}`}></div>
+          </div>
+        </div>
+      </div>
+
+      {/* 2. SECONDARY COLUMN (List View & Search) */}
+      <div className={`w-full md:w-96 flex flex-col bg-white border-r border-gray-200 shrink-0 ${activeCall || dialerMode ? 'hidden xl:flex' : 'flex'}`}>
+        {/* Search Header */}
+        <div className="h-20 flex items-center px-6 border-b border-gray-100 flex-shrink-0">
+          <div className="flex-1 flex items-center bg-[#f1f3f4] rounded-lg px-4 h-12 transition-all focus-within:bg-white focus-within:shadow-md focus-within:ring-1 focus-within:ring-gray-200">
+            <Search className="w-5 h-5 text-gray-500 mr-3" />
+            <input
+              type="text"
+              placeholder="Buscar en Gibbor Voice"
+              className="bg-transparent border-none outline-none text-gray-700 w-full placeholder-gray-500 font-medium text-base"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </div>
+        </div>
+
+        <div className="flex-1 overflow-y-auto custom-scrollbar relative">
+          {/* OLD SIDEBAR WAS HERE - NOW WE WRAP THE RENDER LOGIC BELOW INTO THIS CONTAINER */}
+        </div>
+      </div>
 
       {/* Top Mobile Header (Google Voice Style) */}
       <div className="2xl:hidden fixed top-0 left-0 right-0 h-16 bg-gray-900 text-white flex items-center px-4 z-50 shadow-md">

@@ -31,9 +31,23 @@
 
 Create a separate, experimental application to test advanced AI features without risking the stability of the main call center operations.
 
-### Immediate Plan
+### Immediate Plan (Phase 1: Setup)
 
 1. **Start New Chat**.
 2. Initialize new Next.js project in `gibbor-ai`.
-3. Reuse environment variables (Twilio/Supabase) to access existing data.
-4. Begin AI experiments (e.g., Voice AI, Auto-Disposition, etc.).
+3. Reuse environment variables (Twilio/Supabase).
+
+### Phase 2: UI Redesign (Google Voice Clone) 🎨
+
+**Goal:** Transform the visual experience to match Google Voice (Material Design 3).
+**Reference:** I have already created the **Layout Skeleton** in `MainDashboard.tsx` (Nav Rail + Secondary Column), but the data logic needs to be moved into it.
+
+**Tasks for New Agent:**
+
+1. **Activate the Skeleton:** Locate the "NAVIGATION RAIL" and "SECONDARY COLUMN" comments in `MainDashboard.tsx`.
+2. **Move List Logic:** Move the `calls.map` and `messages.map` logic INTO the "SECONDARY COLUMN" div.
+3. **Modernize Components:**
+    - **Avatars:** Use colored circles with Initials (remove images if any).
+    - **Search:** Ensure the "Pill" shape search bar is functional.
+    - **Fab:** Add a Floating Action Button (+) for new calls.
+4. **Animations:** Use `framer-motion` for smooth layout transitions.
