@@ -453,8 +453,9 @@ export default function MainDashboard() {
       try {
         setIsLoading(true);
         // 1. Get Token (Pass identity for unique session)
-        // Use email as identity (sanitized) to avoid conflicts
-        const identity = (user.email || `user_${user.id}`).toLowerCase();
+        // 1. Get Token (Pass identity for unique session)
+        // Use raw email as identity to match Backend/Supabase casing exactly
+        const identity = user.email || `user_${user.id}`; // Removed .toLowerCase()
         const tokenRes = await fetch(`${API_BASE_URL}/token?identity=${encodeURIComponent(identity)}`);
 
         if (!tokenRes.ok) throw new Error('Failed to fetch token');
