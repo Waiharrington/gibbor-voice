@@ -957,62 +957,63 @@ export default function MainDashboard() {
   return (
     <div className="flex h-screen bg-white overflow-hidden relative font-sans">
       {/* --- GOD MODE TOOLBAR (FIXED TOP) --- */}
-      {/* --- GOD MODE TOOLBAR (FIXED TOP) --- */}
-      <div className="fixed top-0 left-0 right-0 h-8 bg-red-900 text-white z-[9999] flex items-center justify-between px-4 shadow-xl">
-        <span className="text-xs font-mono font-bold">
-          VICIDIAL v5.7 (Stable) | ID: {identity}
-        </span>
-        <div className="flex gap-2">
-          <span className="text-[10px] font-mono opacity-80 self-center mr-2">Status: {callStatus} | Device: {device ? 'OK' : 'NO'}</span>
+      {/* --- GOD MODE TOOLBAR (FIXED TOP) - HIDDEN BY DEFAULT --- */}
+      {false && (
+        <div className="fixed top-0 left-0 right-0 h-8 bg-red-900 text-white z-[9999] flex items-center justify-between px-4 shadow-xl">
+          <span className="text-xs font-mono font-bold">
+            VICIDIAL v5.7 (Stable) | ID: {identity}
+          </span>
+          <div className="flex gap-2">
+            <span className="text-[10px] font-mono opacity-80 self-center mr-2">Status: {callStatus} | Device: {device ? 'OK' : 'NO'}</span>
 
-          {/* NEW: Switch Identity Button */}
-          <button
-            onClick={async () => {
-              const newIdentity = identity === 'agent' ? (user?.email || 'user') : 'agent';
-              if (confirm(`Switch identity to '${newIdentity}'? This handles backend fallback.`)) {
-                try {
-                  if (device) device.destroy();
-                  setDevice(null);
-                  setIsDeviceReady(false);
-                  const res = await fetch(`${API_BASE_URL}/token?identity=${newIdentity}`);
-                  const data = await res.json();
-                  setToken(data.token); // Will trigger useEffect to re-init device
-                  setIdentity(data.identity);
-                  alert(`Switched to ${newIdentity}. Wait for Device OK.`);
-                } catch (e) { alert("Switch failed: " + e); }
-              }
-            }}
-            className="bg-purple-700 hover:bg-purple-600 text-white text-[10px] px-2 py-0.5 rounded font-bold border border-purple-400"
-          >
-            AS: {identity === 'agent' ? 'USER' : 'AGENT'}
-          </button>
-
-          <button
-            onClick={() => {
-              if (device) {
-                const conns = (device as any).connections;
-                if (conns && conns.length > 0) {
-                  const active = conns[0];
-                  active.accept();
-                  setActiveCall(active);
-                  setCallStatus("In Call (Forced)");
-                } else {
-                  alert(`No connections for ID: ${identity}`);
+            {/* NEW: Switch Identity Button */}
+            <button
+              onClick={async () => {
+                const newIdentity = identity === 'agent' ? (user?.email || 'user') : 'agent';
+                if (confirm(`Switch identity to '${newIdentity}'? This handles backend fallback.`)) {
+                  try {
+                    if (device) device.destroy();
+                    setDevice(null);
+                    setIsDeviceReady(false);
+                    const res = await fetch(`${API_BASE_URL}/token?identity=${newIdentity}`);
+                    const data = await res.json();
+                    setToken(data.token); // Will trigger useEffect to re-init device
+                    setIdentity(data.identity);
+                    alert(`Switched to ${newIdentity}. Wait for Device OK.`);
+                  } catch (e) { alert("Switch failed: " + e); }
                 }
-              }
-            }}
-            className="bg-green-600 hover:bg-green-500 text-white text-[10px] px-2 py-0.5 rounded font-bold border border-green-400"
-          >
-            FORCE ANSWER
-          </button>
-          <button
-            onClick={() => location.reload()}
-            className="bg-gray-600 hover:bg-gray-500 text-white text-[10px] px-2 py-0.5 rounded font-bold"
-          >
-            RELOAD
-          </button>
+              }}
+              className="bg-purple-700 hover:bg-purple-600 text-white text-[10px] px-2 py-0.5 rounded font-bold border border-purple-400"
+            >
+              AS: {identity === 'agent' ? 'USER' : 'AGENT'}
+            </button>
+
+            <button
+              onClick={() => {
+                if (device) {
+                  const conns = (device as any).connections;
+                  if (conns && conns.length > 0) {
+                    const active = conns[0];
+                    active.accept();
+                    setActiveCall(active);
+                    setCallStatus("In Call (Forced)");
+                  } else {
+                    alert(`No connections for ID: ${identity}`);
+                  }
+                }
+              }}
+              className="bg-green-600 hover:bg-green-500 text-white text-[10px] px-2 py-0.5 rounded font-bold border border-green-400"
+            >
+              FORCE ANSWER
+            </button>
+            <button
+              onClick={() => location.reload()}
+              className="bg-gray-600 hover:bg-gray-500 text-white text-[10px] px-2 py-0.5 rounded font-bold"
+            >
+              RELOAD
+            </button>
+          </div>
         </div>
-      </div>
       {/* ------------------------------------ */}
       {/* 1. Sidebar (Desktop: Fixed | Mobile: Drawer via Hamburger) */}
       <Sidebar
