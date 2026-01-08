@@ -557,7 +557,7 @@ export default function Home() {
         setCallStatus('Ready');
       });
 
-      call.on('error', (e) => {
+      call.on('error', (e: any) => {
         console.error("Incoming Call Error:", e);
         setCallStatus('Error: ' + e.message);
       });
