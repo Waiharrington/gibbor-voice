@@ -160,7 +160,7 @@ export default function AdminPage() {
 
     return (
         <div className="flex h-screen bg-gray-50 font-sans">
-            <Sidebar currentView="admin" />
+            <Sidebar currentView="admin" userRole="admin" />
 
             <div className="flex-1 flex flex-col overflow-hidden">
                 <header className="bg-white border-b border-gray-200 px-8 py-4 flex justify-between items-center shadow-sm z-10">
