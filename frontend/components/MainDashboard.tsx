@@ -797,6 +797,37 @@ export default function MainDashboard() {
 
   return (
     <div className="flex h-screen bg-white overflow-hidden relative font-sans">
+      {/* --- GOD MODE TOOLBAR (FIXED TOP) --- */}
+      <div className="fixed top-0 left-0 right-0 h-8 bg-red-900 text-white z-[9999] flex items-center justify-between px-4 shadow-xl">
+        <span className="text-xs font-mono font-bold">VICIDIAL GOD MODE v5.0</span>
+        <div className="flex gap-2">
+          <span className="text-[10px] font-mono opacity-80 self-center mr-2">Status: {callStatus} | Device: {device ? 'OK' : 'NO'}</span>
+          <button
+            onClick={() => {
+              if (device) {
+                const conns = (device as any).connections;
+                if (conns && conns.length > 0) {
+                  conns[0].accept();
+                  setActiveCall(conns[0]);
+                  setCallStatus("In Call (Forced)");
+                } else {
+                  alert("No pending connections found.");
+                }
+              }
+            }}
+            className="bg-green-600 hover:bg-green-500 text-white text-[10px] px-2 py-0.5 rounded font-bold border border-green-400"
+          >
+            FORCE ANSWER
+          </button>
+          <button
+            onClick={() => location.reload()}
+            className="bg-gray-600 hover:bg-gray-500 text-white text-[10px] px-2 py-0.5 rounded font-bold"
+          >
+            RELOAD
+          </button>
+        </div>
+      </div>
+      {/* ------------------------------------ */}
       {/* 1. Sidebar (Desktop: Fixed | Mobile: Drawer via Hamburger) */}
       <Sidebar
         currentView={currentView}
