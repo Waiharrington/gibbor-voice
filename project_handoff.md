@@ -9,10 +9,22 @@
 
 - **Incoming Calls:** Robust logic with "Sticky Agent" routing + Emergency Answer Button.
 - **Reporting:** Admin-only advanced metrics.
+
+### Key Features Established
+
+- **Incoming Calls:** Robust logic with "Sticky Agent" routing + Emergency Answer Button.
+- **Reporting:** Admin-only advanced metrics.
 - **UI Logic:** Separated views for Admin (Full Access) vs User/Agent (Simplified: Calls/Messages/History).
 - **Stability:** "Heartbeat" monitor, Visual Status Bar, Auto-Reconnect, and Manual Reload Button.
 - **UX:** Audio Feedback (TTS) for connection restoration and Reconnecting Spinner.
 - **Mobile:** PWA Support (Installable Web App) with Manifest and Icons.
+
+> [!CAUTION]
+> **CRITICAL: DO NOT BREAK THE CURRENT STABILITY**
+> The user has active agents using this system.
+> When implementing the Redesign (Phase 2), work incrementally.
+> Do NOT delete the existing `calls.map` rendering logic until the new one is PROVEN to work.
+> Maintain the PWA Manifest and Heartbeat logic at all costs.
 
 ### Known State
 
