@@ -1360,19 +1360,12 @@ export default function MainDashboard() {
                           if (device) {
                             const conns = (device as any).connections;
                             if (conns && conns.length > 0) {
-                              conns[0].accept();
-                              setActiveCall(conns[0]);
+                              const active = conns[0];
+                              active.accept();
+                              setActiveCall(active);
                               setCallStatus("In Call (Forced)");
                             } else {
-                              // Try getting active connection
-                              const active = device.activeConnection();
-                              if (active) {
-                                active.accept();
-                                setActiveCall(active);
-                                setCallStatus("In Call (Forced)");
-                              } else {
-                                alert("No connection found to answer.");
-                              }
+                              alert("No connection found to answer (Force Mode).");
                             }
                           }
                         }}
