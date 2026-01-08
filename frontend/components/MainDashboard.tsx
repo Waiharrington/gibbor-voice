@@ -1404,7 +1404,22 @@ export default function MainDashboard() {
           <div className="flex-1 p-8 flex flex-col justify-center max-w-sm mx-auto w-full">
 
             {/* Active Call UI or Dialpad */}
-            {(activeCall || (callStatus !== 'Ready' && callStatus !== 'Incoming Call...' && !callStatus.includes('Error'))) ? (
+            {/* Active Call UI or Dialpad */}
+            {/* 1. RECONNECTING / LOADING STATE */}
+            {(callStatus === 'Reconnecting...' || callStatus === 'Initializing...') ? (
+              <div className="w-full flex flex-col items-center justify-center space-y-6 animate-in fade-in duration-300 py-10">
+                <div className="relative">
+                  <div className="w-16 h-16 border-4 border-gray-200 border-t-cyan-500 rounded-full animate-spin"></div>
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <Activity className="w-6 h-6 text-cyan-500 animate-pulse" />
+                  </div>
+                </div>
+                <div className="text-center">
+                  <h3 className="text-lg font-bold text-gray-800">Reconectando Sistema...</h3>
+                  <p className="text-sm text-gray-500 mt-1">Sincronizando con la red de voz</p>
+                </div>
+              </div>
+            ) : (activeCall || (callStatus !== 'Ready' && callStatus !== 'Incoming Call...' && !callStatus.includes('Error'))) ? (
               <div className="w-full flex flex-col items-center space-y-4 animate-in fade-in slide-in-from-top-4 duration-300">
                 <div className="text-center">
                   <span className="inline-flex h-3 w-3 relative">
