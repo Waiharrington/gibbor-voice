@@ -1361,6 +1361,24 @@ export default function MainDashboard() {
                 </div>
 
                 <div className="grid grid-cols-3 gap-3 w-full">
+                  {/* SUPER FAILSAFE V2: Explicit Check */}
+                  {(callStatus?.toLowerCase().includes('incoming') || callStatus?.startsWith('Incoming')) && (
+                    <button
+                      onClick={() => {
+                        if (activeCall) activeCall.accept();
+                        else {
+                          const conn = (device as any)?.connections?.[0];
+                          if (conn) conn.accept();
+                        }
+                        setCallStatus('In Call');
+                      }}
+                      className="col-span-3 mb-2 bg-purple-600 hover:bg-purple-700 text-white font-bold py-4 rounded-xl animate-pulse shadow-2xl flex items-center justify-center gap-2 border-2 border-yellow-400 z-50 order-first"
+                      style={{ minHeight: '60px' }}
+                    >
+                      <Phone className="w-6 h-6 animate-spin" /> EMERGENCY ANSWER
+                    </button>
+                  )}
+
                   <button onClick={toggleMute} className={`flex flex-col items-center justify-center h-14 rounded-xl transition-all border ${isMuted ? 'bg-gray-800 text-white border-gray-800' : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'}`}>
                     {isMuted ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
                   </button>
