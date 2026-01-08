@@ -1418,6 +1418,14 @@ export default function MainDashboard() {
                   <h3 className="text-lg font-bold text-gray-800">Reconectando Sistema...</h3>
                   <p className="text-sm text-gray-500 mt-1">Sincronizando con la red de voz</p>
                 </div>
+
+                {/* MANUAL RELOAD BUTTON (FAILSAFE) */}
+                <button
+                  onClick={() => window.location.reload()}
+                  className="mt-4 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-600 text-xs font-bold rounded-lg transition-colors border border-gray-300"
+                >
+                  🔄 Forzar Recarga
+                </button>
               </div>
             ) : (activeCall || (callStatus !== 'Ready' && callStatus !== 'Incoming Call...' && !callStatus.includes('Error'))) ? (
               <div className="w-full flex flex-col items-center space-y-4 animate-in fade-in slide-in-from-top-4 duration-300">
