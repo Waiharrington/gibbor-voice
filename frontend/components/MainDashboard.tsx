@@ -1014,6 +1014,7 @@ export default function MainDashboard() {
             </button>
           </div>
         </div>
+      )}
       {/* ------------------------------------ */}
       {/* 1. Sidebar (Desktop: Fixed | Mobile: Drawer via Hamburger) */}
       <Sidebar
