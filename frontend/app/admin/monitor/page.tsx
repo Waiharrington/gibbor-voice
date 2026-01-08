@@ -110,7 +110,7 @@ export default function MonitorPage() {
 
     return (
         <div className="flex h-screen bg-gray-50">
-            <Sidebar />
+            <Sidebar userRole="admin" />
             <main className="flex-1 p-8 overflow-y-auto">
                 <div className="flex justify-between items-center mb-8">
                     <div>
