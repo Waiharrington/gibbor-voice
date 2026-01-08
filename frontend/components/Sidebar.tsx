@@ -172,14 +172,15 @@ export default function Sidebar({ currentView, onViewChange, isOpen: externalIsO
                                         Reports
                                     </Link>
                                 </li>
+                                <li>
+                                    <Link href="/contacts" className="flex items-center px-4 py-3 text-gray-600 hover:bg-gray-100 transition-colors">
+                                        <User className="w-5 h-5 mr-3 text-gray-500" />
+                                        Contacts
+                                    </Link>
+                                </li>
                             </>
                         )}
-                        <li>
-                            <Link href="/contacts" className="flex items-center px-4 py-3 text-gray-600 hover:bg-gray-100 transition-colors">
-                                <User className="w-5 h-5 mr-3 text-gray-500" />
-                                Contacts
-                            </Link>
-                        </li>
+
                         <li>
                             <Link href="/history" className="flex items-center px-4 py-3 text-gray-600 hover:bg-gray-100 transition-colors">
                                 <Clock className="w-5 h-5 mr-3 text-gray-500" />
