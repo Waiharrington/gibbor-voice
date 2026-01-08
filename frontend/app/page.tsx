@@ -1448,53 +1448,13 @@ export default function Home() {
                       )}
                     </div>
                   ) : (
-                    <div className="w-full">
-                      <div className="w-full space-y-3">
-                        {/* Caller ID Dropdown */}
-                        <div className="relative">
-                          <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1 block">Calling From</label>
-                          <select
-                            className="w-full p-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 outline-none focus:ring-2 focus:ring-cyan-500"
-                            value={selectedCallerId}
-                            onChange={(e) => setSelectedCallerId(e.target.value)}
-                          >
-                            {availableNumbers.length > 0 ? (
-                              availableNumbers.map(num => (
-                                <option key={num.phoneNumber} value={num.phoneNumber}>
-                                  {formatCallerID(num.phoneNumber)}
-                                </option>
-                              ))
-                            ) : (
-                              <option value="">Loading numbers...</option>
-                            )}
-                            <option value="client:agent">Browser (Testing)</option>
-                          </select>
-                        </div>
-
-                        <button
-                          onClick={() => handleCall(currentLead.phone, selectedCallerId)} // Pass selected ID
-                          className="w-full py-4 bg-green-500 text-white rounded-xl font-bold text-lg shadow-lg hover:bg-green-600 hover:shadow-xl hover:-translate-y-0.5 transition-all flex items-center justify-center active:scale-95 transform"
-                        >
-                          <Phone className="w-5 h-5 mr-2" />
-                          Call Lead
-                        </button>
-
-                        <button
-                          onClick={() => handleCall('888888', selectedCallerId)}
-                          className="w-full py-2 bg-gray-100 text-gray-600 rounded-lg text-xs font-semibold hover:bg-gray-200 transition-colors flex items-center justify-center"
-                          title="Verify microphone and speakers"
-                        >
-                          <Activity className="w-3 h-3 mr-1" />
-                          Test Audio Loopback
-                        </button>
+                    <div className="h-full flex flex-col items-center justify-center text-white bg-blue-600 rounded-xl m-4 border-4 border-dashed border-white shadow-2xl animate-pulse">
+                      <div className="w-24 h-24 bg-white rounded-full flex items-center justify-center mb-6 shadow-md">
+                        <Phone className="w-12 h-12 text-blue-600" />
                       </div>
-
-                      {!activeCall && (
-                        <div className="w-full mt-3 flex justify-between text-[10px] text-gray-400 font-medium uppercase tracking-wider">
-                          <button onClick={() => setDialerMode(false)} className="hover:text-red-500 transition-colors">Exit Dialer</button>
-                          <span>{identity}</span>
-                        </div>
-                      )}
+                      <p className="text-3xl font-bold mb-2">DEBUG MODE ACTIVE/p>
+                        <p className="text-xl font-mono opacity-90">Waiting for Incoming Call...</p>
+                        <p className="text-sm mt-4 font-mono bg-blue-800 px-3 py-1 rounded">p.e.r.s.i.s.t.e.n.c.e</p>
                     </div>
                   )}
                 </div>
