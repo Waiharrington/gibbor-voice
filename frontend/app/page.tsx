@@ -1405,14 +1405,14 @@ export default function Home() {
                       </div>
                     </div>
                   ) : (activeCall || (callStatus !== 'Ready' && !callStatus.includes('Error'))) ? (
-                    <div className="w-full flex flex-col items-center space-y-4 animate-in fade-in slide-in-from-top-4 duration-300">
+                    <div className="w-full h-full flex flex-col items-center justify-center space-y-4 animate-in fade-in slide-in-from-top-4 duration-300 bg-purple-100 border-4 border-purple-500 rounded-xl p-4">
                       <div className="text-center">
                         <span className="inline-flex h-3 w-3 relative">
-                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                          <span className="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
+                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-purple-400 opacity-75"></span>
+                          <span className="relative inline-flex rounded-full h-3 w-3 bg-purple-500"></span>
                         </span>
-                        <span className="ml-2 font-mono text-xl font-bold text-gray-800">{formatDuration(duration)} <span className="text-[10px] text-red-500">(LEGACY UI)</span></span>
-                        <p className="text-xs text-gray-500 uppercase tracking-wider mt-1 font-semibold">{callStatus}</p>
+                        <span className="ml-2 font-mono text-xl font-bold text-gray-800">{formatDuration(duration)} <span className="text-sm font-bold text-purple-700">(DEBUG v4)</span></span>
+                        <p className="text-xs text-purple-700 uppercase tracking-wider mt-1 font-bold">{callStatus}</p>
                         {/* DEBUG: Remove after fix */}
                         <p className="text-[10px] text-red-500 font-mono mt-1">Raw: {JSON.stringify(callStatus)}</p>
                       </div>
