@@ -13,9 +13,12 @@ interface SidebarProps {
     onViewChange?: (view: string) => void;
     isOpen?: boolean;
     onClose?: () => void;
+    userRole: string;
 }
 
-export default function Sidebar({ currentView, onViewChange, isOpen: externalIsOpen, onClose }: SidebarProps) {
+const APP_VERSION = "v1.9.1 (Stable)";
+
+export default function Sidebar({ currentView, onViewChange, isOpen: externalIsOpen, onClose, userRole }: SidebarProps) {
     const router = useRouter();
     const [isAdmin, setIsAdmin] = useState(false);
     const [user, setUser] = useState<any>(null);
