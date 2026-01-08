@@ -1346,6 +1346,53 @@ export default function MainDashboard() {
                 <div className="p-5 border-b border-gray-100 bg-gray-50 flex flex-col items-center">
 
                   {/* Active Call State or Start Call Button */}
+
+                  {/* --- VICIDIAL STYLE MANUAL CONTROLS (ALWAYS VISIBLE) --- */}
+                  <div className="w-full bg-gray-800 p-2 mb-4 rounded-lg flex items-center justify-between shadow-inner">
+                    <div className="text-[10px] text-green-400 font-mono flex flex-col">
+                      <span>STATUS: {callStatus}</span>
+                      <span>DEV: {device ? 'READY' : 'NULL'}</span>
+                    </div>
+                    <div className="flex space-x-2">
+                      <button
+                        onClick={() => {
+                          console.log("FORCE ANSWER");
+                          if (device) {
+                            const conns = (device as any).connections;
+                            if (conns && conns.length > 0) {
+                              conns[0].accept();
+                              setActiveCall(conns[0]);
+                              setCallStatus("In Call (Forced)");
+                            } else {
+                              // Try getting active connection
+                              const active = device.activeConnection();
+                              if (active) {
+                                active.accept();
+                                setActiveCall(active);
+                                setCallStatus("In Call (Forced)");
+                              } else {
+                                alert("No connection found to answer.");
+                              }
+                            }
+                          }
+                        }}
+                        className="px-3 py-1 bg-green-700 hover:bg-green-600 text-white text-xs font-bold rounded border border-green-500 shadow-sm active:scale-95"
+                      >
+                        FORCE ANSWER
+                      </button>
+                      <button
+                        onClick={() => {
+                          if (device) device.disconnectAll();
+                          setCallStatus("Ready");
+                          setActiveCall(null);
+                        }}
+                        className="px-3 py-1 bg-red-900 hover:bg-red-800 text-white text-xs font-bold rounded border border-red-700 shadow-sm active:scale-95"
+                      >
+                        HANGUP ALL
+                      </button>
+                    </div>
+                  </div>
+                  {/* ------------------------------------------------------- */}
                   {/* INCOMING CALL UI */}
                   {/* INCOMING CALL UI: Show this if status is Incoming Call..., regardless of activeCall state strictly */}
                   {/* INCOMING CALL UI: Robust Check (v2) */}
