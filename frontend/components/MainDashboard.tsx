@@ -590,6 +590,44 @@ export default function MainDashboard() {
     };
   }, [token, user?.email]); // DEPEND ONLY ON TOKEN
 
+
+  // --- CONNECTION HEARTBEAT & AUTO-RECONNECT ---
+  // Fixes "Zombie Tab" issue where Chrome sleeps the socket
+  useEffect(() => {
+    if (!device) return;
+
+    // 1. Polling Heartbeat (Check connection every 5s)
+    const heartbeatInterval = setInterval(() => {
+      const state = (device as any)?.state; // Twilio Device State
+      if (state === 'Unregistered' || state === 'Destroyed' || !device.token) {
+        console.warn('⚠️ Heartbeat: Device disconnected. Updating UI.');
+        setCallStatus('Disconnected (Click Refresh)');
+        setIsDeviceReady(false);
+      } else if (state === 'Registered') {
+        // Connection is healthy
+        setIsDeviceReady(true);
+      }
+    }, 5000);
+
+    // 2. Window Focus Re-check
+    const handleFocus = () => {
+      console.log("👀 Window Focused - Checking Connection...");
+      const state = (device as any)?.state;
+      if (state !== 'Registered') {
+        console.log("⚠️ Found dead connection on focus. Re-registering...");
+        setCallStatus('Reconnecting...');
+        device.register(); // Attempt quick re-register
+      }
+    };
+
+    window.addEventListener('focus', handleFocus);
+
+    return () => {
+      clearInterval(heartbeatInterval);
+      window.removeEventListener('focus', handleFocus);
+    };
+  }, [device]);
+
   const [duration, setDuration] = useState(0);
 
   // Timer logic
@@ -964,6 +1002,11 @@ export default function MainDashboard() {
             VICIDIAL v5.7 (Stable) | ID: {identity}
           </span>
           <div className="flex gap-2">
+            {/* HEARTBEAT INDICATOR */}
+            <div className={`flex items-center gap-1 px-2 py-0.5 rounded ${isDeviceReady ? 'bg-green-800' : 'bg-red-800'} border ${isDeviceReady ? 'border-green-600' : 'border-red-600'}`}>
+              <div className={`w-2 h-2 rounded-full ${isDeviceReady ? 'bg-green-400 animate-pulse' : 'bg-red-500'}`} />
+              <span className="text-[10px] font-mono font-bold">{isDeviceReady ? 'ONLINE' : 'OFFLINE'}</span>
+            </div>
             <span className="text-[10px] font-mono opacity-80 self-center mr-2">Status: {callStatus} | Device: {device ? 'OK' : 'NO'}</span>
 
             {/* NEW: Switch Identity Button */}
