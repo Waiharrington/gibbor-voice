@@ -799,8 +799,15 @@ export default function MainDashboard() {
   // Refactored Render Function for Logic Clarity
   const renderCallPanel = () => {
     // 1. PRIORITY: Incoming Call
-    // If text says "Incoming", WE SHOW INCOMING UI. No exceptions.
-    if ((activeCall && (activeCall.status() === 'ringing' || activeCall.status() === 'pending')) || (callStatus && callStatus.toLowerCase().includes('incoming'))) {
+    // Debug: Check if 'Incom' exists or starts with 'Inc'
+    const isIncoming = (activeCall && (activeCall.status() === 'ringing' || activeCall.status() === 'pending')) ||
+      (callStatus && (
+        callStatus.toLowerCase().includes('incoming') ||
+        callStatus.toLowerCase().includes('ncoming') ||
+        callStatus.startsWith('Inc')
+      ));
+
+    if (isIncoming) {
       return (
         <div className="w-full flex flex-col items-center space-y-4 animate-in fade-in slide-in-from-top-4 duration-300">
           <div className="text-center mb-2">
@@ -952,7 +959,13 @@ export default function MainDashboard() {
       {/* --- GOD MODE TOOLBAR (FIXED TOP) --- */}
       {/* --- GOD MODE TOOLBAR (FIXED TOP) --- */}
       <div className="fixed top-0 left-0 right-0 h-8 bg-red-900 text-white z-[9999] flex items-center justify-between px-4 shadow-xl">
-        <span className="text-xs font-mono font-bold">VICIDIAL v5.5 (FIXED UI) | ID: {identity}</span>
+        <span className="text-xs font-mono font-bold">
+          v5.6 DEBUG |
+          ST: "{callStatus}" |
+          TP: {typeof callStatus} |
+          LEN: {callStatus?.length} |
+          INC: {callStatus?.toLowerCase().includes('incoming') ? 'YES' : 'NO'}
+        </span>
         <div className="flex gap-2">
           <span className="text-[10px] font-mono opacity-80 self-center mr-2">Status: {callStatus} | Device: {device ? 'OK' : 'NO'}</span>
 
