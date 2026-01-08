@@ -1356,7 +1356,7 @@ export default function Home() {
                         <div className="animate-bounce inline-flex p-3 rounded-full bg-blue-100 text-blue-600 mb-2">
                           <Phone className="w-8 h-8" />
                         </div>
-                        <h3 className="text-lg font-bold text-gray-900">INCOMING CALL (v2)</h3>
+                        <h3 className="text-lg font-bold text-gray-900">INCOMING CALL (v3)</h3>
                         <p className="text-xl font-mono text-gray-700 mt-1 font-semibold">
                           {activeCall?.parameters?.From || 'Incoming Call'}
                         </p>
@@ -1411,7 +1411,7 @@ export default function Home() {
                           <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
                           <span className="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
                         </span>
-                        <span className="ml-2 font-mono text-xl font-bold text-gray-800">{formatDuration(duration)}</span>
+                        <span className="ml-2 font-mono text-xl font-bold text-gray-800">{formatDuration(duration)} <span className="text-[10px] text-red-500">(LEGACY UI)</span></span>
                         <p className="text-xs text-gray-500 uppercase tracking-wider mt-1 font-semibold">{callStatus}</p>
                         {/* DEBUG: Remove after fix */}
                         <p className="text-[10px] text-red-500 font-mono mt-1">Raw: {JSON.stringify(callStatus)}</p>
