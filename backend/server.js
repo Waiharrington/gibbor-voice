@@ -151,58 +151,58 @@ app.post("/incoming-call", async (req, res) => {
             method: 'POST'
         });
 
-    });
 
-// --- STICKY AGENT ROUTING (VICIDIAL STYLE) ---
-let routed = false;
-try {
-    console.log(`Checking Sticky Agent for caller: ${From}`);
-    // Find the last agent who called THIS number (From)
-    const { data: lastCall } = await supabase
-        .from('calls')
-        .select('user_id, created_at')
-        .eq('to', From) // Customer number
-        .eq('direction', 'outbound')
-        .neq('user_id', null)
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .single();
 
-    if (lastCall && lastCall.user_id) {
-        console.log(`Found previous interaction from user_id: ${lastCall.user_id} at ${lastCall.created_at}`);
-        // Get Agent Identity
-        const { data: profile } = await supabase
-            .from('profiles')
-            .select('email')
-            .eq('id', lastCall.user_id)
-            .single();
+        // --- STICKY AGENT ROUTING (VICIDIAL STYLE) ---
+        let routed = false;
+        try {
+            console.log(`Checking Sticky Agent for caller: ${From}`);
+            // Find the last agent who called THIS number (From)
+            const { data: lastCall } = await supabase
+                .from('calls')
+                .select('user_id, created_at')
+                .eq('to', From) // Customer number
+                .eq('direction', 'outbound')
+                .neq('user_id', null)
+                .order('created_at', { ascending: false })
+                .limit(1)
+                .single();
 
-        if (profile && profile.email) {
-            console.log(`🎯 STICKY ROUTE: Routing to ${profile.email}`);
-            dial.client(profile.email);
-            routed = true;
+            if (lastCall && lastCall.user_id) {
+                console.log(`Found previous interaction from user_id: ${lastCall.user_id} at ${lastCall.created_at}`);
+                // Get Agent Identity
+                const { data: profile } = await supabase
+                    .from('profiles')
+                    .select('email')
+                    .eq('id', lastCall.user_id)
+                    .single();
+
+                if (profile && profile.email) {
+                    console.log(`🎯 STICKY ROUTE: Routing to ${profile.email}`);
+                    dial.client(profile.email);
+                    routed = true;
+                }
+            }
+        } catch (stickyErr) {
+            console.error("Sticky Routing Error:", stickyErr);
+        }
+
+        if (!routed) {
+            // Fallback: Backend Simulring to ALL agents
+            const { data: agents } = await supabase.from('profiles').select('email').neq('email', null);
+
+            if (agents && agents.length > 0) {
+                console.log(`Fallback: Simulring to ${agents.length} agents:`, agents.map(a => a.email));
+                agents.forEach(agent => {
+                    if (agent.email) dial.client(agent.email);
+                });
+            } else {
+                console.log("No agents found. Dialing default 'agent'.");
+                dial.client("agent");
+            }
         }
     }
-} catch (stickyErr) {
-    console.error("Sticky Routing Error:", stickyErr);
 }
-
-if (!routed) {
-    // Fallback: Backend Simulring to ALL agents
-    const { data: agents } = await supabase.from('profiles').select('email').neq('email', null);
-
-    if (agents && agents.length > 0) {
-        console.log(`Fallback: Simulring to ${agents.length} agents:`, agents.map(a => a.email));
-        agents.forEach(agent => {
-            if (agent.email) dial.client(agent.email);
-        });
-    } else {
-        console.log("No agents found. Dialing default 'agent'.");
-        dial.client("agent");
-    }
-}
-        }
-    }
     else if (To === '888888') { // ECHO TEST SERVICE
     console.log("Audio Test Requested (Echo)");
     twiml.say({ voice: 'alice', language: 'es-MX' }, "Prueba de audio Gibbor Voice. Hable después del tono y escuchará su eco.");
