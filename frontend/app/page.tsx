@@ -13,6 +13,68 @@ import { format } from 'date-fns';
 import { supabase } from '@/utils/supabaseClient';
 import { CALL_STATUSES } from '@/constants/statuses';
 
+// --- Local Ringback Tone Generator (Web Audio API) ---
+// US Standard Ring: 440Hz + 480Hz, 2s ON, 4s OFF
+let audioCtx: AudioContext | null = null;
+let ringbackOscillators: OscillatorNode[] = [];
+let ringbackGain: GainNode | null = null;
+
+const startRingback = () => {
+  stopRingback(); // Ensure clean start
+  try {
+    const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+    if (!AudioContextClass) return;
+
+    if (!audioCtx) audioCtx = new AudioContextClass();
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+
+    ringbackGain = audioCtx.createGain();
+    ringbackGain.gain.value = 0.15; // Low volume
+    ringbackGain.connect(audioCtx.destination);
+
+    const osc1 = audioCtx.createOscillator();
+    const osc2 = audioCtx.createOscillator();
+
+    osc1.frequency.value = 440;
+    osc2.frequency.value = 480;
+
+    osc1.connect(ringbackGain);
+    osc2.connect(ringbackGain);
+
+    // Pulse effect
+    const now = audioCtx.currentTime;
+    for (let i = 0; i < 10; i++) { // Ring for ~60 seconds max
+      const start = now + (i * 6);
+      const end = start + 2;
+      ringbackGain.gain.setValueAtTime(0.15, start);
+      ringbackGain.gain.setValueAtTime(0, end);
+    }
+
+    osc1.start();
+    osc2.start();
+
+    ringbackOscillators = [osc1, osc2];
+  } catch (e) {
+    console.error("Failed to start ringback tone:", e);
+  }
+};
+
+const stopRingback = () => {
+  try {
+    ringbackOscillators.forEach(osc => {
+      try { osc.stop(); osc.disconnect(); } catch (e) { }
+    });
+    ringbackOscillators = [];
+    if (ringbackGain) {
+      ringbackGain.disconnect();
+      ringbackGain = null;
+    }
+  } catch (e) {
+    console.error("Error stopping ringback:", e);
+  }
+};
+// -----------------------------------------------------
+
 // Simple Custom Audio Player Component
 function AudioPlayer({ src }: { src: string }) {
   const [isPlaying, setIsPlaying] = useState(false);
@@ -572,6 +634,9 @@ export default function Home() {
         throw new Error("Device is destroyed. Please refresh the page.");
       }
 
+      // START RINGBACK TONE
+      startRingback();
+
       const call = await device.connect({ params });
 
       setCallStatus('Dialing...'); // Immediate UI update
@@ -579,11 +644,13 @@ export default function Home() {
       setActiveCall(call);
 
       call.on('accept', () => {
+        stopRingback(); // STOP RINGBACK
         setCallStatus('In Call');
         setActiveCall(call); // Re-set to ensure state persistence
       });
 
       call.on('disconnect', () => {
+        stopRingback(); // STOP RINGBACK
         setCallStatus('Ready');
         setActiveCall(null);
         setIsMuted(false);
@@ -592,12 +659,14 @@ export default function Home() {
       });
 
       call.on('cancel', () => {
+        stopRingback(); // STOP RINGBACK
         setCallStatus('Ready');
         setActiveCall(null);
         setDialedNumber('');
       });
 
       call.on('error', (error: any) => {
+        stopRingback(); // STOP RINGBACK
         console.error('Call Error:', error);
         setCallStatus(`Error: ${error.message || 'Unknown Call Error'}`);
         setActiveCall(null);
@@ -605,6 +674,7 @@ export default function Home() {
       });
 
     } catch (error: any) {
+      stopRingback(); // STOP RINGBACK
       console.error('Error making call:', error);
       if (error.name === 'NotAllowedError' || error.message?.includes('Permission denied') || error.code === 31208) {
         setCallStatus('Mic Access Denied');
@@ -618,6 +688,7 @@ export default function Home() {
   };
 
   const handleHangup = () => {
+    stopRingback(); // STOP RINGBACK (Manual Hangup)
     console.log("Hangup requested. Active call:", activeCall);
 
     // 1. Try hanging up the known active call
@@ -638,9 +709,10 @@ export default function Home() {
       // Twilio SDK 2.x specific: Try to reject pending invitations
       // Note: device.connections is an array of Connections
       /* @ts-ignore */
-      if (device.connections) {
+      const conns = (device as any).connections;
+      if (conns) {
         /* @ts-ignore */
-        device.connections.forEach(conn => {
+        conns.forEach((conn: any) => {
           if (conn.status() === 'pending' || conn.status() === 'ringing') {
             console.log("Rejecting pending connection:", conn);
             conn.reject();
