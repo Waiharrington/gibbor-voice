@@ -1513,6 +1513,23 @@ export default function MainDashboard() {
                       </div>
 
                       <div className="grid grid-cols-3 gap-3 w-full">
+                        {/* FAILSAFE ANSWER BUTTON: If status is Incoming but we ended up here */}
+                        {callStatus.toLowerCase().includes('incoming') && (
+                          <button
+                            onClick={() => {
+                              if (activeCall) activeCall.accept();
+                              else {
+                                const conn = (device as any)?.connections?.[0];
+                                if (conn) conn.accept();
+                              }
+                              setCallStatus('In Call');
+                            }}
+                            className="col-span-3 mb-2 bg-green-500 hover:bg-green-600 text-white font-bold py-3 rounded-xl animate-pulse shadow-lg flex items-center justify-center gap-2"
+                          >
+                            <Phone className="w-5 h-5" /> ANSWER CALL (FAILSAFE)
+                          </button>
+                        )}
+
                         <button onClick={toggleMute} className={`flex flex-col items-center justify-center h-14 rounded-xl transition-all border ${isMuted ? 'bg-gray-800 text-white border-gray-800' : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'}`}>
                           {isMuted ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
                         </button>
