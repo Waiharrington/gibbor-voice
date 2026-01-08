@@ -796,6 +796,157 @@ export default function MainDashboard() {
     setDialerMode(!dialerMode);
   };
 
+  // Refactored Render Function for Logic Clarity
+  const renderCallPanel = () => {
+    // 1. PRIORITY: Incoming Call
+    // If text says "Incoming", WE SHOW INCOMING UI. No exceptions.
+    if ((activeCall && (activeCall.status() === 'ringing' || activeCall.status() === 'pending')) || (callStatus && callStatus.toLowerCase().includes('incoming'))) {
+      return (
+        <div className="w-full flex flex-col items-center space-y-4 animate-in fade-in slide-in-from-top-4 duration-300">
+          <div className="text-center mb-2">
+            <div className="animate-bounce inline-flex p-3 rounded-full bg-blue-100 text-blue-600 mb-2">
+              <Phone className="w-8 h-8" />
+            </div>
+            <h3 className="text-lg font-bold text-gray-900">INCOMING CALL (v4.0)</h3>
+            <p className="text-xl font-mono text-gray-700 mt-1 font-semibold">
+              {activeCall?.parameters?.From || 'Incoming Call'}
+            </p>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4 w-full px-4">
+            <button
+              onClick={() => {
+                console.log("Answering from v4.0 UI");
+                if (activeCall) {
+                  activeCall.accept();
+                  setCallStatus('In Call');
+                } else {
+                  // Rescue
+                  const conn = (device as any)?.connections?.[0];
+                  if (conn) {
+                    conn.accept();
+                    setActiveCall(conn);
+                    setCallStatus('In Call');
+                  } else {
+                    alert("No Connection Found in Device Object");
+                  }
+                }
+              }}
+              className="flex flex-col items-center justify-center h-20 rounded-2xl bg-green-500 text-white shadow-lg hover:bg-green-600 transition-all hover:-translate-y-1 active:scale-95"
+            >
+              <Phone className="w-8 h-8 mb-1" />
+              <span className="text-xs font-bold uppercase tracking-wider">Answer</span>
+            </button>
+
+            <button
+              onClick={() => {
+                if (activeCall) activeCall.reject();
+                else device?.disconnectAll();
+                setActiveCall(null);
+                setCallStatus('Ready');
+              }}
+              className="flex flex-col items-center justify-center h-20 rounded-2xl bg-red-500 text-white shadow-lg hover:bg-red-600 transition-all hover:-translate-y-1 active:scale-95"
+            >
+              <PhoneOff className="w-8 h-8 mb-1" />
+              <span className="text-xs font-bold uppercase tracking-wider">Decline</span>
+            </button>
+          </div>
+        </div>
+      );
+    }
+
+    // 2. FAILSAFE: If no activeCall but text says Incoming, SHOW ABOVE UI.
+    // (Already covered by OR clause above, but let's be double sure to avoid fallthrough)
+
+    // 3. Active Call / Busy State
+    if (activeCall || (callStatus !== 'Ready' && !callStatus.includes('Error'))) {
+      return (
+        <div className="w-full flex flex-col items-center space-y-4 animate-in fade-in slide-in-from-top-4 duration-300">
+          <div className="text-center">
+            <span className="inline-flex h-3 w-3 relative">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
+            </span>
+            <span className="ml-2 font-mono text-xl font-bold text-gray-800">{formatDuration(duration)}</span>
+            <p className="text-xs text-gray-500 uppercase tracking-wider mt-1 font-semibold">{callStatus}</p>
+          </div>
+
+          <div className="grid grid-cols-3 gap-3 w-full">
+            <button onClick={toggleMute} className={`flex flex-col items-center justify-center h-14 rounded-xl transition-all border ${isMuted ? 'bg-gray-800 text-white border-gray-800' : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'}`}>
+              {isMuted ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
+            </button>
+            <button onClick={() => setIsKeypadOpen(!isKeypadOpen)} className={`flex flex-col items-center justify-center h-14 rounded-xl transition-all border ${isKeypadOpen ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'}`}>
+              <div className="grid grid-cols-3 gap-3 w-4 h-4 items-center justify-center ml-2 mt-1">
+                {[...Array(9)].map((_, i) => <div key={i} className={`w-0.5 h-0.5 rounded-full ${isKeypadOpen ? 'bg-white' : 'bg-gray-400'}`} />)}
+              </div>
+            </button>
+            <button onClick={handleHangup} className="col-span-1 flex flex-col items-center justify-center h-14 rounded-xl bg-red-500 text-white hover:bg-red-600 shadow-md transition-all active:scale-95">
+              <PhoneOff className="w-6 h-6" />
+            </button>
+          </div>
+
+          {isKeypadOpen && (
+            <div className="grid grid-cols-3 gap-2 w-full pt-2">
+              {['1', '2', '3', '4', '5', '6', '7', '8', '9', '*', '0', '#'].map((digit) => (
+                <button
+                  key={digit}
+                  onClick={() => activeCall?.sendDigits(digit)}
+                  className="h-10 rounded-lg bg-white border border-gray-200 hover:bg-gray-50 flex items-center justify-center text-lg font-bold text-gray-700 transition-colors"
+                >
+                  {digit}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    // 4. Default: Dialer
+    return (
+      <div className="w-full">
+        <div className="w-full space-y-3">
+          <div className="relative">
+            <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1 block">Calling From</label>
+            <select
+              className="w-full p-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 outline-none focus:ring-2 focus:ring-cyan-500"
+              value={selectedCallerId}
+              onChange={(e) => setSelectedCallerId(e.target.value)}
+            >
+              {availableNumbers.length > 0 ? (
+                availableNumbers.map(num => (
+                  <option key={num.phoneNumber} value={num.phoneNumber}>
+                    {formatCallerID(num.phoneNumber)}
+                  </option>
+                ))
+              ) : (
+                <option value="">Loading numbers...</option>
+              )}
+              <option value="client:agent">Browser (Testing)</option>
+            </select>
+          </div>
+
+          <button
+            onClick={() => handleCall(currentLead.phone, selectedCallerId)}
+            className="w-full py-4 bg-green-500 text-white rounded-xl font-bold text-lg shadow-lg hover:bg-green-600 hover:shadow-xl hover:-translate-y-0.5 transition-all flex items-center justify-center active:scale-95 transform"
+          >
+            <Phone className="w-5 h-5 mr-2" />
+            Call Lead
+          </button>
+
+          <button
+            onClick={() => handleCall('888888', selectedCallerId)}
+            className="w-full py-2 bg-gray-100 text-gray-600 rounded-lg text-xs font-semibold hover:bg-gray-200 transition-colors flex items-center justify-center"
+            title="Verify microphone and speakers"
+          >
+            <Activity className="w-3 h-3 mr-1" />
+            Audio Test
+          </button>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="flex h-screen bg-white overflow-hidden relative font-sans">
       {/* --- GOD MODE TOOLBAR (FIXED TOP) --- */}
@@ -1443,172 +1594,9 @@ export default function MainDashboard() {
                     </div>
                   </div>
                   {/* ------------------------------------------------------- */}
-                  {/* INCOMING CALL UI */}
-                  {/* INCOMING CALL UI: Show this if status is Incoming Call..., regardless of activeCall state strictly */}
-                  {/* INCOMING CALL UI: Robust Check (v2) */}
-                  {/* Priority: Check Twilio Call Status directly if available */}
-                  {((activeCall && (activeCall.status() === 'ringing' || activeCall.status() === 'pending')) || (callStatus && callStatus.toLowerCase().includes('incoming'))) ? (
-                    <div className="w-full flex flex-col items-center space-y-4 animate-in fade-in slide-in-from-top-4 duration-300">
-                      <div className="text-center mb-2">
-                        <div className="animate-bounce inline-flex p-3 rounded-full bg-blue-100 text-blue-600 mb-2">
-                          <Phone className="w-8 h-8" />
-                        </div>
-                        <h3 className="text-lg font-bold text-gray-900">INCOMING CALL (v3)</h3>
-                        <p className="text-xl font-mono text-gray-700 mt-1 font-semibold">
-                          {activeCall?.parameters?.From || 'Incoming Call'}
-                        </p>
-                      </div>
+                  {/* --- CALL CONTROL PANEL (Logic Refactored v4.0) --- */}
+                  {renderCallPanel()}
 
-                      <div className="grid grid-cols-2 gap-4 w-full px-4">
-                        <button
-                          onClick={() => {
-                            if (activeCall) {
-                              activeCall.accept();
-                              setCallStatus('In Call');
-                            } else {
-                              // Try to rescue connection
-                              const conn = (device as any)?.connections?.[0]; // Twilio SDK v2 legacy or check active
-                              if (conn) {
-                                conn.accept();
-                                setActiveCall(conn);
-                                setCallStatus('In Call');
-                              } else {
-                                console.warn("No active call found to answer");
-                                setCallStatus('Error: Call not found');
-                              }
-                            }
-                          }}
-                          className="flex flex-col items-center justify-center h-20 rounded-2xl bg-green-500 text-white shadow-lg hover:bg-green-600 transition-all hover:-translate-y-1 active:scale-95"
-                        >
-                          <Phone className="w-8 h-8 mb-1" />
-                          <span className="text-xs font-bold uppercase tracking-wider">Answer</span>
-                        </button>
-
-                        <button
-                          onClick={() => {
-                            if (activeCall) {
-                              activeCall.reject();
-                            } else {
-                              device?.disconnectAll(); // Best effort reject
-                            }
-                            setActiveCall(null);
-                            setCallStatus('Ready');
-                          }}
-                          className="flex flex-col items-center justify-center h-20 rounded-2xl bg-red-500 text-white shadow-lg hover:bg-red-600 transition-all hover:-translate-y-1 active:scale-95"
-                        >
-                          <PhoneOff className="w-8 h-8 mb-1" />
-                          <span className="text-xs font-bold uppercase tracking-wider">Decline</span>
-                        </button>
-                      </div>
-                    </div>
-                  ) : (activeCall || (callStatus !== 'Ready' && !callStatus.includes('Error'))) ? (
-                    <div className="w-full flex flex-col items-center space-y-4 animate-in fade-in slide-in-from-top-4 duration-300">
-                      <div className="text-center">
-                        <span className="inline-flex h-3 w-3 relative">
-                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                          <span className="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
-                        </span>
-                        <span className="ml-2 font-mono text-xl font-bold text-gray-800">{formatDuration(duration)}</span>
-                        <p className="text-xs text-gray-500 uppercase tracking-wider mt-1 font-semibold">{callStatus}</p>
-                      </div>
-
-                      <div className="grid grid-cols-3 gap-3 w-full">
-                        {/* FAILSAFE ANSWER BUTTON: If status is Incoming but we ended up here */}
-                        {callStatus.toLowerCase().includes('incoming') && (
-                          <button
-                            onClick={() => {
-                              if (activeCall) activeCall.accept();
-                              else {
-                                const conn = (device as any)?.connections?.[0];
-                                if (conn) conn.accept();
-                              }
-                              setCallStatus('In Call');
-                            }}
-                            className="col-span-3 mb-2 bg-green-500 hover:bg-green-600 text-white font-bold py-3 rounded-xl animate-pulse shadow-lg flex items-center justify-center gap-2"
-                          >
-                            <Phone className="w-5 h-5" /> ANSWER CALL (FAILSAFE)
-                          </button>
-                        )}
-
-                        <button onClick={toggleMute} className={`flex flex-col items-center justify-center h-14 rounded-xl transition-all border ${isMuted ? 'bg-gray-800 text-white border-gray-800' : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'}`}>
-                          {isMuted ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
-                        </button>
-                        <button onClick={() => setIsKeypadOpen(!isKeypadOpen)} className={`flex flex-col items-center justify-center h-14 rounded-xl transition-all border ${isKeypadOpen ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'}`}>
-                          <div className="grid grid-cols-3 gap-3 w-4 h-4 items-center justify-center ml-2 mt-1">
-                            {/* Mini grid icon representation */}
-                            {[...Array(9)].map((_, i) => <div key={i} className={`w-0.5 h-0.5 rounded-full ${isKeypadOpen ? 'bg-white' : 'bg-gray-400'}`} />)}
-                          </div>
-                        </button>
-                        <button onClick={handleHangup} className="col-span-1 flex flex-col items-center justify-center h-14 rounded-xl bg-red-500 text-white hover:bg-red-600 shadow-md transition-all active:scale-95">
-                          <PhoneOff className="w-6 h-6" />
-                        </button>
-                      </div>
-
-                      {/* In-Call Keypad (Overlay or Expand) */}
-                      {isKeypadOpen && (
-                        <div className="grid grid-cols-3 gap-2 w-full pt-2">
-                          {['1', '2', '3', '4', '5', '6', '7', '8', '9', '*', '0', '#'].map((digit) => (
-                            <button
-                              key={digit}
-                              onClick={() => activeCall?.sendDigits(digit)}
-                              className="h-10 rounded-lg bg-white border border-gray-200 hover:bg-gray-50 flex items-center justify-center text-lg font-bold text-gray-700 transition-colors"
-                            >
-                              {digit}
-                            </button>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  ) : (
-                    <div className="w-full">
-                      <div className="w-full space-y-3">
-                        {/* Caller ID Dropdown */}
-                        <div className="relative">
-                          <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1 block">Calling From</label>
-                          <select
-                            className="w-full p-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 outline-none focus:ring-2 focus:ring-cyan-500"
-                            value={selectedCallerId}
-                            onChange={(e) => setSelectedCallerId(e.target.value)}
-                          >
-                            {availableNumbers.length > 0 ? (
-                              availableNumbers.map(num => (
-                                <option key={num.phoneNumber} value={num.phoneNumber}>
-                                  {formatCallerID(num.phoneNumber)}
-                                </option>
-                              ))
-                            ) : (
-                              <option value="">Loading numbers...</option>
-                            )}
-                            <option value="client:agent">Browser (Testing)</option>
-                          </select>
-                        </div>
-
-                        <button
-                          onClick={() => handleCall(currentLead.phone, selectedCallerId)} // Pass selected ID
-                          className="w-full py-4 bg-green-500 text-white rounded-xl font-bold text-lg shadow-lg hover:bg-green-600 hover:shadow-xl hover:-translate-y-0.5 transition-all flex items-center justify-center active:scale-95 transform"
-                        >
-                          <Phone className="w-5 h-5 mr-2" />
-                          Call Lead
-                        </button>
-
-                        <button
-                          onClick={() => handleCall('888888', selectedCallerId)}
-                          className="w-full py-2 bg-gray-100 text-gray-600 rounded-lg text-xs font-semibold hover:bg-gray-200 transition-colors flex items-center justify-center"
-                          title="Verify microphone and speakers"
-                        >
-                          <Activity className="w-3 h-3 mr-1" />
-                          Test Audio Loopback
-                        </button>
-                      </div>
-
-                      {!activeCall && (
-                        <div className="w-full mt-3 flex justify-between text-[10px] text-gray-400 font-medium uppercase tracking-wider">
-                          <button onClick={() => setDialerMode(false)} className="hover:text-red-500 transition-colors">Exit Dialer</button>
-                          <span>{identity}</span>
-                        </div>
-                      )}
-                    </div>
-                  )}
                 </div>
 
                 {/* MIDDLE: Status List (Scrollable) */}
