@@ -952,7 +952,7 @@ export default function MainDashboard() {
       {/* --- GOD MODE TOOLBAR (FIXED TOP) --- */}
       {/* --- GOD MODE TOOLBAR (FIXED TOP) --- */}
       <div className="fixed top-0 left-0 right-0 h-8 bg-red-900 text-white z-[9999] flex items-center justify-between px-4 shadow-xl">
-        <span className="text-xs font-mono font-bold">VICIDIAL v5.3 | ID: {identity}</span>
+        <span className="text-xs font-mono font-bold">VICIDIAL v5.5 (FIXED UI) | ID: {identity}</span>
         <div className="flex gap-2">
           <span className="text-[10px] font-mono opacity-80 self-center mr-2">Status: {callStatus} | Device: {device ? 'OK' : 'NO'}</span>
 
