@@ -12,6 +12,7 @@
 - **UI Logic:** Separated views for Admin (Full Access) vs User/Agent (Simplified: Calls/Messages/History).
 - **Stability:** "Heartbeat" monitor, Visual Status Bar, Auto-Reconnect, and Manual Reload Button.
 - **UX:** Audio Feedback (TTS) for connection restoration and Reconnecting Spinner.
+- **Mobile:** PWA Support (Installable Web App) with Manifest and Icons.
 
 ### Known State
 

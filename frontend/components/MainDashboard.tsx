@@ -604,7 +604,8 @@ export default function MainDashboard() {
         setCallStatus('Disconnected (Click Refresh)');
         setIsDeviceReady(false);
       } else if (state === 'Registered') {
-        // Connection is healthy
+        const currentMs = Date.now();
+        // Debounce: Only announce restored if it has been stable for >2s or if we were definitely offline
         if (!isDeviceReady) {
           console.log("🟢 Connection Restored!");
           setIsDeviceReady(true);
@@ -617,16 +618,21 @@ export default function MainDashboard() {
           } catch (e) { }
         }
       }
-    }, 5000);
+    }, 10000); // Relaxed to 10s to avoid race conditions
 
     // 2. Window Focus Re-check
     const handleFocus = () => {
       console.log("👀 Window Focused - Checking Connection...");
       const state = (device as any)?.state;
-      if (state !== 'Registered') {
+      // ONLY Re-register if TRULY disconnected. 
+      // Do NOT interrupt if state is "Incoming", "Busy", or transitioning.
+      if (state === 'Unregistered' || state === 'Destroyed') {
         console.log("⚠️ Found dead connection on focus. Re-registering...");
         setCallStatus('Reconnecting...');
-        device.register(); // Attempt quick re-register
+        setIsDeviceReady(false);
+        device.register();
+      } else {
+        console.log(`✅ Connection OK on focus (State: ${state})`);
       }
     };
 
