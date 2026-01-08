@@ -71,7 +71,7 @@ export default function History() {
 
     return (
         <div className="flex h-screen bg-white">
-            <Sidebar />
+            <Sidebar currentView="history" userRole="agent" />
             <main className="flex-1 flex flex-col bg-gray-50">
                 <header className="h-16 border-b border-gray-200 flex items-center px-8 bg-white">
                     <h1 className="text-xl font-semibold text-gray-800 flex items-center">

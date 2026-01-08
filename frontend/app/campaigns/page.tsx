@@ -104,7 +104,7 @@ export default function CampaignsPage() {
 
     return (
         <div className="flex h-screen bg-gray-50 font-sans">
-            <Sidebar currentView="campaigns" />
+            <Sidebar currentView="campaigns" userRole="admin" />
 
             <div className="flex-1 flex flex-col overflow-hidden">
                 <header className="bg-white border-b border-gray-200 px-8 py-6 flex justify-between items-center">

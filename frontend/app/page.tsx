@@ -800,6 +800,7 @@ export default function Home() {
       {/* 1. Sidebar (Desktop: Fixed | Mobile: Drawer via Hamburger) */}
       <Sidebar
         currentView={currentView}
+        userRole={userRole || "agent"}
         onViewChange={handleViewChange}
         isOpen={isSidebarOpen}
         onClose={() => setIsSidebarOpen(false)}
