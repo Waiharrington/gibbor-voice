@@ -202,32 +202,31 @@ app.post("/incoming-call", async (req, res) => {
             }
         }
     }
-}
     else if (To === '888888') { // ECHO TEST SERVICE
-    console.log("Audio Test Requested (Echo)");
-    twiml.say({ voice: 'alice', language: 'es-MX' }, "Prueba de audio Gibbor Voice. Hable después del tono y escuchará su eco.");
-    twiml.pause({ length: 1 });
-    twiml.echo();
-}
-else if (To) {
-    // Outbound calls from browser (TwiML App default URL)
-    const dial = twiml.dial({
-        callerId: outboundCallerId,
-        record: 'record-from-ringing',
-        recordingStatusCallback: `${baseUrl}/recording-status`,
-        recordingStatusCallbackEvent: ['completed'],
-        action: `${baseUrl}/call-status`,
-        method: 'POST',
-        answerOnBridge: true
-    });
-    dial.number(To);
-}
-else {
-    twiml.say("Bienvenido a Gibbor Voice.");
-}
+        console.log("Audio Test Requested (Echo)");
+        twiml.say({ voice: 'alice', language: 'es-MX' }, "Prueba de audio Gibbor Voice. Hable después del tono y escuchará su eco.");
+        twiml.pause({ length: 1 });
+        twiml.echo();
+    }
+    else if (To) {
+        // Outbound calls from browser (TwiML App default URL)
+        const dial = twiml.dial({
+            callerId: outboundCallerId,
+            record: 'record-from-ringing',
+            recordingStatusCallback: `${baseUrl}/recording-status`,
+            recordingStatusCallbackEvent: ['completed'],
+            action: `${baseUrl}/call-status`,
+            method: 'POST',
+            answerOnBridge: true
+        });
+        dial.number(To);
+    }
+    else {
+        twiml.say("Bienvenido a Gibbor Voice.");
+    }
 
-res.type("text/xml");
-res.send(twiml.toString());
+    res.type("text/xml");
+    res.send(twiml.toString());
 });
 
 // Generic Call Status Handler
