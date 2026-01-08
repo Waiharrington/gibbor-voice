@@ -960,11 +960,7 @@ export default function MainDashboard() {
       {/* --- GOD MODE TOOLBAR (FIXED TOP) --- */}
       <div className="fixed top-0 left-0 right-0 h-8 bg-red-900 text-white z-[9999] flex items-center justify-between px-4 shadow-xl">
         <span className="text-xs font-mono font-bold">
-          v5.6 DEBUG |
-          ST: "{callStatus}" |
-          TP: {typeof callStatus} |
-          LEN: {callStatus?.length} |
-          INC: {callStatus?.toLowerCase().includes('incoming') ? 'YES' : 'NO'}
+          VICIDIAL v5.7 (Stable) | ID: {identity}
         </span>
         <div className="flex gap-2">
           <span className="text-[10px] font-mono opacity-80 self-center mr-2">Status: {callStatus} | Device: {device ? 'OK' : 'NO'}</span>
@@ -1372,10 +1368,10 @@ export default function MainDashboard() {
                         }
                         setCallStatus('In Call');
                       }}
-                      className="col-span-3 mb-2 bg-purple-600 hover:bg-purple-700 text-white font-bold py-4 rounded-xl animate-pulse shadow-2xl flex items-center justify-center gap-2 border-2 border-yellow-400 z-50 order-first"
+                      className="col-span-3 mb-2 bg-green-500 hover:bg-green-600 text-white font-bold py-4 rounded-xl animate-pulse shadow-lg flex items-center justify-center gap-2 border-2 border-green-400 z-50 order-first"
                       style={{ minHeight: '60px' }}
                     >
-                      <Phone className="w-6 h-6 animate-spin" /> EMERGENCY ANSWER
+                      <Phone className="w-6 h-6 animate-bounce" /> ANSWER INCOMING CALL
                     </button>
                   )}
 
