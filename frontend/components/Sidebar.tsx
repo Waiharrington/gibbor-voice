@@ -16,7 +16,7 @@ interface SidebarProps {
     userRole: string;
 }
 
-const APP_VERSION = "v1.9.2 (Debug)";
+const APP_VERSION = "v1.9.3 (Red)";
 
 export default function Sidebar({ currentView, onViewChange, isOpen: externalIsOpen, onClose, userRole }: SidebarProps) {
     const router = useRouter();
@@ -119,12 +119,12 @@ export default function Sidebar({ currentView, onViewChange, isOpen: externalIsO
 
             <aside className={`fixed inset-y-0 left-0 z-[60] w-64 bg-gray-50 border-r border-gray-200 h-screen flex flex-col transform transition-transform duration-200 ease-in-out 2xl:translate-x-0 2xl:static ${showSidebar ? 'translate-x-0' : '-translate-x-full'}`}>
                 <div className="p-4 flex items-center space-x-2 border-b border-gray-100">
-                    <div className="w-8 h-8 bg-cyan-500 rounded-full flex items-center justify-center text-white font-bold">
+                    <div className="w-8 h-8 bg-red-600 rounded-full flex items-center justify-center text-white font-bold animate-pulse">
                         G
                     </div>
                     <div className="flex flex-col">
                         <span className="text-xl font-semibold text-gray-700">Gibbor Voice</span>
-                        <span className="text-xs text-gray-400 font-mono">v1.6 (Stable)</span>
+                        <span className="text-xs text-red-500 font-bold font-mono">{APP_VERSION}</span>
                     </div>
                 </div>
 
