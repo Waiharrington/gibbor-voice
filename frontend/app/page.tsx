@@ -454,7 +454,7 @@ export default function Home() {
         setIsLoading(true);
         // 1. Get Token (Pass identity for unique session)
         // Use email as identity (sanitized) to avoid conflicts
-        const identity = user.email || `user_${user.id}`;
+        const identity = (user.email || `user_${user.id}`).toLowerCase();
         const tokenRes = await fetch(`${API_BASE_URL}/token?identity=${encodeURIComponent(identity)}`);
 
         if (!tokenRes.ok) throw new Error('Failed to fetch token');
@@ -1348,7 +1348,8 @@ export default function Home() {
                   {/* Active Call State or Start Call Button */}
                   {/* INCOMING CALL UI */}
                   {/* INCOMING CALL UI: Show this if status is Incoming Call..., regardless of activeCall state strictly */}
-                  {callStatus === 'Incoming Call...' ? (
+                  {/* INCOMING CALL UI: Relaxed check */}
+                  {(callStatus === 'Incoming Call...' || callStatus.includes('Incoming')) ? (
                     <div className="w-full flex flex-col items-center space-y-4 animate-in fade-in slide-in-from-top-4 duration-300">
                       <div className="text-center mb-2">
                         <div className="animate-bounce inline-flex p-3 rounded-full bg-blue-100 text-blue-600 mb-2">
