@@ -16,7 +16,7 @@ interface SidebarProps {
     userRole: string;
 }
 
-const APP_VERSION = "v1.9.1 (Stable)";
+const APP_VERSION = "v1.9.2 (Debug)";
 
 export default function Sidebar({ currentView, onViewChange, isOpen: externalIsOpen, onClose, userRole }: SidebarProps) {
     const router = useRouter();

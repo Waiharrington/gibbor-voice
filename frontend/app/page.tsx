@@ -1412,6 +1412,8 @@ export default function Home() {
                         </span>
                         <span className="ml-2 font-mono text-xl font-bold text-gray-800">{formatDuration(duration)}</span>
                         <p className="text-xs text-gray-500 uppercase tracking-wider mt-1 font-semibold">{callStatus}</p>
+                        {/* DEBUG: Remove after fix */}
+                        <p className="text-[10px] text-red-500 font-mono mt-1">Raw: {JSON.stringify(callStatus)}</p>
                       </div>
 
                       <div className="grid grid-cols-3 gap-3 w-full">
