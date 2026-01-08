@@ -1452,9 +1452,9 @@ export default function Home() {
                       <div className="w-24 h-24 bg-white rounded-full flex items-center justify-center mb-6 shadow-md">
                         <Phone className="w-12 h-12 text-blue-600" />
                       </div>
-                      <p className="text-3xl font-bold mb-2">DEBUG MODE ACTIVE/p>
-                        <p className="text-xl font-mono opacity-90">Waiting for Incoming Call...</p>
-                        <p className="text-sm mt-4 font-mono bg-blue-800 px-3 py-1 rounded">p.e.r.s.i.s.t.e.n.c.e</p>
+                      <p className="text-3xl font-bold mb-2">DEBUG MODE ACTIVE</p>
+                      <p className="text-xl font-mono opacity-90">Waiting for Incoming Call...</p>
+                      <p className="text-sm mt-4 font-mono bg-blue-800 px-3 py-1 rounded">p.e.r.s.i.s.t.e.n.c.e</p>
                     </div>
                   )}
                 </div>
