@@ -14,9 +14,10 @@ interface MessagesPanelProps {
     userId?: string | null;
     userRole?: string | null;
     onConversationSelect?: (id: string | null) => void;
+    hideList?: boolean;
 }
 
-export default function MessagesPanel({ initialConversationId, userId, userRole, onConversationSelect }: MessagesPanelProps) {
+export default function MessagesPanel({ initialConversationId, userId, userRole, onConversationSelect, hideList }: MessagesPanelProps) {
     // State
     const [messages, setMessages] = useState<any[]>([]);
     const [selectedConversationId, setSelectedConversationId] = useState<string | null>(initialConversationId || null);
@@ -191,55 +192,57 @@ export default function MessagesPanel({ initialConversationId, userId, userRole,
     return (
         <div className="flex flex-1 h-full overflow-hidden">
             {/* 1. Conversations List (Left Panel) - Hidden on Mobile if Conversation Selected */}
-            <div className={`w-full md:w-80 border-r border-gray-200 flex flex-col bg-white ${selectedConversationId ? 'hidden md:flex' : 'flex'}`}>
-                <div className="p-4 border-b border-gray-100">
-                    <div className="relative">
-                        <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
-                        <input
-                            type="text"
-                            placeholder="Search"
-                            className="w-full bg-gray-100 pl-9 pr-4 py-2 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-gray-300 transition-shadow"
-                        />
+            {!hideList && (
+                <div className={`w-full md:w-80 border-r border-gray-200 flex flex-col bg-white ${selectedConversationId ? 'hidden md:flex' : 'flex'}`}>
+                    <div className="p-4 border-b border-gray-100">
+                        <div className="relative">
+                            <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
+                            <input
+                                type="text"
+                                placeholder="Search"
+                                className="w-full bg-gray-100 pl-9 pr-4 py-2 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-gray-300 transition-shadow"
+                            />
+                        </div>
+                    </div>
+
+                    <div className="flex-1 overflow-y-auto">
+                        {conversations.map((conv) => (
+                            <div
+                                key={conv.id}
+                                onClick={() => setSelectedConversationId(conv.id)}
+                                className={`p-4 flex items-start cursor-pointer transition-colors border-l-4 ${selectedConversationId === conv.id
+                                    ? 'bg-cyan-50 border-cyan-500'
+                                    : 'hover:bg-gray-50 border-transparent'
+                                    }`}
+                            >
+                                <div className="h-10 w-10 rounded-full bg-cyan-500 flex items-center justify-center text-white font-medium text-sm shrink-0 mr-3">
+                                    {conv.id.slice(-2)}
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                    <div className="flex justify-between items-baseline mb-1">
+                                        <h3 className={`text-sm font-semibold truncate ${selectedConversationId === conv.id ? 'text-gray-900' : 'text-gray-700'}`}>
+                                            {conv.id}
+                                        </h3>
+                                        <span className="text-xs text-gray-500 shrink-0 ml-2">
+                                            {new Date(conv.lastMessage.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                        </span>
+                                    </div>
+                                    <p className={`text-xs truncate ${selectedConversationId === conv.id ? 'text-gray-700' : 'text-gray-500'}`}>
+                                        {conv.lastMessage.direction === 'outbound' ? 'You: ' : ''}
+                                        {conv.lastMessage.media_url ? '📷 Image' : conv.lastMessage.body}
+                                    </p>
+                                </div>
+                            </div>
+                        ))}
+
+                        {conversations.length === 0 && (
+                            <div className="p-8 text-center text-gray-500 text-sm">
+                                No messages yet.
+                            </div>
+                        )}
                     </div>
                 </div>
-
-                <div className="flex-1 overflow-y-auto">
-                    {conversations.map((conv) => (
-                        <div
-                            key={conv.id}
-                            onClick={() => setSelectedConversationId(conv.id)}
-                            className={`p-4 flex items-start cursor-pointer transition-colors border-l-4 ${selectedConversationId === conv.id
-                                ? 'bg-cyan-50 border-cyan-500'
-                                : 'hover:bg-gray-50 border-transparent'
-                                }`}
-                        >
-                            <div className="h-10 w-10 rounded-full bg-cyan-500 flex items-center justify-center text-white font-medium text-sm shrink-0 mr-3">
-                                {conv.id.slice(-2)}
-                            </div>
-                            <div className="flex-1 min-w-0">
-                                <div className="flex justify-between items-baseline mb-1">
-                                    <h3 className={`text-sm font-semibold truncate ${selectedConversationId === conv.id ? 'text-gray-900' : 'text-gray-700'}`}>
-                                        {conv.id}
-                                    </h3>
-                                    <span className="text-xs text-gray-500 shrink-0 ml-2">
-                                        {new Date(conv.lastMessage.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                    </span>
-                                </div>
-                                <p className={`text-xs truncate ${selectedConversationId === conv.id ? 'text-gray-700' : 'text-gray-500'}`}>
-                                    {conv.lastMessage.direction === 'outbound' ? 'You: ' : ''}
-                                    {conv.lastMessage.media_url ? '📷 Image' : conv.lastMessage.body}
-                                </p>
-                            </div>
-                        </div>
-                    ))}
-
-                    {conversations.length === 0 && (
-                        <div className="p-8 text-center text-gray-500 text-sm">
-                            No messages yet.
-                        </div>
-                    )}
-                </div>
-            </div>
+            )}
 
             {/* 2. Active Chat (Center Panel) - Full Width on Mobile if Selected, Hidden if not */}
             <div className={`flex-1 flex-col bg-white min-w-0 min-h-0 h-full border-r border-gray-200 ${selectedConversationId ? 'flex' : 'hidden md:flex'}`}>

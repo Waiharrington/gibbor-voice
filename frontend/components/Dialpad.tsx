@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Phone, Delete, Activity } from 'lucide-react';
+import { Phone, Delete } from 'lucide-react';
 
 export default function Dialpad({
     onCall
@@ -24,67 +24,72 @@ export default function Dialpad({
         }
     };
 
-    const digits = [
-        '1', '2', '3',
-        '4', '5', '6',
-        '7', '8', '9',
-        '*', '0', '#'
-    ];
-
     return (
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 w-80 p-6 flex flex-col items-center">
-            <div className="w-full mb-6 relative">
+        <div className="w-full flex flex-col items-center">
+            {/* Display */}
+            <div className="w-full mb-4 relative flex items-center justify-center min-h-[48px]">
                 <input
                     type="text"
                     value={number}
                     onChange={(e) => setNumber(e.target.value)}
-                    className="w-full text-3xl text-center font-light text-gray-800 outline-none border-b border-transparent focus:border-green-500 transition-colors pb-2"
+                    className="w-full text-3xl text-center text-gray-800 bg-transparent outline-none font-normal tracking-wide"
                     placeholder="Enter number"
                 />
+                {number && (
+                    <button
+                        onClick={handleDelete}
+                        className="absolute right-0 text-gray-500 hover:text-gray-700 p-2"
+                    >
+                        <Delete className="w-5 h-5" />
+                    </button>
+                )}
             </div>
 
-            <div className="grid grid-cols-3 gap-4 mb-6">
-                {digits.map((digit) => (
+            {/* Keypad Grid */}
+            <div className="grid grid-cols-3 w-full gap-y-3 mb-6 place-items-center">
+                {digits.map((item) => (
                     <button
-                        key={digit}
-                        onClick={() => handlePress(digit)}
-                        className="w-16 h-16 rounded-full hover:bg-gray-100 flex items-center justify-center text-2xl font-medium text-gray-700 transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50"
+                        key={item.digit}
+                        onClick={() => handlePress(item.digit)}
+                        className="w-16 h-16 rounded-full hover:bg-gray-100 flex flex-col items-center justify-center transition-colors focus:outline-none active:bg-gray-200"
                     >
-                        {digit}
+                        <span className="text-2xl text-gray-700 font-normal">{item.digit}</span>
+                        {item.letters && (
+                            <span className="text-[10px] text-gray-400 font-medium tracking-widest mt-[-2px]">{item.letters}</span>
+                        )}
                     </button>
                 ))}
             </div>
 
-            <div className="flex items-center justify-center space-x-8 w-full">
-                <div className="w-12" /> {/* Spacer */}
+            {/* Call Button */}
+            <div className="flex items-center justify-center w-full">
                 <button
                     onClick={handleCall}
                     disabled={!number}
-                    className="w-16 h-16 rounded-full bg-green-600 hover:bg-green-700 text-white flex items-center justify-center shadow-md transition-transform active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="w-16 h-16 rounded-full bg-blue-600 hover:bg-blue-700 text-white flex items-center justify-center shadow-md transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
                     title="Call"
                     aria-label="Call"
                 >
-                    <Phone className="w-8 h-8 fill-current" />
-                </button>
-                <button
-                    onClick={handleDelete}
-                    className="w-12 h-12 rounded-full hover:bg-gray-100 text-gray-500 flex items-center justify-center transition-colors"
-                    title="Delete"
-                    aria-label="Delete"
-                >
-                    <Delete className="w-6 h-6" />
+                    <Phone className="w-7 h-7 fill-current" />
                 </button>
             </div>
-            <div className="mt-4 w-full px-4">
-                <button
-                    onClick={() => onCall('888888')}
-                    className="w-full py-2 bg-gray-50 text-gray-500 rounded-lg text-xs font-semibold hover:bg-gray-100 hover:text-green-600 transition-colors flex items-center justify-center border border-dashed border-gray-300"
-                    title="Verify microphone and speakers"
-                >
-                    <Activity className="w-3 h-3 mr-1" />
-                    Test Audio (Loopback)
-                </button>
-            </div>
+
+
         </div>
     );
 }
+
+const digits = [
+    { digit: '1', letters: '' },
+    { digit: '2', letters: 'ABC' },
+    { digit: '3', letters: 'DEF' },
+    { digit: '4', letters: 'GHI' },
+    { digit: '5', letters: 'JKL' },
+    { digit: '6', letters: 'MNO' },
+    { digit: '7', letters: 'PQRS' },
+    { digit: '8', letters: 'TUV' },
+    { digit: '9', letters: 'WXYZ' },
+    { digit: '*', letters: '' },
+    { digit: '0', letters: '+' },
+    { digit: '#', letters: '' }
+];

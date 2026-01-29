@@ -2,14 +2,15 @@
 'use client';
 import { useRouter } from 'next/navigation';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import Sidebar from '@/components/Sidebar';
 import Dialpad from '@/components/Dialpad';
 import MessagesPanel from '@/components/MessagesPanel';
 import CampaignManager from '@/components/CampaignManager';
 import { Device } from '@twilio/voice-sdk';
-import { Phone, PhoneOff, Mic, MicOff, Search, ArrowUpRight, ArrowDownLeft, MoreVertical, Download, MessageSquare, Copy, MapPin, Building, Info, FileText, Send, Clock, X, Activity } from 'lucide-react';
+import { Phone, PhoneOff, Mic, MicOff, Search, ArrowUpRight, ArrowDownLeft, MoreVertical, Download, MessageSquare, Copy, MapPin, Building, Info, FileText, Send, Clock, X, Activity, Menu, BarChart3, Plus } from 'lucide-react';
 import { format } from 'date-fns';
+import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '@/utils/supabaseClient';
 import { CALL_STATUSES } from '@/constants/statuses';
 
@@ -183,6 +184,53 @@ const formatCallerID = (phoneNumber: string) => {
   return phoneNumber;
 };
 
+const getAvatarColor = (name: string) => {
+  const colors = ['bg-red-500', 'bg-orange-500', 'bg-amber-500', 'bg-green-500', 'bg-emerald-500', 'bg-teal-500', 'bg-cyan-500', 'bg-sky-500', 'bg-blue-500', 'bg-indigo-500', 'bg-violet-500', 'bg-purple-500', 'bg-fuchsia-500', 'bg-pink-500', 'bg-rose-500'];
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) {
+    hash = name.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  return colors[Math.abs(hash) % colors.length];
+};
+
+function NavIcon({ icon, label, active, onClick, expanded }: { icon: any, label: string, active: boolean, onClick: () => void, expanded?: boolean }) {
+  return (
+    <motion.button
+      whileHover={{ scale: 1.05 }}
+      whileTap={{ scale: 0.95 }}
+      onClick={onClick}
+      className={`relative flex items-center ${expanded ? 'justify-start px-4 w-full' : 'justify-center w-12'} h-12 rounded-full mb-3 transition-all duration-300
+      ${active ? 'bg-blue-100/50 text-blue-700' : 'text-gray-500 hover:bg-gray-100'}`}
+      title={!expanded ? label : ''}
+    >
+      <div className={`z-10 flex items-center justify-center ${active ? 'text-blue-700' : 'text-gray-600'}`}>
+        {icon}
+      </div>
+
+      {expanded && (
+        <motion.span
+          initial={{ opacity: 0, x: -10 }}
+          animate={{ opacity: 1, x: 0 }}
+          className="ml-3 text-sm font-medium whitespace-nowrap z-10"
+        >
+          {label}
+        </motion.span>
+      )}
+
+      {active && (
+        <motion.div
+          layoutId="activeNavBG"
+          className="absolute inset-0 bg-blue-100 rounded-full z-0"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ type: "spring", stiffness: 300, damping: 30 }}
+        />
+      )}
+    </motion.button>
+  );
+}
+
 export default function MainDashboard() {
   const router = useRouter();
   const [device, setDevice] = useState<Device | null>(null);
@@ -224,7 +272,8 @@ export default function MainDashboard() {
   }, [currentLead?.id]); // Only reset when ID changes
 
   // View Navigation State (Persistent Call)
-  const [currentView, setCurrentView] = useState<'calls' | 'messages' | 'campaigns' | 'contacts' | 'voicemail'>('calls');
+  const [currentView, setCurrentView] = useState<'calls' | 'messages' | 'campaigns' | 'contacts' | 'voicemail' | 'history' | 'reports'>('calls');
+  const [searchQuery, setSearchQuery] = useState('');
   const [initialConvId, setInitialConvId] = useState<string | null>(null);
 
   // Auth Protection
@@ -262,8 +311,39 @@ export default function MainDashboard() {
   // History Stack for Back functionality
   const [leadHistory, setLeadHistory] = useState<any[]>([]);
 
+  // Messages State (Lifted from MessagesPanel)
+  const [messages, setMessages] = useState<any[]>([]);
+
+  // Helper to group messages into conversations
+  const getConversationId = (msg: any) => {
+    return msg.direction === 'outbound' ? msg.to : msg.from;
+  };
+
+  // Derived State: Grouped Conversations
+  const conversations = useMemo(() => {
+    const groups: { [key: string]: any[] } = {};
+
+    messages.forEach(msg => {
+      const id = getConversationId(msg);
+      if (!groups[id]) groups[id] = [];
+      groups[id].push(msg);
+    });
+
+    // Convert to array and sort by latest message
+    return Object.entries(groups).map(([id, msgs]) => {
+      const lastMsg = msgs[msgs.length - 1];
+      return {
+        id,
+        messages: msgs,
+        lastMessage: lastMsg,
+        timestamp: new Date(lastMsg.created_at).getTime()
+      };
+    }).sort((a, b) => b.timestamp - a.timestamp);
+  }, [messages]);
+
   // Caller ID State
   const [selectedCallerId, setSelectedCallerId] = useState<string>('');
+  const [isSidebarExpanded, setIsSidebarExpanded] = useState(false); // Sidebar State
   const [availableNumbers, setAvailableNumbers] = useState<any[]>([]);
 
   // Fetch available numbers on mount
@@ -486,8 +566,8 @@ export default function MainDashboard() {
     };
     init();
 
-    // 3. Realtime Subscription
-    const channel = supabase
+    // 3. Realtime Subscription (Calls)
+    const channelCalls = supabase
       .channel('calls_realtime')
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'calls' }, (payload) => {
         console.log('New call logged:', payload.new);
@@ -500,8 +580,42 @@ export default function MainDashboard() {
       })
       .subscribe();
 
+    // 4. Realtime Subscription (Messages)
+    const channelMessages = supabase
+      .channel('messages-realtime')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, (payload) => {
+        const newMsg = payload.new;
+        setMessages((prev) => [...prev, newMsg]);
+      })
+      .subscribe();
+
+    // Fetch Messages Initial
+    const fetchMessages = async () => {
+      try {
+        let url = `${API_BASE_URL}/history/messages`;
+        const params = new URLSearchParams();
+        if (user?.id) params.append('userId', user.id);
+        if (userRole) params.append('role', userRole);
+
+        if (params.toString()) url += `?${params.toString()}`;
+
+        const response = await fetch(url);
+        const data = await response.json();
+        if (Array.isArray(data)) {
+          setMessages(data);
+        } else {
+          console.error('Expected array of messages, got:', data);
+          setMessages([]);
+        }
+      } catch (error) {
+        console.error('Error fetching messages:', error);
+      }
+    };
+    if (user) fetchMessages();
+
     return () => {
-      supabase.removeChannel(channel);
+      supabase.removeChannel(channelCalls);
+      supabase.removeChannel(channelMessages);
     };
   }, [user, userRole]);
 
@@ -1076,8 +1190,11 @@ export default function MainDashboard() {
       )}
       {/* ------------------------------------ */}
       {/* 1. NAVIGATION RAIL (Google Voice Style) */}
-      <div className="w-20 flex flex-col items-center py-4 bg-gray-50 border-r border-gray-200 z-20 shrink-0 hidden md:flex">
-        <button className="p-3 mb-6 hover:bg-gray-200 rounded-full transition-colors text-gray-600">
+      <div className={`${isSidebarExpanded ? 'w-64' : 'w-20'} flex flex-col items-center py-4 bg-gray-50 border-r border-gray-200 z-20 shrink-0 hidden md:flex transition-all duration-300 ease-in-out`}>
+        <button
+          onClick={() => setIsSidebarExpanded(!isSidebarExpanded)}
+          className="p-3 mb-6 hover:bg-gray-200 rounded-full transition-colors text-gray-600 self-center"
+        >
           <Menu className="w-6 h-6" />
         </button>
 
@@ -1087,12 +1204,14 @@ export default function MainDashboard() {
             label="Llamadas"
             active={currentView === 'calls' || currentView === 'history'}
             onClick={() => handleViewChange('calls')}
+            expanded={isSidebarExpanded}
           />
           <NavIcon
             icon={<MessageSquare className="w-6 h-6" />}
             label="Mensajes"
             active={currentView === 'messages'}
             onClick={() => handleViewChange('messages')}
+            expanded={isSidebarExpanded}
           />
           {userRole === 'admin' && (
             <NavIcon
@@ -1100,26 +1219,37 @@ export default function MainDashboard() {
               label="Reportes"
               active={currentView === 'reports'}
               onClick={() => handleViewChange('reports')}
+              expanded={isSidebarExpanded}
             />
           )}
         </nav>
 
         {/* User & Status Dot */}
-        <div className="flex flex-col gap-4 pb-4 items-center">
-          <div className="relative group cursor-pointer" title={isDeviceReady ? "Online" : "Disconnected"}>
-            <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-bold transition-all shadow-sm ${isDeviceReady ? 'bg-purple-600' : 'bg-gray-400'}`}>
+        <div className={`flex flex-col gap-4 pb-4 items-center ${isSidebarExpanded ? 'px-4 w-full' : ''}`}>
+          <div className="relative group cursor-pointer flex items-center" title={isDeviceReady ? "Online" : "Disconnected"}>
+            <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-bold transition-all shadow-sm shrink-0 ${isDeviceReady ? 'bg-purple-600' : 'bg-gray-400'}`}>
               {user?.email?.[0].toUpperCase() || 'G'}
             </div>
-            <div className={`absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-white ${isDeviceReady ? 'bg-green-500' : 'bg-red-500'}`}></div>
+            {isSidebarExpanded && (
+              <div className="ml-3 overflow-hidden">
+                <p className="text-sm font-bold text-gray-700 truncate">{user?.email || 'Guest'}</p>
+                <p className="text-xs text-green-600 flex items-center">
+                  <span className="w-2 h-2 rounded-full bg-green-500 mr-1"></span> Online
+                </p>
+              </div>
+            )}
+            {!isSidebarExpanded && (
+              <div className={`absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-white ${isDeviceReady ? 'bg-green-500' : 'bg-red-500'}`}></div>
+            )}
           </div>
         </div>
       </div>
 
       {/* 2. SECONDARY COLUMN (List View & Search) */}
-      <div className={`w-full md:w-96 flex flex-col bg-white border-r border-gray-200 shrink-0 ${activeCall || dialerMode ? 'hidden xl:flex' : 'flex'}`}>
+      <div className={`w-full md:w-96 flex flex-col bg-white border-r border-gray-200 shrink-0 relative ${activeCall || dialerMode ? 'hidden xl:flex' : 'flex'}`}>
         {/* Search Header */}
         <div className="h-20 flex items-center px-6 border-b border-gray-100 flex-shrink-0">
-          <div className="flex-1 flex items-center bg-[#f1f3f4] rounded-lg px-4 h-12 transition-all focus-within:bg-white focus-within:shadow-md focus-within:ring-1 focus-within:ring-gray-200">
+          <div className="flex-1 flex items-center bg-[#f1f3f4] rounded-full px-4 h-12 transition-all focus-within:bg-white focus-within:shadow-md focus-within:ring-1 focus-within:ring-gray-200">
             <Search className="w-5 h-5 text-gray-500 mr-3" />
             <input
               type="text"
@@ -1132,7 +1262,126 @@ export default function MainDashboard() {
         </div>
 
         <div className="flex-1 overflow-y-auto custom-scrollbar relative">
-          {/* OLD SIDEBAR WAS HERE - NOW WE WRAP THE RENDER LOGIC BELOW INTO THIS CONTAINER */}
+
+          {/* --- A. CALLS LIST --- */}
+          {(currentView === 'calls' || currentView === 'history' || currentView === 'contacts') && (
+            <div className="pb-20"> {/* Padding for FAB */}
+              {isLoading ? (
+                <div className="flex items-center justify-center h-48 text-gray-400">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-cyan-500 mr-2"></div>
+                  Loading...
+                </div>
+              ) : error ? (
+                <div className="p-6 text-center text-red-500 bg-red-50 m-4 rounded-lg text-sm">
+                  <p className="font-semibold">Connection Error</p>
+                  <p>{error}</p>
+                  <button onClick={() => window.location.reload()} className="mt-2 text-red-700 underline">Retry</button>
+                </div>
+              ) : (
+                calls.map((call, index) => (
+                  <motion.div
+                    layout
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.05 }}
+                    key={call.id}
+                    onClick={() => {
+                      setSelectedCall(call);
+                      setActiveMobileTab('details');
+                    }}
+                    className={`p-4 flex items-center cursor-pointer transition-colors border-l-4 hover:bg-gray-50 ${selectedCall?.id === call.id
+                      ? 'bg-blue-50/50 border-blue-600'
+                      : 'border-transparent'
+                      }`}
+                  >
+                    {/* Modern Avatar */}
+                    <motion.div
+                      whileHover={{ scale: 1.1 }}
+                      className={`h-10 w-10 rounded-full flex items-center justify-center text-white font-bold text-sm shrink-0 mr-4 shadow-sm ${getAvatarColor(call.direction === 'inbound' ? (call.from || '#') : (call.to || '#'))}`}
+                    >
+                      {call.direction === 'inbound' ?
+                        (call.from?.[1]?.toUpperCase() || '#') :
+                        (call.to?.[1]?.toUpperCase() || '#')}
+                    </motion.div>
+
+                    {/* Info */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex justify-between items-baseline mb-0.5">
+                        <h3 className={`text-sm font-bold truncate ${selectedCall?.id === call.id ? 'text-gray-900' : 'text-gray-800'}`}>
+                          {call.direction === 'outbound' ? formatCallerID(call.to) : formatCallerID(call.from)}
+                        </h3>
+                        <span className={`text-[10px] shrink-0 ml-2 font-medium ${selectedCall?.id === call.id ? 'text-blue-600' : 'text-gray-400'}`}>
+                          {call.created_at && format(new Date(call.created_at), 'MMM d')}
+                        </span>
+                      </div>
+                      <div className="flex items-center text-xs text-gray-500">
+                        {call.direction === 'outbound' ? (
+                          <ArrowUpRight className="w-3 h-3 mr-1.5 text-gray-400" />
+                        ) : (
+                          <ArrowDownLeft className="w-3 h-3 mr-1.5 text-purple-500" />
+                        )}
+                        <span className="truncate">{call.direction === 'inbound' ? 'Incoming' : 'Outgoing'} • {call.duration || 0}s</span>
+                      </div>
+                    </div>
+                  </motion.div>
+                ))
+              )}
+            </div>
+          )}
+
+          {/* --- B. MESSAGES LIST --- */}
+          {currentView === 'messages' && (
+            <div className="pb-20">
+              {conversations.map((conv, index) => (
+                <motion.div
+                  layout
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: index * 0.05 }}
+                  key={conv.id}
+                  onClick={() => {
+                    setInitialConvId(conv.id);
+                    setActiveMobileTab('details');
+                  }}
+                  className={`p-4 flex items-start cursor-pointer transition-colors border-l-4 hover:bg-gray-50 ${initialConvId === conv.id
+                    ? 'bg-blue-50/50 border-blue-600'
+                    : 'border-transparent'
+                    }`}
+                >
+                  <motion.div
+                    whileHover={{ scale: 1.1 }}
+                    className={`h-10 w-10 rounded-full flex items-center justify-center text-white font-bold text-sm shrink-0 mr-4 shadow-sm ${getAvatarColor(conv.id)}`}
+                  >
+                    {conv.id.replace(/\D/g, '')[0] || '#'}
+                  </motion.div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex justify-between items-baseline mb-0.5">
+                      <h3 className={`text-sm font-bold truncate ${initialConvId === conv.id ? 'text-gray-900' : 'text-gray-800'}`}>
+                        {formatCallerID(conv.id)}
+                      </h3>
+                      <span className={`text-[10px] shrink-0 ml-2 font-medium ${initialConvId === conv.id ? 'text-blue-600' : 'text-gray-400'}`}>
+                        {new Date(conv.lastMessage.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      </span>
+                    </div>
+                    <p className={`text-xs truncate ${initialConvId === conv.id ? 'text-gray-700' : 'text-gray-500'}`}>
+                      {conv.lastMessage.direction === 'outbound' ? 'You: ' : ''}
+                      {conv.lastMessage.media_url ? '📷 Image' : conv.lastMessage.body}
+                    </p>
+                  </div>
+                </motion.div>
+              ))}
+
+              {conversations.length === 0 && (
+                <div className="p-10 text-center">
+                  <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <MessageSquare className="w-8 h-8 text-gray-300" />
+                  </div>
+                  <p className="text-gray-500 text-sm">No messages yet</p>
+                </div>
+              )}
+            </div>
+          )}
+
         </div>
       </div>
 
@@ -1206,96 +1455,24 @@ export default function MainDashboard() {
         </div>
 
         {/* Floating Action Button (FAB) */}
-        <button
+        {/* Floating Action Button (FAB) */}
+        <motion.button
+          initial={{ scale: 0, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          whileHover={{ scale: 1.1, rotate: 90 }}
+          whileTap={{ scale: 0.9 }}
           onClick={() => setDialerMode(true)}
-          className="2xl:hidden fixed bottom-24 right-4 w-14 h-14 bg-cyan-600 rounded-xl shadow-lg flex items-center justify-center text-white z-50 hover:bg-cyan-500 transition-colors"
+          className="2xl:hidden fixed bottom-24 right-4 w-16 h-16 bg-cyan-600 rounded-2xl shadow-xl flex items-center justify-center text-white z-50 hover:bg-cyan-500 transition-colors"
         >
-          <div className="grid grid-cols-3 gap-1 p-1">
-            {[...Array(9)].map((_, i) => <div key={i} className="w-1 h-1 bg-white rounded-full"></div>)}
-          </div>
-        </button>
+          <Plus className="w-8 h-8" />
+        </motion.button>
 
         {/* Existing Content Rendering Logic (Modified to fit new container) */}
         {(currentView === 'calls' || currentView === 'contacts') && !dialerMode && (
           <>
             {/* 2. Call List (Left) - Adjusted for Mobile */}
-            <div
-              style={{ width: '20rem', flexShrink: 0 }}
-              className={`
-              w-full md:w-80 border-r border-gray-200 flex flex-col bg-white
-              ${activeMobileTab === 'calls' ? 'flex' : 'hidden md:flex'}
-          `}>
-              {/* Desktop Search Header (Keep existing) */}
-              <div className="hidden lg:flex p-4 border-b border-gray-100 items-center gap-2">
-                <div className="relative flex-1">
-                  <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
-                  <input
-                    type="text"
-                    placeholder="Search"
-                    className="w-full bg-gray-100 pl-9 pr-4 py-2 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-gray-300 transition-shadow"
-                  />
-                </div>
-              </div>
+            {/* 2. Call List (Removed - Moved to Secondary Column) */}
 
-              {/* List */}
-              <div className="flex-1 overflow-y-auto mb-20 lg:mb-0">
-                {isLoading ? (
-                  <div className="flex items-center justify-center h-48 text-gray-400">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-cyan-500 mr-2"></div>
-                    Loading...
-                  </div>
-                ) : error ? (
-                  <div className="p-6 text-center text-red-500 bg-red-50 m-4 rounded-lg text-sm">
-                    <p className="font-semibold">Connection Error</p>
-                    <p>{error}</p>
-                    <button onClick={() => window.location.reload()} className="mt-2 text-red-700 underline">Retry</button>
-                  </div>
-                ) : (
-                  calls.map((call) => (
-                    <div
-                      key={call.id}
-                      onClick={() => {
-                        setSelectedCall(call);
-                        setActiveMobileTab('details'); // Switch to details view on mobile/tablet
-                      }}
-                      className={`p-4 flex items-center cursor-pointer transition-colors border-l-4 ${selectedCall?.id === call.id
-                        ? 'bg-cyan-50 border-cyan-500'
-                        : 'hover:bg-gray-50 border-transparent'
-                        }`}
-                    >
-                      {/* Avatar */}
-                      <div className={`h-10 w-10 rounded-full flex items-center justify-center text-white font-medium text-sm shrink-0 mr-3 ${call.direction === 'inbound' ? 'bg-purple-500' : 'bg-gray-500' // Different color for distinction
-                        }`}>
-                        <Phone className="w-4 h-4" />
-                      </div>
-
-                      {/* Info */}
-                      <div className="flex-1 min-w-0">
-                        <div className="flex justify-between items-baseline mb-1">
-                          <h3 className={`text-sm font-semibold truncate ${selectedCall?.id === call.id ? 'text-gray-900' : 'text-gray-700'}`}>
-                            {call.direction === 'outbound' ? call.to : call.from}
-                          </h3>
-                          <span className="text-xs text-gray-400 shrink-0 ml-2">
-                            {call.created_at && format(new Date(call.created_at), 'dd/MM HH:mm')}
-                          </span>
-                        </div>
-                        <div className="flex items-center text-xs text-gray-500">
-                          {call.direction === 'outbound' ? (
-                            <ArrowUpRight className="w-3 h-3 mr-1 text-green-500" />
-                          ) : (
-                            <ArrowDownLeft className="w-3 h-3 mr-1 text-cyan-500" />
-                          )}
-                          <span>{call.status || 'unknown'}</span>
-                          {call.duration && (
-                            <span className="ml-1 text-gray-400">• {call.duration}s</span>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  ))
-                )}
-              </div>
-            </div>
 
             {/* 3. Center Panel (Details) */}
             <div
@@ -1436,6 +1613,7 @@ export default function MainDashboard() {
               userId={user?.id}
               userRole={userRole}
               onConversationSelect={(id) => setIsMessageDetailOpen(!!id)}
+              hideList={true}
             />
           </div>
         )}
@@ -1446,20 +1624,32 @@ export default function MainDashboard() {
           </div>
         )}
 
+        {currentView === 'reports' && (
+          <div style={{ minWidth: 0, flexGrow: 1 }} className="flex-1 flex flex-col bg-white border-r border-gray-200 min-w-0 p-10 items-center justify-center">
+            <div className="w-24 h-24 bg-blue-50 rounded-full flex items-center justify-center mb-6">
+              <BarChart3 className="w-12 h-12 text-blue-500" />
+            </div>
+            <h2 className="text-2xl font-bold text-gray-800 mb-2">Panel de Reportes</h2>
+            <p className="text-gray-500 text-center max-w-md">
+              Las métricas avanzadas y reportes administrativos estarán disponibles pronto en esta sección.
+            </p>
+          </div>
+        )}
+
         {/* 4. Dialpad (Right) */}
         <div
           style={{ flexShrink: 0 }}
           className={`
-              w-full md:w-96 border-l border-gray-200 bg-gray-50 flex-col shrink-0
+              w-full md:w-96 border-l border-gray-200 bg-gray-50 flex-col shrink-0 h-full overflow-hidden
               ${(dialerMode || activeCall) ? 'flex absolute inset-0 z-40 bg-white md:static md:bg-gray-50 md:z-auto' : 'hidden md:flex'}
            `}>
 
           {/* PROMINENT CONNECTION STATUS BAR */}
-          <div className={`w-full py-1 text-center text-[10px] font-bold tracking-wider text-white transition-colors duration-500 ${isDeviceReady ? 'bg-emerald-500' : 'bg-rose-500 animate-pulse'}`}>
+          <div className={`w-full py-1 text-center text-[10px] font-bold tracking-wider text-white transition-colors duration-500 shrink-0 ${isDeviceReady ? 'bg-emerald-500' : 'bg-rose-500 animate-pulse'}`}>
             {isDeviceReady ? '● SISTEMA ONLINE' : '○ DESCONECTADO - RECONECTANDO...'}
           </div>
 
-          <div className="flex-1 p-8 flex flex-col justify-center max-w-sm mx-auto w-full">
+          <div className="flex-1 p-2 flex flex-col justify-center max-w-sm mx-auto w-full overflow-y-auto min-h-0">
 
             {/* Active Call UI or Dialpad */}
             {/* Active Call UI or Dialpad */}
@@ -1586,6 +1776,18 @@ export default function MainDashboard() {
                 <Dialpad onCall={(num) => handleCall(num, selectedCallerId)} />
               </>
             )}
+          </div>
+
+          {/* FOOTER: Fixed Actions (Like Google Voice "Hide Keypad") */}
+          <div className="w-full p-4 flex justify-end border-t border-gray-100 bg-gray-50/50 mt-auto">
+            <button
+              onClick={() => handleCall('888888', selectedCallerId)}
+              className="flex items-center px-3 py-2 text-xs font-medium text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-md transition-all"
+              title="Verify microphone and speakers"
+            >
+              <Activity className="w-4 h-4 mr-2" />
+              Test Audio
+            </button>
           </div>
         </div>
 
