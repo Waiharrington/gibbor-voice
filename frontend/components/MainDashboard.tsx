@@ -346,6 +346,14 @@ export default function MainDashboard() {
   const [selectedCallerId, setSelectedCallerId] = useState<string>('');
   const [isSidebarExpanded, setIsSidebarExpanded] = useState(false); // Sidebar State
   const [availableNumbers, setAvailableNumbers] = useState<any[]>([]);
+  const [isMobile, setIsMobile] = useState(false); // SSR-safe mobile check
+
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile(); // Check on mount
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   // Fetch available numbers on mount
   useEffect(() => {
@@ -1306,7 +1314,7 @@ export default function MainDashboard() {
       {/* 2. SECONDARY COLUMN (List View & Search) */}
       {/* Hide on mobile if showing details or dialer/active call */}
       <div className={`w-full md:w-96 flex flex-col bg-white border-r border-gray-200 shrink-0 relative
-          ${(activeCall || dialerMode || (window.innerWidth < 768 && activeMobileTab === 'details')) ? 'hidden md:flex' : 'flex'}
+          ${(activeCall || dialerMode || (isMobile && activeMobileTab === 'details')) ? 'hidden md:flex' : 'flex'}
       `}>
         {/* Search Header */}
         <div className="h-20 flex items-center px-6 border-b border-gray-100 flex-shrink-0">
