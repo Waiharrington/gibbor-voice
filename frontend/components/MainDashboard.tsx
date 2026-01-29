@@ -235,6 +235,7 @@ export default function MainDashboard() {
   const router = useRouter();
   const [device, setDevice] = useState<Device | null>(null);
   const [token, setToken] = useState<string | null>(null);
+  const [tokenFetchedAt, setTokenFetchedAt] = useState<number>(0); // Track token age
   const [activeCall, setActiveCall] = useState<any>(null);
   const [isMuted, setIsMuted] = useState(false);
   const [callStatus, setCallStatus] = useState<string>('Idle');
@@ -541,6 +542,7 @@ export default function MainDashboard() {
         if (!tokenRes.ok) throw new Error('Failed to fetch token');
         const tokenData = await tokenRes.json();
         setToken(tokenData.token);
+        setTokenFetchedAt(Date.now()); // Set timestamp
         setIdentity(tokenData.identity);
 
         // 2. Get History (Filtered by User)
@@ -734,9 +736,36 @@ export default function MainDashboard() {
       }
     }, 10000); // Relaxed to 10s to avoid race conditions
 
-    // 2. Window Focus Re-check
-    const handleFocus = () => {
-      console.log("👀 Window Focused - Checking Connection...");
+    // 2. Window Focus Re-check & Token Refresh
+    const handleFocus = async () => {
+      console.log("👀 Window Focused - Checking Connection & Token...");
+
+      // A. Proactive Token Refresh (If > 45 mins old)
+      if (tokenFetchedAt > 0) {
+        const tokenAgeMinutes = (Date.now() - tokenFetchedAt) / 1000 / 60;
+        console.log(`Token Age: ${tokenAgeMinutes.toFixed(1)} mins`);
+
+        if (tokenAgeMinutes > 45) {
+          console.log("⚠️ Token is stale (>45 mins). Refreshing IMMEDIATELY...");
+          try {
+            // Re-fetch token logic
+            const idParam = user?.email ? `?identity=${encodeURIComponent(user.email)}` : '';
+            const res = await fetch(`${API_BASE_URL}/token${idParam}`);
+            if (res.ok) {
+              const data = await res.json();
+              if (device) {
+                device.updateToken(data.token);
+                console.log('✅ Token refreshed proactively on focus.');
+              }
+              setToken(data.token);
+              setTokenFetchedAt(Date.now());
+            }
+          } catch (e) {
+            console.error("Failed to refresh token on focus:", e);
+          }
+        }
+      }
+
       const state = (device as any)?.state;
       // ONLY Re-register if TRULY disconnected. 
       // Do NOT interrupt if state is "Incoming", "Busy", or transitioning.
@@ -744,7 +773,10 @@ export default function MainDashboard() {
         console.log("⚠️ Found dead connection on focus. Re-registering...");
         setCallStatus('Reconnecting...');
         setIsDeviceReady(false);
-        device.register();
+        // If token was just refreshed above, this register will use the old device instance 
+        // but arguably updateToken should have handled it. If destroyed, we might need a full re-init 
+        // but 'token' state change triggers re-init in that other useEffect.
+        if (device.state !== 'destroyed') device.register();
       } else {
         console.log(`✅ Connection OK on focus (State: ${state})`);
       }
@@ -756,7 +788,7 @@ export default function MainDashboard() {
       clearInterval(heartbeatInterval);
       window.removeEventListener('focus', handleFocus);
     };
-  }, [device, isDeviceReady]);
+  }, [device, isDeviceReady, tokenFetchedAt, user?.email]); // Added dependencies
 
   const [duration, setDuration] = useState(0);
 
