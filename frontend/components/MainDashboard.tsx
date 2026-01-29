@@ -860,10 +860,52 @@ export default function MainDashboard() {
         throw new Error("Device is destroyed. Please refresh the page.");
       }
 
+
+      // PRE-FLIGHT CHECK: Token Age
+      // If token is > 30 mins old, force refresh BEFORE dialing.
+      if (tokenFetchedAt > 0) {
+        const tokenAgeMinutes = (Date.now() - tokenFetchedAt) / 1000 / 60;
+        console.log(`[Pre-Flight] Token Age: ${tokenAgeMinutes.toFixed(1)} mins`);
+
+        if (tokenAgeMinutes > 30) {
+          console.log("⚠️ Token stale (>30m). Forcing refresh before call...");
+          setCallStatus('Refreshing Security Token...');
+          try {
+            const idParam = user?.email ? `?identity=${encodeURIComponent(user.email)}` : '';
+            const res = await fetch(`${API_BASE_URL}/token${idParam}`);
+            if (!res.ok) throw new Error("Token refresh failed");
+            const data = await res.json();
+
+            // Update Device
+            device.updateToken(data.token);
+            setToken(data.token);
+            setTokenFetchedAt(Date.now());
+            console.log("✅ Token Security Refreshed. Proceeding to dial...");
+            // Small delay to let socket reconnect if needed
+            await new Promise(r => setTimeout(r, 500));
+          } catch (e) {
+            console.error("Pre-flight token refresh failed", e);
+            alert("Security Refresh Failed. Please reload the page.");
+            return;
+          }
+        }
+      }
+
       // START RINGBACK TONE
       startRingback();
 
-      const call = await device.connect({ params });
+      let call;
+      try {
+        call = await device.connect({ params });
+      } catch (connErr: any) {
+        console.error("Device Connect Error:", connErr);
+        stopRingback();
+        if (connErr.code === 31005 || connErr.code === 31000 || connErr.code === 31009) {
+          alert("Connection Error (31005): System lost connection to voice server.\n\nClick 'Reset Connection' or Reload the page.");
+          setCallStatus("Connection Lost");
+        }
+        throw connErr;
+      }
 
       setCallStatus('Dialing...'); // Immediate UI update
       // Set active call immediately to show UI controls (including Keypad)
@@ -1298,9 +1340,21 @@ export default function MainDashboard() {
             {isSidebarExpanded && (
               <div className="ml-3 overflow-hidden">
                 <p className="text-sm font-bold text-gray-700 truncate">{user?.email || 'Guest'}</p>
-                <p className="text-xs text-green-600 flex items-center">
+                <p className="text-xs text-green-600 flex items-center mb-1">
                   <span className="w-2 h-2 rounded-full bg-green-500 mr-1"></span> Online
                 </p>
+                {/* MANUAL RESET BUTTON */}
+                <button
+                  onClick={() => {
+                    setCallStatus("Resetting...");
+                    if (device) device.disconnectAll();
+                    // Trigger a re-fetch of token effectively by reloading or clearing device
+                    window.location.reload();
+                  }}
+                  className="text-[10px] bg-gray-200 hover:bg-gray-300 text-gray-700 px-2 py-0.5 rounded border border-gray-300 transition-colors"
+                >
+                  Reset Connection
+                </button>
               </div>
             )}
             {!isSidebarExpanded && (
