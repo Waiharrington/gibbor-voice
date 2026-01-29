@@ -8,7 +8,7 @@ import Dialpad from '@/components/Dialpad';
 import MessagesPanel from '@/components/MessagesPanel';
 import CampaignManager from '@/components/CampaignManager';
 import { Device } from '@twilio/voice-sdk';
-import { Phone, PhoneOff, Mic, MicOff, Search, ArrowUpRight, ArrowDownLeft, MoreVertical, Download, MessageSquare, Copy, MapPin, Building, Info, FileText, Send, Clock, X, Activity, Menu, BarChart3, Plus } from 'lucide-react';
+import { Phone, PhoneOff, Mic, MicOff, Search, ArrowUpRight, ArrowDownLeft, MoreVertical, Download, MessageSquare, Copy, MapPin, Building, Info, FileText, Send, Clock, X, Activity, Menu, BarChart3, Plus, LogOut, Shield } from 'lucide-react';
 import { format } from 'date-fns';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '@/utils/supabaseClient';
@@ -1222,10 +1222,35 @@ export default function MainDashboard() {
               expanded={isSidebarExpanded}
             />
           )}
+          {userRole === 'admin' && (
+            <NavIcon
+              icon={<Shield className="w-6 h-6" />}
+              label="Admin Panel"
+              active={false}
+              onClick={() => window.location.href = '/admin'}
+              expanded={isSidebarExpanded}
+            />
+          )}
         </nav>
 
         {/* User & Status Dot */}
         <div className={`flex flex-col gap-4 pb-4 items-center ${isSidebarExpanded ? 'px-4 w-full' : ''}`}>
+
+          {/* Logout Button */}
+          <button
+            onClick={() => {
+              if (confirm('Are you sure you want to logout?')) {
+                // Implement actual logout logic here (e.g., signOut() or clear cookies)
+                window.location.href = '/login';
+              }
+            }}
+            className={`flex items-center justify-center rounded-lg transition-colors text-red-400 hover:text-red-500 hover:bg-red-50 ${isSidebarExpanded ? 'w-full py-2 mb-2' : 'w-10 h-10 mb-2'}`}
+            title="Logout"
+          >
+            <LogOut className="w-5 h-5" />
+            {isSidebarExpanded && <span className="ml-2 text-sm font-bold">Logout</span>}
+          </button>
+
           <div className="relative group cursor-pointer flex items-center" title={isDeviceReady ? "Online" : "Disconnected"}>
             <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-bold transition-all shadow-sm shrink-0 ${isDeviceReady ? 'bg-purple-600' : 'bg-gray-400'}`}>
               {user?.email?.[0].toUpperCase() || 'G'}
