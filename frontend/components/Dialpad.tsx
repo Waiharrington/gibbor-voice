@@ -33,7 +33,7 @@ export default function Dialpad({
                     value={number}
                     onChange={(e) => setNumber(e.target.value)}
                     className="w-full text-3xl text-center text-gray-800 bg-transparent outline-none font-normal tracking-wide"
-                    placeholder="Enter number"
+                    placeholder="Ingresar número"
                 />
                 {number && (
                     <button

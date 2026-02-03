@@ -238,7 +238,7 @@ export default function MainDashboard() {
   const [tokenFetchedAt, setTokenFetchedAt] = useState<number>(0); // Track token age
   const [activeCall, setActiveCall] = useState<any>(null);
   const [isMuted, setIsMuted] = useState(false);
-  const [callStatus, setCallStatus] = useState<string>('Idle');
+  const [callStatus, setCallStatus] = useState<string>('Inactivo');
   const [identity, setIdentity] = useState<string>('');
 
   // History State
@@ -641,7 +641,7 @@ export default function MainDashboard() {
 
     newDevice.on('registered', () => {
       console.log('Twilio Device Registered');
-      setCallStatus('Ready');
+      setCallStatus('Disponible');
       setIsDeviceReady(true);
     });
 
@@ -650,8 +650,8 @@ export default function MainDashboard() {
 
       let msg = error.message;
       if (error.code === 31009 || error.code === 31000 || error.code === 31005) {
-        msg = "Network blocked. Please disable VPN/Firewall and refresh.";
-        alert("CRITICAL NETWORK ERROR: Your internet connection is blocking calls. \n\n1. Disable any VPN/Firewall.\n2. Connect to a different WiFi/Hotspot if possible.\n3. Refresh the page.");
+        msg = "Red bloqueada. Por favor deshabilite VPN/Firewall y refresque.";
+        alert("ERROR CRÍTICO DE RED: Su conexión a internet está bloqueando llamadas. \n\n1. Desactive cualquier VPN/Firewall.\n2. Conéctese a otra red WiFi si es posible.\n3. Recargue la página.");
       }
 
       setCallStatus('Error: ' + msg);
@@ -662,24 +662,24 @@ export default function MainDashboard() {
       console.log("Incoming call from:", call.parameters.From);
       stopRingback(); // Ensure no outgoing ringback is playing
 
-      setCallStatus('Incoming Call...');
+      setCallStatus('Llamada Entrante...');
       setActiveCall(call);
 
       // Play Incoming Ringtone? (Optional, maybe later)
 
       call.on('accept', () => {
-        setCallStatus('In Call');
+        setCallStatus('En Llamada');
         setActiveCall(call);
       });
 
       call.on('disconnect', () => {
         setActiveCall(null);
-        setCallStatus('Ready');
+        setCallStatus('Disponible');
       });
 
       call.on('cancel', () => {
         setActiveCall(null);
-        setCallStatus('Ready');
+        setCallStatus('Disponible');
       });
 
       call.on('error', (e: any) => {
@@ -725,7 +725,7 @@ export default function MainDashboard() {
       const state = (device as any)?.state; // Twilio Device State
       if (state === 'Unregistered' || state === 'Destroyed' || !device.token) {
         console.warn('⚠️ Heartbeat: Device disconnected. Updating UI.');
-        setCallStatus('Disconnected (Click Refresh)');
+        setCallStatus('Desconectado (Recargar)');
         setIsDeviceReady(false);
       } else if (state === 'Registered') {
         const currentMs = Date.now();
@@ -733,7 +733,7 @@ export default function MainDashboard() {
         if (!isDeviceReady) {
           console.log("🟢 Connection Restored!");
           setIsDeviceReady(true);
-          setCallStatus('Ready');
+          setCallStatus('Disponible');
           // AUDIO
           try {
             const u = new SpeechSynthesisUtterance("Sistema conectado");
@@ -779,7 +779,7 @@ export default function MainDashboard() {
       // Do NOT interrupt if state is "Incoming", "Busy", or transitioning.
       if (state === 'Unregistered' || state === 'Destroyed') {
         console.log("⚠️ Found dead connection on focus. Re-registering...");
-        setCallStatus('Reconnecting...');
+        setCallStatus('Reconectando...');
         setIsDeviceReady(false);
         // If token was just refreshed above, this register will use the old device instance 
         // but arguably updateToken should have handled it. If destroyed, we might need a full re-init 
@@ -823,11 +823,11 @@ export default function MainDashboard() {
 
   const handleCall = async (number: string, callerId?: string) => {
     if (!device) {
-      alert("Phone is initializing... Please wait 3 seconds.");
+      alert("El teléfono se está iniciando... Espere 3 segundos.");
       return;
     }
     if (!isDeviceReady) {
-      alert("Phone connecting... Please wait for 'Ready' status.");
+      alert("Teléfono conectando... Espere a que esté 'Disponible'.");
       return;
     }
 
@@ -835,13 +835,13 @@ export default function MainDashboard() {
     try {
       await navigator.mediaDevices.getUserMedia({ audio: true });
     } catch (e) {
-      alert("Microphone Error: Please allow microphone access in your browser settings.");
+      alert("Error de Micrófono: Por favor permita el acceso en la configuración del navegador.");
       return;
     }
 
     setDialedNumber(number); // Store for display
     try {
-      setCallStatus('Calling ' + number + '...');
+      setCallStatus('Llamando a ' + number + '...');
       // IMPORTANT: Explicitly cast to any to allow custom params
       const params: any = { To: number };
 
@@ -857,7 +857,7 @@ export default function MainDashboard() {
       console.log("[Client] Connecting with params:", params);
 
       if (device.state === 'destroyed') {
-        throw new Error("Device is destroyed. Please refresh the page.");
+        throw new Error("Dispositivo destruido. Por favor recargue la página.");
       }
 
 
@@ -869,7 +869,7 @@ export default function MainDashboard() {
 
         if (tokenAgeMinutes > 30) {
           console.log("⚠️ Token stale (>30m). Forcing refresh before call...");
-          setCallStatus('Refreshing Security Token...');
+          setCallStatus('Renovando Token de Seguridad...');
           try {
             const idParam = user?.email ? `?identity=${encodeURIComponent(user.email)}` : '';
             const res = await fetch(`${API_BASE_URL}/token${idParam}`);
@@ -885,7 +885,7 @@ export default function MainDashboard() {
             await new Promise(r => setTimeout(r, 500));
           } catch (e) {
             console.error("Pre-flight token refresh failed", e);
-            alert("Security Refresh Failed. Please reload the page.");
+            alert("Falló la renovación de seguridad. Por favor recargue la página.");
             return;
           }
         }
@@ -901,25 +901,25 @@ export default function MainDashboard() {
         console.error("Device Connect Error:", connErr);
         stopRingback();
         if (connErr.code === 31005 || connErr.code === 31000 || connErr.code === 31009) {
-          alert("Connection Error (31005): System lost connection to voice server.\n\nClick 'Reset Connection' or Reload the page.");
-          setCallStatus("Connection Lost");
+          alert("Error de Conexión (31005): Se perdió conexión con el servidor.\n\nHaga clic en 'Reiniciar Conexión' o recargue la página.");
+          setCallStatus("Conexión Perdida");
         }
         throw connErr;
       }
 
-      setCallStatus('Dialing...'); // Immediate UI update
+      setCallStatus('Marcando...'); // Immediate UI update
       // Set active call immediately to show UI controls (including Keypad)
       setActiveCall(call);
 
       call.on('accept', () => {
         stopRingback(); // STOP RINGBACK
-        setCallStatus('In Call');
+        setCallStatus('En Llamada');
         setActiveCall(call); // Re-set to ensure state persistence
       });
 
       call.on('disconnect', () => {
         stopRingback(); // STOP RINGBACK
-        setCallStatus('Ready');
+        setCallStatus('Disponible');
         setActiveCall(null);
         setIsMuted(false);
         setDialedNumber('');
@@ -928,7 +928,7 @@ export default function MainDashboard() {
 
       call.on('cancel', () => {
         stopRingback(); // STOP RINGBACK
-        setCallStatus('Ready');
+        setCallStatus('Disponible');
         setActiveCall(null);
         setDialedNumber('');
       });
@@ -945,12 +945,12 @@ export default function MainDashboard() {
       stopRingback(); // STOP RINGBACK
       console.error('Error making call:', error);
       if (error.name === 'NotAllowedError' || error.message?.includes('Permission denied') || error.code === 31208) {
-        setCallStatus('Mic Access Denied');
-        alert("Please allow microphone access in your browser settings to make calls.");
+        setCallStatus('Acceso Micrófono Denegado');
+        alert("Por favor permita el acceso al micrófono para realizar llamadas.");
       } else {
         const errMsg = error.message || 'Unknown Connection Error';
         setCallStatus(`Error: ${errMsg}`);
-        alert(`Call failed: ${errMsg}`); // Also alert for visibility
+        alert(`Llamada fallida: ${errMsg}`); // Also alert for visibility
       }
     }
   };
@@ -989,7 +989,7 @@ export default function MainDashboard() {
       }
     }
 
-    setCallStatus('Ready');
+    setCallStatus('Disponible');
     setActiveCall(null);
     setDialedNumber('');
     setIsMuted(false);
@@ -1052,9 +1052,9 @@ export default function MainDashboard() {
     // Debug: Check if 'Incom' exists or starts with 'Inc'
     const isIncoming = (activeCall && (activeCall.status() === 'ringing' || activeCall.status() === 'pending')) ||
       (callStatus && (
-        callStatus.toLowerCase().includes('incoming') ||
-        callStatus.toLowerCase().includes('ncoming') ||
-        callStatus.startsWith('Inc')
+        callStatus.toLowerCase().includes('entrante') ||
+        callStatus.toLowerCase().includes('llamada') ||
+        callStatus.startsWith('Llamada')
       ));
 
     if (isIncoming) {
@@ -1064,9 +1064,9 @@ export default function MainDashboard() {
             <div className="animate-bounce inline-flex p-3 rounded-full bg-blue-100 text-blue-600 mb-2">
               <Phone className="w-8 h-8" />
             </div>
-            <h3 className="text-lg font-bold text-gray-900">INCOMING CALL (v4.0)</h3>
+            <h3 className="text-lg font-bold text-gray-900">LLAMADA ENTRANTE</h3>
             <p className="text-xl font-mono text-gray-700 mt-1 font-semibold">
-              {activeCall?.parameters?.From || 'Incoming Call'}
+              {activeCall?.parameters?.From || 'Llamada Entrante'}
             </p>
           </div>
 
@@ -1076,14 +1076,14 @@ export default function MainDashboard() {
                 console.log("Answering from v4.0 UI");
                 if (activeCall) {
                   activeCall.accept();
-                  setCallStatus('In Call');
+                  setCallStatus('En Llamada');
                 } else {
                   // Rescue
                   const conn = (device as any)?.connections?.[0];
                   if (conn) {
                     conn.accept();
                     setActiveCall(conn);
-                    setCallStatus('In Call');
+                    setCallStatus('En Llamada');
                   } else {
                     alert("No Connection Found in Device Object");
                   }
@@ -1092,7 +1092,7 @@ export default function MainDashboard() {
               className="flex flex-col items-center justify-center h-20 rounded-2xl bg-green-500 text-white shadow-lg hover:bg-green-600 transition-all hover:-translate-y-1 active:scale-95"
             >
               <Phone className="w-8 h-8 mb-1" />
-              <span className="text-xs font-bold uppercase tracking-wider">Answer</span>
+              <span className="text-xs font-bold uppercase tracking-wider">Contestar</span>
             </button>
 
             <button
@@ -1100,12 +1100,12 @@ export default function MainDashboard() {
                 if (activeCall) activeCall.reject();
                 else device?.disconnectAll();
                 setActiveCall(null);
-                setCallStatus('Ready');
+                setCallStatus('Disponible');
               }}
               className="flex flex-col items-center justify-center h-20 rounded-2xl bg-red-500 text-white shadow-lg hover:bg-red-600 transition-all hover:-translate-y-1 active:scale-95"
             >
               <PhoneOff className="w-8 h-8 mb-1" />
-              <span className="text-xs font-bold uppercase tracking-wider">Decline</span>
+              <span className="text-xs font-bold uppercase tracking-wider">Rechazar</span>
             </button>
           </div>
         </div>
@@ -1116,7 +1116,7 @@ export default function MainDashboard() {
     // (Already covered by OR clause above, but let's be double sure to avoid fallthrough)
 
     // 3. Active Call / Busy State
-    if (activeCall || (callStatus !== 'Ready' && !callStatus.includes('Error'))) {
+    if (activeCall || (callStatus !== 'Disponible' && !callStatus.includes('Error'))) {
       return (
         <div className="w-full flex flex-col items-center space-y-4 animate-in fade-in slide-in-from-top-4 duration-300">
           <div className="text-center">
@@ -1219,7 +1219,7 @@ export default function MainDashboard() {
               <div className={`w-2 h-2 rounded-full ${isDeviceReady ? 'bg-green-400 animate-pulse' : 'bg-red-500'}`} />
               <span className="text-[10px] font-mono font-bold">{isDeviceReady ? 'ONLINE' : 'OFFLINE'}</span>
             </div>
-            <span className="text-[10px] font-mono opacity-80 self-center mr-2">Status: {callStatus} | Device: {device ? 'OK' : 'NO'}</span>
+            <span className="text-[10px] font-mono opacity-80 self-center mr-2">Estado: {callStatus} | Disp: {device ? 'OK' : 'NO'}</span>
 
             {/* NEW: Switch Identity Button */}
             <button
@@ -1321,16 +1321,16 @@ export default function MainDashboard() {
           {/* Logout Button */}
           <button
             onClick={() => {
-              if (confirm('Are you sure you want to logout?')) {
+              if (confirm('¿Estás seguro de que quieres cerrar sesión?')) {
                 // Implement actual logout logic here (e.g., signOut() or clear cookies)
                 window.location.href = '/login';
               }
             }}
             className={`flex items-center justify-center rounded-lg transition-colors text-red-400 hover:text-red-500 hover:bg-red-50 ${isSidebarExpanded ? 'w-full py-2 mb-2' : 'w-10 h-10 mb-2'}`}
-            title="Logout"
+            title="Cerrar Sesión"
           >
             <LogOut className="w-5 h-5" />
-            {isSidebarExpanded && <span className="ml-2 text-sm font-bold">Logout</span>}
+            {isSidebarExpanded && <span className="ml-2 text-sm font-bold">Cerrar Sesión</span>}
           </button>
 
           <div className="relative group cursor-pointer flex items-center" title={isDeviceReady ? "Online" : "Disconnected"}>
@@ -1339,21 +1339,21 @@ export default function MainDashboard() {
             </div>
             {isSidebarExpanded && (
               <div className="ml-3 overflow-hidden">
-                <p className="text-sm font-bold text-gray-700 truncate">{user?.email || 'Guest'}</p>
+                <p className="text-sm font-bold text-gray-700 truncate">{user?.email || 'Invitado'}</p>
                 <p className="text-xs text-green-600 flex items-center mb-1">
-                  <span className="w-2 h-2 rounded-full bg-green-500 mr-1"></span> Online
+                  <span className="w-2 h-2 rounded-full bg-green-500 mr-1"></span> En Línea
                 </p>
                 {/* MANUAL RESET BUTTON */}
                 <button
                   onClick={() => {
-                    setCallStatus("Resetting...");
+                    setCallStatus("Reiniciando...");
                     if (device) device.disconnectAll();
                     // Trigger a re-fetch of token effectively by reloading or clearing device
                     window.location.reload();
                   }}
                   className="text-[10px] bg-gray-200 hover:bg-gray-300 text-gray-700 px-2 py-0.5 rounded border border-gray-300 transition-colors"
                 >
-                  Reset Connection
+                  Reiniciar Conexión
                 </button>
               </div>
             )}
@@ -1392,13 +1392,13 @@ export default function MainDashboard() {
               {isLoading ? (
                 <div className="flex items-center justify-center h-48 text-gray-400">
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-cyan-500 mr-2"></div>
-                  Loading...
+                  Cargando...
                 </div>
               ) : error ? (
                 <div className="p-6 text-center text-red-500 bg-red-50 m-4 rounded-lg text-sm">
-                  <p className="font-semibold">Connection Error</p>
+                  <p className="font-semibold">Error de Conexión</p>
                   <p>{error}</p>
-                  <button onClick={() => window.location.reload()} className="mt-2 text-red-700 underline">Retry</button>
+                  <button onClick={() => window.location.reload()} className="mt-2 text-red-700 underline">Reintentar</button>
                 </div>
               ) : (
                 calls.map((call, index) => (
@@ -1443,7 +1443,7 @@ export default function MainDashboard() {
                         ) : (
                           <ArrowDownLeft className="w-3 h-3 mr-1.5 text-purple-500" />
                         )}
-                        <span className="truncate">{call.direction === 'inbound' ? 'Incoming' : 'Outgoing'} • {call.duration || 0}s</span>
+                        <span className="truncate">{call.direction === 'inbound' ? 'Entrante' : 'Saliente'} • {call.duration || 0}s</span>
                       </div>
                     </div>
                   </motion.div>
@@ -1487,8 +1487,8 @@ export default function MainDashboard() {
                       </span>
                     </div>
                     <p className={`text-xs truncate ${initialConvId === conv.id ? 'text-gray-700' : 'text-gray-500'}`}>
-                      {conv.lastMessage.direction === 'outbound' ? 'You: ' : ''}
-                      {conv.lastMessage.media_url ? '📷 Image' : conv.lastMessage.body}
+                      {conv.lastMessage.direction === 'outbound' ? 'Tú: ' : ''}
+                      {conv.lastMessage.media_url ? '📷 Imagen' : conv.lastMessage.body}
                     </p>
                   </div>
                 </motion.div>
@@ -1499,7 +1499,7 @@ export default function MainDashboard() {
                   <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
                     <MessageSquare className="w-8 h-8 text-gray-300" />
                   </div>
-                  <p className="text-gray-500 text-sm">No messages yet</p>
+                  <p className="text-gray-500 text-sm">No hay mensajes aún</p>
                 </div>
               )}
             </div>
@@ -1628,7 +1628,7 @@ export default function MainDashboard() {
                       <button
                         onClick={() => handleGoToMessage(selectedCall.direction === 'outbound' ? selectedCall.to : selectedCall.from)}
                         className="p-2 hover:bg-gray-100 rounded-full text-gray-500 hover:text-cyan-600 transition-colors"
-                        title="Message"
+                        title="Mensaje"
                         aria-label="Message"
                       >
                         <MessageSquare className="w-5 h-5" />
@@ -1636,7 +1636,7 @@ export default function MainDashboard() {
                       <button
                         onClick={() => handleCall(selectedCall.direction === 'outbound' ? selectedCall.to : selectedCall.from, selectedCallerId)}
                         className="p-2 hover:bg-gray-100 rounded-full text-gray-500 hover:text-green-600 transition-colors"
-                        title="Call"
+                        title="Llamar"
                         aria-label="Call"
                       >
                         <Phone className="w-5 h-5" />
@@ -1645,7 +1645,7 @@ export default function MainDashboard() {
                       {/* More Menu */}
                       <button
                         className="p-2 hover:bg-gray-100 rounded-full text-gray-500"
-                        title="More options"
+                        title="Más opciones"
                         aria-label="More options"
                       >
                         <MoreVertical className="w-5 h-5" />
@@ -1657,14 +1657,14 @@ export default function MainDashboard() {
                     {/* Status Card */}
                     <div className="bg-gray-50 rounded-2xl p-6 border border-gray-100 flex items-center justify-between">
                       <div>
-                        <p className="text-sm text-gray-500 mb-1">Status</p>
+                        <p className="text-sm text-gray-500 mb-1">Estado</p>
                         <div className="flex items-center gap-2">
                           <span className={`inline-block w-2.5 h-2.5 rounded-full ${selectedCall.status === 'completed' ? 'bg-green-500' : 'bg-gray-400'}`}></span>
                           <span className="font-medium text-gray-900 capitalize">{selectedCall.status}</span>
                         </div>
                       </div>
                       <div className="text-right">
-                        <p className="text-sm text-gray-500 mb-1">Duration</p>
+                        <p className="text-sm text-gray-500 mb-1">Duración</p>
                         <span className="font-medium text-gray-900">{selectedCall.duration || 0}s</span>
                       </div>
                     </div>
@@ -1676,19 +1676,19 @@ export default function MainDashboard() {
                           <div className="p-2 bg-indigo-50 text-indigo-600 rounded-lg">
                             <Mic className="w-5 h-5" />
                           </div>
-                          <h3 className="font-medium text-gray-900">Call Recording</h3>
+                          <h3 className="font-medium text-gray-900">Grabación de Llamada</h3>
                         </div>
                         <AudioPlayer src={selectedCall.recording_url} />
                         <div className="mt-4 flex justify-end">
                           <a href={selectedCall.recording_url} download target="_blank" rel="noreferrer" className="text-sm text-indigo-600 hover:text-indigo-700 flex items-center gap-1 font-medium">
-                            <Download className="w-4 h-4" /> Download
+                            <Download className="w-4 h-4" /> Descargar
                           </a>
                         </div>
                       </div>
                     ) : (
                       <div className="bg-gray-50 rounded-xl p-8 border border-gray-100 border-dashed text-center text-gray-400">
                         <MicOff className="w-8 h-8 mx-auto mb-2 opacity-50" />
-                        No recording available for this call.
+                        No hay grabación disponible para esta llamada.
                       </div>
                     )}
 
@@ -1697,7 +1697,7 @@ export default function MainDashboard() {
                       <div className="p-4 rounded-xl border border-gray-100 bg-white">
                         <div className="flex items-center gap-2 text-gray-500 mb-1">
                           <Clock className="w-4 h-4" />
-                          <span className="text-xs font-medium uppercase tracking-wide">Time</span>
+                          <span className="text-xs font-medium uppercase tracking-wide">Hora</span>
                         </div>
                         <p className="font-medium text-gray-900">
                           {selectedCall.created_at ? format(new Date(selectedCall.created_at), 'PP p') : '-'}
@@ -1706,7 +1706,7 @@ export default function MainDashboard() {
                       <div className="p-4 rounded-xl border border-gray-100 bg-white">
                         <div className="flex items-center gap-2 text-gray-500 mb-1">
                           <MapPin className="w-4 h-4" />
-                          <span className="text-xs font-medium uppercase tracking-wide">Location</span>
+                          <span className="text-xs font-medium uppercase tracking-wide">Ubicación</span>
                         </div>
                         <p className="font-medium text-gray-900">
                           {selectedCall.to_city || '-'}, {selectedCall.to_state || '-'}
@@ -1720,7 +1720,7 @@ export default function MainDashboard() {
                   <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
                     <Phone className="w-8 h-8 text-gray-300" />
                   </div>
-                  <p>Select a call to view details</p>
+                  <p>Selecciona una llamada para ver detalles</p>
                 </div>
               )}
             </div>
@@ -1769,7 +1769,7 @@ export default function MainDashboard() {
 
           {/* PROMINENT CONNECTION STATUS BAR */}
           <div className={`w-full py-1 text-center text-[10px] font-bold tracking-wider text-white transition-colors duration-500 shrink-0 ${isDeviceReady ? 'bg-emerald-500' : 'bg-rose-500 animate-pulse'}`}>
-            {isDeviceReady ? '● SISTEMA ONLINE' : '○ DESCONECTADO - RECONECTANDO...'}
+            {isDeviceReady ? '● SISTEMA EN LÍNEA' : '○ DESCONECTADO - RECONECTANDO...'}
           </div>
 
           <div className="flex-1 p-2 flex flex-col justify-center max-w-sm mx-auto w-full overflow-y-auto min-h-0">
@@ -1798,7 +1798,7 @@ export default function MainDashboard() {
                   🔄 Forzar Recarga
                 </button>
               </div>
-            ) : (activeCall || (callStatus !== 'Ready' && callStatus !== 'Incoming Call...' && !callStatus.includes('Error'))) ? (
+            ) : (activeCall || (callStatus !== 'Disponible' && callStatus !== 'Llamada Entrante...' && !callStatus.includes('Error'))) ? (
               <div className="w-full flex flex-col items-center space-y-4 animate-in fade-in slide-in-from-top-4 duration-300">
                 <div className="text-center">
                   <span className="inline-flex h-3 w-3 relative">
@@ -1811,7 +1811,7 @@ export default function MainDashboard() {
 
                 <div className="grid grid-cols-3 gap-3 w-full">
                   {/* SUPER FAILSAFE V2: Explicit Check */}
-                  {(callStatus?.toLowerCase().includes('incoming') || callStatus?.startsWith('Incoming')) && (
+                  {(callStatus?.toLowerCase().includes('entrante') || callStatus?.startsWith('Llamada')) && (
                     <button
                       onClick={() => {
                         if (activeCall) activeCall.accept();
@@ -1824,7 +1824,7 @@ export default function MainDashboard() {
                       className="col-span-3 mb-2 bg-green-500 hover:bg-green-600 text-white font-bold py-4 rounded-xl animate-pulse shadow-lg flex items-center justify-center gap-2 border-2 border-green-400 z-50 order-first"
                       style={{ minHeight: '60px' }}
                     >
-                      <Phone className="w-6 h-6 animate-bounce" /> ANSWER INCOMING CALL
+                      <Phone className="w-6 h-6 animate-bounce" /> CONTESTAR LLAMADA ENTRANTE
                     </button>
                   )}
 
@@ -1858,13 +1858,12 @@ export default function MainDashboard() {
               </div>
             ) : (
               <>
-                {/* Status Indicator (Only for Idle) */}
                 <div className="mb-8 text-center flex items-center justify-center gap-2 relative">
-                  <div className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${callStatus === 'Ready' ? 'bg-green-100 text-green-700' :
+                  <div className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${callStatus === 'Disponible' ? 'bg-green-100 text-green-700' :
                     callStatus.includes('Error') ? 'bg-red-100 text-red-700' :
                       'bg-blue-100 text-blue-700'
                     }`}>
-                    <div className={`w-2 h-2 rounded-full mr-2 ${callStatus === 'Ready' ? 'bg-green-500' :
+                    <div className={`w-2 h-2 rounded-full mr-2 ${callStatus === 'Disponible' ? 'bg-green-500' :
                       callStatus.includes('Error') ? 'bg-red-500' :
                         'bg-blue-500 animate-pulse'
                       }`} />
@@ -1881,7 +1880,7 @@ export default function MainDashboard() {
                 {availableNumbers.length > 0 && (
                   <div className="mb-4">
                     <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1.5 ml-1">
-                      Call From:
+                      Llamar Desde:
                     </label>
                     <select
                       className="w-full bg-white border border-gray-300 text-gray-700 py-2 px-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent text-sm shadow-sm"
@@ -1909,7 +1908,7 @@ export default function MainDashboard() {
               title="Verify microphone and speakers"
             >
               <Activity className="w-4 h-4 mr-2" />
-              Test Audio
+              Prueba de Audio
             </button>
           </div>
         </div>
@@ -1922,8 +1921,8 @@ export default function MainDashboard() {
           !currentLead ? (
             <div className="flex-1 flex items-center justify-center bg-gray-50 flex-col">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-cyan-500 mb-4"></div>
-              <p className="text-gray-500 font-medium">Fetching next lead...</p>
-              <button onClick={() => setDialerMode(false)} className="mt-8 text-red-400 hover:text-red-500 text-sm">Cancel</button>
+              <p className="text-gray-500 font-medium">Buscando siguiente lead...</p>
+              <button onClick={() => setDialerMode(false)} className="mt-8 text-red-400 hover:text-red-500 text-sm">Cancelar</button>
             </div>
           ) : (
             <div className="flex-1 flex bg-gray-50">
@@ -1941,7 +1940,7 @@ export default function MainDashboard() {
                     </div>
                     <div className="text-right">
                       <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-700 uppercase tracking-wide">
-                        Power Dialer Active v2.9
+                        Power Dialer Activo v2.9
                       </span>
                     </div>
                   </div>
@@ -1949,7 +1948,7 @@ export default function MainDashboard() {
                   {/* Grid Fields (Editable) - Single Row Layout */}
                   <div className="grid grid-cols-4 gap-4 mb-4">
                     <div className="col-span-1 space-y-1">
-                      <label className="text-xs font-bold text-black uppercase tracking-wider">Referred By</label>
+                      <label className="text-xs font-bold text-black uppercase tracking-wider">Referido Por</label>
                       <input
                         type="text"
                         className="w-full p-2 bg-gray-50 border border-gray-200 rounded-lg text-gray-800 font-medium focus:ring-1 focus:ring-cyan-500 focus:border-cyan-500 transition-all text-xs"
@@ -1958,7 +1957,7 @@ export default function MainDashboard() {
                       />
                     </div>
                     <div className="col-span-1 space-y-1">
-                      <label className="text-xs font-bold text-black uppercase tracking-wider">City</label>
+                      <label className="text-xs font-bold text-black uppercase tracking-wider">Ciudad</label>
                       <div className="relative">
                         <Building className="absolute left-2.5 top-2.5 w-3.5 h-3.5 text-gray-400" />
                         <input
@@ -1970,7 +1969,7 @@ export default function MainDashboard() {
                       </div>
                     </div>
                     <div className="col-span-2 space-y-1">
-                      <label className="text-xs font-bold text-black uppercase tracking-wider">Address</label>
+                      <label className="text-xs font-bold text-black uppercase tracking-wider">Dirección</label>
                       <div className="relative">
                         <MapPin className="absolute left-2.5 top-2.5 w-3.5 h-3.5 text-gray-400" />
                         <input
@@ -1986,7 +1985,7 @@ export default function MainDashboard() {
                   {/* Text Areas */}
                   <div className="space-y-4">
                     <div>
-                      <label className="text-xs font-bold text-black uppercase tracking-wider mb-1 block">General Info</label>
+                      <label className="text-xs font-bold text-black uppercase tracking-wider mb-1 block">Info General</label>
                       <textarea
                         rows={3}
                         className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-700 leading-relaxed focus:ring-1 focus:ring-cyan-500 focus:border-cyan-500 transition-all resize-none"
@@ -1996,7 +1995,7 @@ export default function MainDashboard() {
                     </div>
 
                     <div>
-                      <label className="text-xs font-bold text-black uppercase tracking-wider mb-1 block">Rep Observations</label>
+                      <label className="text-xs font-bold text-black uppercase tracking-wider mb-1 block">Observaciones del Rep</label>
                       <textarea
                         rows={2}
                         className="w-full p-3 bg-yellow-50 border border-yellow-100 rounded-xl text-gray-700 leading-relaxed focus:ring-1 focus:ring-yellow-400 focus:border-yellow-400 transition-all resize-none"
@@ -2007,7 +2006,7 @@ export default function MainDashboard() {
 
                     <div className="relative group">
                       <label className="text-xs font-bold text-black uppercase tracking-wider mb-1 block">
-                        TLMK Observations (History)
+                        Observaciones TLMK (Historial)
                       </label>
                       <div className="p-3 bg-blue-50 rounded-xl text-gray-700 text-sm leading-relaxed border border-blue-100 max-h-32 overflow-y-auto w-full">
                         {currentLead.tlmk_notes || 'No history'}
@@ -2017,18 +2016,18 @@ export default function MainDashboard() {
                     {/* NEW COMMENTS FIELD */}
                     <div>
                       <label className="text-xs font-bold text-black uppercase tracking-wider mb-1 block flex items-center justify-between">
-                        <span>Call Comments (Current)</span>
+                        <span>Comentarios de la Llamada (Actual)</span>
                         <button onClick={() => {
                           const noteInput = document.getElementById('current-call-notes') as HTMLTextAreaElement;
                           if (noteInput) handleCopy(noteInput.value);
-                        }} className="text-cyan-600 hover:text-cyan-700 text-xs font-bold flex items-center" title="Copy">
-                          <Copy className="w-3 h-3 mr-1" /> Copy
+                        }} className="text-cyan-600 hover:text-cyan-700 text-xs font-bold flex items-center" title="Copiar">
+                          <Copy className="w-3 h-3 mr-1" /> Copiar
                         </button>
                       </label>
                       <textarea
                         id="current-call-notes"
                         rows={4}
-                        placeholder="Write notes for this call..."
+                        placeholder="Escribe notas para esta llamada..."
                         className="w-full p-3 bg-white border border-gray-300 rounded-xl text-gray-900 leading-relaxed focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition-all shadow-sm resize-none"
                         value={currentLead.notes || ''}
                         onChange={(e) => setCurrentLead((prev: any) => ({ ...prev, notes: e.target.value }))}
@@ -2050,8 +2049,8 @@ export default function MainDashboard() {
                   {/* --- VICIDIAL STYLE MANUAL CONTROLS (ALWAYS VISIBLE) --- */}
                   <div className="w-full bg-gray-800 p-2 mb-4 rounded-lg flex items-center justify-between shadow-inner">
                     <div className="text-[10px] text-green-400 font-mono flex flex-col">
-                      <span>STATUS: {callStatus}</span>
-                      <span>DEV: {device ? 'READY' : 'NULL'}</span>
+                      <span>ESTADO: {callStatus}</span>
+                      <span>DISP: {device ? 'READY' : 'NULL'}</span>
                     </div>
                     <div className="flex space-x-2">
                       <button
@@ -2071,7 +2070,7 @@ export default function MainDashboard() {
                         }}
                         className="px-3 py-1 bg-green-700 hover:bg-green-600 text-white text-xs font-bold rounded border border-green-500 shadow-sm active:scale-95"
                       >
-                        FORCE ANSWER
+                        FORZAR RESPUESTA
                       </button>
                       <button
                         onClick={() => {
@@ -2081,7 +2080,7 @@ export default function MainDashboard() {
                         }}
                         className="px-3 py-1 bg-red-900 hover:bg-red-800 text-white text-xs font-bold rounded border border-red-700 shadow-sm active:scale-95"
                       >
-                        HANGUP ALL
+                        COLGAR TODO
                       </button>
                     </div>
                   </div>
@@ -2093,7 +2092,7 @@ export default function MainDashboard() {
 
                 {/* MIDDLE: Status List (Scrollable) */}
                 <div className="flex-1 overflow-y-auto p-3 bg-gray-50/50">
-                  <label className="text-xs font-bold text-gray-500 uppercase tracking-wider px-1 mb-2 block">Disposition (Multi-select)</label>
+                  <label className="text-xs font-bold text-gray-500 uppercase tracking-wider px-1 mb-2 block">Resultado (Selección múltiple)</label>
                   <div className="space-y-1.5">
                     {CALL_STATUSES.map(status => {
                       const isSelected = selectedStatuses.includes(status.id);
@@ -2126,15 +2125,15 @@ export default function MainDashboard() {
                 <div className="p-3 bg-white border-t border-gray-200 grid grid-cols-3 gap-2">
                   <button onClick={handleBackLead} className="flex flex-col items-center justify-center p-2 text-gray-500 hover:bg-gray-100 rounded-lg transition-colors">
                     <ArrowDownLeft className="w-4 h-4 mb-1 rotate-90" />
-                    <span className="text-[10px] uppercase font-bold tracking-wider">Back</span>
+                    <span className="text-[10px] uppercase font-bold tracking-wider">Atrás</span>
                   </button>
                   <button onClick={handleSkipLead} className="flex flex-col items-center justify-center p-2 text-gray-500 hover:bg-gray-100 rounded-lg transition-colors">
                     <ArrowDownLeft className="w-4 h-4 mb-1 rotate-[-90deg]" />
-                    <span className="text-[10px] uppercase font-bold tracking-wider">Skip</span>
+                    <span className="text-[10px] uppercase font-bold tracking-wider">Saltar</span>
                   </button>
                   <button onClick={handleNextLead} className="flex flex-col items-center justify-center p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors">
                     <ArrowDownLeft className="w-4 h-4 mb-1 rotate-[-135deg]" /> {/* Next Icon Proxy */}
-                    <span className="text-[10px] uppercase font-bold tracking-wider">Next</span>
+                    <span className="text-[10px] uppercase font-bold tracking-wider">Siguiente</span>
                   </button>
                 </div>
               </div>

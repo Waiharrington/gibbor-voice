@@ -18,16 +18,16 @@ export default function GlobalError({
                             <AlertTriangle className="h-12 w-12 text-red-500" />
                         </div>
                         <h2 className="mb-2 text-2xl font-bold">
-                            Critical System Error
+                            Error Crítico del Sistema
                         </h2>
                         <p className="mb-8 text-gray-300">
-                            The application encountered a critical error and cannot continue.
+                            La aplicación encontró un error crítico y no puede continuar.
                         </p>
                         <button
                             onClick={() => window.location.reload()}
                             className="rounded-lg bg-red-600 px-8 py-3 font-bold text-white transition-colors hover:bg-red-700"
                         >
-                            Restart System
+                            Reiniciar Sistema
                         </button>
                     </div>
                 </div>

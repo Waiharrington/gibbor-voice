@@ -22,10 +22,10 @@ export default function Error({
                     <AlertTriangle className="h-10 w-10 text-red-600" />
                 </div>
                 <h2 className="mb-2 text-2xl font-bold text-gray-900">
-                    Something went wrong in the dashboard
+                    Algo salió mal en el panel
                 </h2>
                 <p className="mb-8 text-gray-500">
-                    We encountered an unexpected error. This might be due to a connection issue or a temporary glitch.
+                    Encontramos un error inesperado. Esto puede deberse a un problema de conexión o un fallo temporal.
                 </p>
                 <div className="flex gap-4">
                     <button
@@ -33,14 +33,14 @@ export default function Error({
                         className="flex items-center gap-2 rounded-lg bg-gray-200 px-6 py-3 font-medium text-gray-800 transition-colors hover:bg-gray-300"
                     >
                         <RefreshCcw className="h-4 w-4" />
-                        Reload Page
+                        Recargar Página
                     </button>
 
                     <button
                         onClick={() => reset()} // Try to re-render the segment
                         className="rounded-lg bg-blue-600 px-6 py-3 font-medium text-white transition-colors hover:bg-blue-700"
                     >
-                        Try Again
+                        Reintentar
                     </button>
                 </div>
                 {error.digest && (
