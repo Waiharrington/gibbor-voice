@@ -45,6 +45,7 @@ app.get("/token", async (req, res) => {
         // Usamos una identidad fija para que las llamadas entrantes encuentren al usuario
         // Allow dynamic identity (e.g. for Admin monitoring), fallback to 'agent'
         const identity = req.query.identity || "agent";
+        console.log(`Generating Token for Identity: ${identity}`);
 
         const AccessToken = twilio.jwt.AccessToken;
         const VoiceGrant = AccessToken.VoiceGrant;
@@ -113,16 +114,16 @@ app.get("/phone-numbers", async (req, res) => {
                 // For now: Admin sees ALL, Agent sees ASSIGNED.
                 if (profile.role !== 'admin') {
                     const assigned = profile.assigned_caller_ids || [];
+                    console.log(`[UserId: ${userId}] Assigned numbers:`, assigned);
+
                     if (assigned.length > 0) {
-                        allNumbers = allNumbers.filter(n => assigned.includes(n.phoneNumber));
-                    } else {
-                        // If NO numbers assigned, maybe default to NONE or ALL? 
-                        // Let's default to ALL for backward compatibility until User starts assigning.
-                        // OR return empty if we want strict mode. 
-                        // User asked to assign, so eventually it should be strict. 
-                        // Strategy: If assigned array exists but is empty -> Empty list (Strict). 
-                        // But since column is new, it might be null. 
-                        // Let's Keep showing ALL if null/empty for now to avoid breaking prod immediately.
+                        // Normalize and filter
+                        const assignedNormalized = assigned.map(n => n.trim());
+                        const initialCount = allNumbers.length;
+
+                        allNumbers = allNumbers.filter(n => assignedNormalized.includes(n.phoneNumber.trim()));
+
+                        console.log(`[UserId: ${userId}] Filtered numbers from ${initialCount} to ${allNumbers.length}`);
                     }
                 }
                 callbackNumber = profile.callback_number;
