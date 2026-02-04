@@ -375,8 +375,8 @@ export default function MainDashboard() {
             }
           }
         }
-      } catch (_e) {
-        console.error("Failed to fetch numbers");
+      } catch (e) {
+        console.error("Failed to fetch numbers:", e);
       }
     }
     fetchNumbers();

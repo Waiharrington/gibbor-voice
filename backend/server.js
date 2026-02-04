@@ -81,23 +81,30 @@ app.get("/phone-numbers", async (req, res) => {
         const { userId } = req.query;
 
         // 1. Fetch All Available Numbers from Twilio (Base Source of Truth)
-        const [incoming, verified] = await Promise.all([
-            twilioClient.incomingPhoneNumbers.list({ limit: 100 }), // Increased limit
-            twilioClient.outgoingCallerIds.list({ limit: 100 })
-        ]);
+        // 1. Fetch All Available Numbers from Twilio (Base Source of Truth)
+        let allTwilioNumbers = [];
+        try {
+            const [incoming, verified] = await Promise.all([
+                twilioClient.incomingPhoneNumbers.list({ limit: 100 }), // Increased limit
+                twilioClient.outgoingCallerIds.list({ limit: 100 })
+            ]);
 
-        let allTwilioNumbers = [
-            ...incoming.map(n => ({
-                phoneNumber: n.phoneNumber,
-                friendlyName: n.friendlyName,
-                type: 'Twilio'
-            })),
-            ...verified.map(n => ({
-                phoneNumber: n.phoneNumber,
-                friendlyName: n.friendlyName,
-                type: 'Verified'
-            }))
-        ];
+            allTwilioNumbers = [
+                ...incoming.map(n => ({
+                    phoneNumber: n.phoneNumber,
+                    friendlyName: n.friendlyName,
+                    type: 'Twilio'
+                })),
+                ...verified.map(n => ({
+                    phoneNumber: n.phoneNumber,
+                    friendlyName: n.friendlyName,
+                    type: 'Verified'
+                }))
+            ];
+        } catch (twilioError) {
+            console.error("Twilio API Error (Non-critical):", twilioError.message);
+            // Proceed with empty list - local DB numbers will be used as fallback
+        }
 
         let finalNumbers = allTwilioNumbers;
         let callbackNumber = null;
