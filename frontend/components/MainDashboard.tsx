@@ -380,7 +380,7 @@ export default function MainDashboard() {
       }
     }
     fetchNumbers();
-  }, [API_BASE_URL]);
+  }, [API_BASE_URL, user?.id]);
 
 
   const handleViewChange = (view: string) => {
