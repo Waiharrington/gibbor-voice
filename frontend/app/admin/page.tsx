@@ -128,6 +128,18 @@ export default function AdminPage() {
         }
     };
 
+    const fetchTwilioNumbers = async () => {
+        try {
+            const res = await fetch(`${API_BASE_URL}/phone-numbers`);
+            if (res.ok) {
+                const data = await res.json();
+                setAvailableTwilioNumbers(data.numbers || []);
+            }
+        } catch (e) {
+            console.error("Error fetching numbers", e);
+        }
+    };
+
     const handleDeleteAgent = async (agentId: string, agentName: string) => {
         if (!confirm(`¿Estás seguro de que quieres eliminar a ${agentName}? Esta acción no se puede deshacer.`)) return;
         try {
@@ -181,39 +193,17 @@ export default function AdminPage() {
         setSelectedZone(zone);
         setSavingZone(true); // Re-using loading state
         try {
-            // Fetch ALL Twilio Numbers
-            const res = await fetch(`${API_BASE_URL}/phone-numbers`);
-            if (res.ok) {
-                const data = await res.json();
-                setAvailableTwilioNumbers(data.numbers || []);
+            await fetchTwilioNumbers();
 
-                // Fetch Zone's Current Numbers (need separate call or parse from zone data if full)
-                // For simplicity assuming we need to build a way to know exactly which belong to this zone
-                // Actually /zones endpoint returns numberCount, but not the numbers list. 
-                // We'll rely on checking if a number is assigned to this zone ID via a small hack or just fetching again?
-                // Ideally backend gives us full list. But let's assume we can see which are assigned.
-                // Wait, the /phone-numbers endpoint for ADMIN returns ALL numbers. 
-                // We need to know which ones are currently in *this* zone.
-                // The current backend doesn't make this super easy without another endpoint or expanding /zones.
-                // Let's assume we implement a quick client-side filtering if possible, or update backend?
-                // Easier: Use the updated /zones endpoint if I expanded it? I only did count.
-                // Let's update frontend logic:
-                // Actually, let's fetch the zone details again or rely on availableTwilioNumbers having no "zone info" attached.
-                // Wait, my /phone-numbers endpoint doesn't return zone info for each number to admins.
-                // Let's add a small backend fetch for zone specific numbers here?
-                // Or: assume numbers returned by /phone-numbers will be all.
-                // PROBLEM: I don't know which numbers belong to this zone to check the checkboxes.
-                // FIX: I will fetch the zone details including numbers manually using Supabase client here since I have it.
+            // Query Zone's numbers (reusing Supabase as localized helper)
+            const { data: zoneData } = await supabase
+                .from('zones')
+                .select('zone_numbers(phone_number)')
+                .eq('id', zone.id)
+                .single();
 
-                const { data: zoneData } = await supabase
-                    .from('zones')
-                    .select('zone_numbers(phone_number)')
-                    .eq('id', zone.id)
-                    .single();
-
-                if (zoneData) {
-                    setSelectedZoneNumbers(zoneData.zone_numbers.map((zn: any) => zn.phone_number));
-                }
+            if (zoneData) {
+                setSelectedZoneNumbers(zoneData.zone_numbers.map((zn: any) => zn.phone_number));
             }
             setIsZoneNumbersModalOpen(true);
         } catch (e) {
@@ -364,7 +354,10 @@ export default function AdminPage() {
                                 Gestión de Zonas
                             </h3>
                             <button
-                                onClick={() => setIsZoneModalOpen(true)}
+                                onClick={() => {
+                                    setIsZoneModalOpen(true);
+                                    fetchTwilioNumbers(); // Fetch numbers for dropdown
+                                }}
                                 className="text-sm bg-indigo-50 text-indigo-700 px-3 py-2 rounded-lg hover:bg-indigo-100 font-medium flex items-center"
                             >
                                 <Plus className="w-4 h-4 mr-1" /> Nueva Zona
@@ -402,9 +395,17 @@ export default function AdminPage() {
                                 <Users className="w-5 h-5 mr-2 text-indigo-600" />
                                 Miembros del Equipo
                             </h3>
-                            <button onClick={() => fetchStats()} className="text-sm text-indigo-600 hover:text-indigo-800 font-medium">
-                                Actualizar
-                            </button>
+                            <div className="flex gap-2">
+                                <button
+                                    onClick={() => setIsAgentModalOpen(true)}
+                                    className="text-sm bg-indigo-600 text-white px-3 py-2 rounded-lg hover:bg-indigo-700 font-medium flex items-center shadow-lg hover:shadow-xl transition-all"
+                                >
+                                    <UserPlus className="w-4 h-4 mr-1" /> Nuevo Agente
+                                </button>
+                                <button onClick={() => fetchStats()} className="text-sm text-indigo-600 hover:text-indigo-800 font-medium px-3 py-2">
+                                    Actualizar
+                                </button>
+                            </div>
                         </div>
                         <div className="overflow-x-auto">
                             <table className="w-full text-sm text-left">
@@ -496,15 +497,15 @@ export default function AdminPage() {
                             <div className="space-y-4">
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-1">Nombre Completo</label>
-                                    <input type="text" className="w-full border border-gray-300 rounded-lg px-4 py-2" value={newAgent.fullName} onChange={(e) => setNewAgent({ ...newAgent, fullName: e.target.value })} required />
+                                    <input type="text" className="w-full border border-gray-300 rounded-lg px-4 py-2 text-gray-900" value={newAgent.fullName} onChange={(e) => setNewAgent({ ...newAgent, fullName: e.target.value })} required />
                                 </div>
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
-                                    <input type="email" className="w-full border border-gray-300 rounded-lg px-4 py-2" value={newAgent.email} onChange={(e) => setNewAgent({ ...newAgent, email: e.target.value })} required />
+                                    <input type="email" className="w-full border border-gray-300 rounded-lg px-4 py-2 text-gray-900" value={newAgent.email} onChange={(e) => setNewAgent({ ...newAgent, email: e.target.value })} required />
                                 </div>
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
-                                    <input type="password" className="w-full border border-gray-300 rounded-lg px-4 py-2" value={newAgent.password} onChange={(e) => setNewAgent({ ...newAgent, password: e.target.value })} required />
+                                    <input type="password" className="w-full border border-gray-300 rounded-lg px-4 py-2 text-gray-900" value={newAgent.password} onChange={(e) => setNewAgent({ ...newAgent, password: e.target.value })} required />
                                 </div>
                             </div>
                             <div className="flex justify-end gap-3 mt-6">
@@ -527,11 +528,27 @@ export default function AdminPage() {
                             <div className="space-y-4">
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-1">Nombre de Zona</label>
-                                    <input type="text" placeholder="Ej: Venezuela, Colombia..." className="w-full border border-gray-300 rounded-lg px-4 py-2" value={newZone.name} onChange={(e) => setNewZone({ ...newZone, name: e.target.value })} required />
+                                    <input type="text" placeholder="Ej: Venezuela, Colombia..." className="w-full border border-gray-300 rounded-lg px-4 py-2 text-gray-900" value={newZone.name} onChange={(e) => setNewZone({ ...newZone, name: e.target.value })} required />
                                 </div>
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-1">Número de Retorno (Callback)</label>
-                                    <input type="text" placeholder="+1..." className="w-full border border-gray-300 rounded-lg px-4 py-2 font-mono" value={newZone.callback_number} onChange={(e) => setNewZone({ ...newZone, callback_number: e.target.value })} required />
+                                    <select
+                                        className="w-full border border-gray-300 rounded-lg px-4 py-2 font-mono text-gray-900 bg-white"
+                                        value={newZone.callback_number}
+                                        onChange={(e) => setNewZone({ ...newZone, callback_number: e.target.value })}
+                                        required
+                                    >
+                                        <option value="">-- Seleccionar un Número Twilio --</option>
+                                        {availableTwilioNumbers.length > 0 ? (
+                                            availableTwilioNumbers.map(num => (
+                                                <option key={num.phoneNumber} value={num.phoneNumber}>
+                                                    {num.phoneNumber} ({num.friendlyName})
+                                                </option>
+                                            ))
+                                        ) : (
+                                            <option disabled>Cargando números...</option>
+                                        )}
+                                    </select>
                                 </div>
                             </div>
                             <div className="flex justify-end gap-3 mt-6">
