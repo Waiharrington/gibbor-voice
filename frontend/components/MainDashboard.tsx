@@ -1627,7 +1627,7 @@ export default function MainDashboard() {
         </motion.button>
 
         {/* Existing Content Rendering Logic (Modified to fit new container) */}
-        {(currentView === 'calls' || currentView === 'contacts') && !dialerMode && (
+        {(currentView === 'calls' || currentView === 'history' || currentView === 'contacts') && !dialerMode && (
           <>
             {/* 2. Call List (Left) - Adjusted for Mobile */}
             {/* 2. Call List (Removed - Moved to Secondary Column) */}
