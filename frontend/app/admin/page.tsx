@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Sidebar from '@/components/Sidebar';
-import { Shield, Users, Phone, BarChart3, Clock, ArrowUpRight, UserPlus, Loader2, Plus, Trash2 } from 'lucide-react';
+import { Shield, Users, Phone, BarChart3, Clock, ArrowUpRight, UserPlus, Loader2, Plus, Trash2, Edit } from 'lucide-react';
 import { supabase } from '@/utils/supabaseClient';
 import { useAgentStatus } from '@/providers/AgentStatusContext';
 
@@ -57,6 +57,15 @@ export default function AdminPage() {
     const [creating, setCreating] = useState(false);
     const [usersList, setUsersList] = useState<any[]>([]); // New State
 
+    // Number Assignment Modal State
+    const [isNumberModalOpen, setIsNumberModalOpen] = useState(false);
+    const [editingUserId, setEditingUserId] = useState<string | null>(null);
+    const [editingUserName, setEditingUserName] = useState('');
+    const [availableTwilioNumbers, setAvailableTwilioNumbers] = useState<any[]>([]);
+    const [assignedNumbers, setAssignedNumbers] = useState<string[]>([]);
+    const [callbackNumber, setCallbackNumber] = useState('');
+    const [savingNumbers, setSavingNumbers] = useState(false);
+
     // Protect Route
     useEffect(() => {
         const checkAdmin = async () => {
@@ -85,6 +94,11 @@ export default function AdminPage() {
         const intervalId = setInterval(() => {
             fetchStats();
         }, 5000);
+
+        // Fetch all Twilio numbers once for the modal
+        fetchAvailableNumbers();
+
+        return () => clearInterval(intervalId);
 
         return () => clearInterval(intervalId);
     }, []);
@@ -138,6 +152,64 @@ export default function AdminPage() {
             setCreating(false);
         }
     };
+
+    // --- NUMBER ASSIGNMENT LOGIC ---
+
+    const fetchAvailableNumbers = async () => {
+        try {
+            const res = await fetch(`${API_BASE_URL}/phone-numbers`); // No userId = fetch all
+            if (res.ok) {
+                const data = await res.json();
+                setAvailableTwilioNumbers(data.numbers || []);
+            }
+        } catch (e) {
+            console.error("Error fetching all numbers:", e);
+        }
+    };
+
+    const openNumberModal = (user: any) => {
+        setEditingUserId(user.id);
+        setEditingUserName(user.full_name || user.email);
+        setAssignedNumbers(user.assigned_caller_ids || []);
+        setCallbackNumber(user.callback_number || '');
+        setIsNumberModalOpen(true);
+    };
+
+    const toggleNumberAssignment = (phoneNumber: string) => {
+        setAssignedNumbers(prev => {
+            if (prev.includes(phoneNumber)) {
+                return prev.filter(n => n !== phoneNumber);
+            } else {
+                return [...prev, phoneNumber];
+            }
+        });
+    };
+
+    const handleSaveNumbers = async () => {
+        if (!editingUserId) return;
+        setSavingNumbers(true);
+        try {
+            const res = await fetch(`${API_BASE_URL}/agents/${editingUserId}/numbers`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    assigned_caller_ids: assignedNumbers,
+                    callback_number: callbackNumber
+                })
+            });
+
+            if (!res.ok) throw new Error("Failed to update numbers");
+
+            alert("Numbers updated successfully!");
+            setIsNumberModalOpen(false);
+            fetchStats(); // Refresh user list to show updated data if we displayed it
+        } catch (e: any) {
+            alert("Error: " + e.message);
+        } finally {
+            setSavingNumbers(false);
+        }
+    };
+
 
     const handleDeleteAgent = async (agentId: string, agentName: string) => {
         if (!confirm(`Are you sure you want to delete ${agentName}? This action cannot be undone.`)) return;
@@ -314,6 +386,13 @@ export default function AdminPage() {
                                                 </td>
                                                 <td className="px-6 py-4 text-right">
                                                     <button
+                                                        onClick={() => openNumberModal(u)}
+                                                        className="p-2 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors mr-2"
+                                                        title="Manage Numbers"
+                                                    >
+                                                        <Edit className="w-4 h-4" />
+                                                    </button>
+                                                    <button
                                                         onClick={() => handleDeleteAgent(u.id, u.full_name || u.email)}
                                                         className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                                                         title="Delete User"
@@ -409,6 +488,96 @@ export default function AdminPage() {
                                 </button>
                             </div>
                         </form>
+                    </div>
+                </div>
+            )}
+
+            {/* Number Assignment Modal */}
+            {isNumberModalOpen && (
+                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
+                    <div className="bg-white rounded-2xl w-full max-w-2xl p-6 shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+                        <div className="flex justify-between items-center mb-4">
+                            <h2 className="text-xl font-bold">Manage Numbers for {editingUserName}</h2>
+                            <button onClick={() => setIsNumberModalOpen(false)} className="text-gray-400 hover:text-gray-600" aria-label="Close Modal">
+                                <Plus className="w-6 h-6 rotate-45" />
+                            </button>
+                        </div>
+
+                        <div className="flex-1 overflow-y-auto pr-2">
+                            {/* Callback Number Section */}
+                            <div className="mb-6 p-4 bg-blue-50 rounded-xl border border-blue-100">
+                                <label className="block text-xs font-bold text-blue-800 uppercase tracking-wide mb-2">
+                                    Callback Phone Number (Retorno)
+                                </label>
+                                <input
+                                    type="text"
+                                    value={callbackNumber}
+                                    onChange={(e) => setCallbackNumber(e.target.value)}
+                                    placeholder="+15550001234"
+                                    className="w-full p-2 border border-blue-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm font-mono"
+                                />
+                                <p className="text-xs text-blue-600 mt-2">
+                                    This number will be displayed to the agent as the &quot;Return Call To&quot; number.
+                                </p>
+                            </div>
+
+                            {/* Number Selection Grid */}
+                            <h3 className="text-sm font-bold text-gray-700 uppercase tracking-wide mb-3">Assignable Caller IDs</h3>
+
+                            {availableTwilioNumbers.length === 0 ? (
+                                <p className="text-gray-500 italic">No phone numbers found in Twilio/Server.</p>
+                            ) : (
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                    {availableTwilioNumbers.map((num) => {
+                                        const isAssigned = assignedNumbers.includes(num.phoneNumber);
+                                        return (
+                                            <div
+                                                key={num.phoneNumber}
+                                                onClick={() => toggleNumberAssignment(num.phoneNumber)}
+                                                className={`p-3 rounded-lg border cursor-pointer transition-all flex items-center justify-between ${isAssigned
+                                                    ? 'bg-indigo-50 border-indigo-500 shadow-sm'
+                                                    : 'bg-white border-gray-200 hover:border-gray-300'
+                                                    }`}
+                                            >
+                                                <div className="flex items-center">
+                                                    <div className={`w-4 h-4 rounded border flex items-center justify-center mr-3 ${isAssigned ? 'bg-indigo-600 border-indigo-600' : 'border-gray-400'
+                                                        }`}>
+                                                        {isAssigned && <Plus className="w-3 h-3 text-white" />}
+                                                    </div>
+                                                    <div>
+                                                        <p className="font-mono text-sm font-medium text-gray-900">{num.phoneNumber}</p>
+                                                        {num.friendlyName && num.friendlyName !== num.phoneNumber && (
+                                                            <p className="text-xs text-gray-500 truncate max-w-[150px]">{num.friendlyName}</p>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                                <span className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded ${num.type === 'Twilio' ? 'bg-gray-100 text-gray-600' : 'bg-green-100 text-green-700'
+                                                    }`}>
+                                                    {num.type}
+                                                </span>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-gray-100">
+                            <button
+                                onClick={() => setIsNumberModalOpen(false)}
+                                className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={handleSaveNumbers}
+                                disabled={savingNumbers}
+                                className="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50 flex items-center font-bold shadow-md active:scale-95 transition-all"
+                            >
+                                {savingNumbers && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                                Save Assignments
+                            </button>
+                        </div>
                     </div>
                 </div>
             )}

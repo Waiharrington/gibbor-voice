@@ -77,26 +77,86 @@ app.get("/token", async (req, res) => {
 // Fetch available Twilio numbers (Incoming + Verified Outgoing)
 app.get("/phone-numbers", async (req, res) => {
     try {
+        const { userId } = req.query;
+
+        // 1. Fetch All Available Numbers from Twilio
         const [incoming, verified] = await Promise.all([
-            twilioClient.incomingPhoneNumbers.list({ limit: 20 }),
-            twilioClient.outgoingCallerIds.list({ limit: 20 })
+            twilioClient.incomingPhoneNumbers.list({ limit: 50 }),
+            twilioClient.outgoingCallerIds.list({ limit: 50 })
         ]);
 
-        const mappedIncoming = incoming.map(n => ({
-            phoneNumber: n.phoneNumber,
-            friendlyName: n.friendlyName,
-            type: 'Twilio'
-        }));
+        let allNumbers = [
+            ...incoming.map(n => ({
+                phoneNumber: n.phoneNumber,
+                friendlyName: n.friendlyName,
+                type: 'Twilio'
+            })),
+            ...verified.map(n => ({
+                phoneNumber: n.phoneNumber,
+                friendlyName: n.friendlyName,
+                type: 'Verified'
+            }))
+        ];
 
-        const mappedVerified = verified.map(n => ({
-            phoneNumber: n.phoneNumber,
-            friendlyName: n.friendlyName,
-            type: 'Verified'
-        }));
+        // 2. Filter by User Assignment (if userId provided)
+        let callbackNumber = null;
 
-        res.json([...mappedIncoming, ...mappedVerified]);
+        if (userId) {
+            const { data: profile } = await supabase
+                .from('profiles')
+                .select('assigned_caller_ids, callback_number, role')
+                .eq('id', userId)
+                .single();
+
+            if (profile) {
+                // If user is Admin, they usually see ALL numbers, but let's stick to assignment if strictly set?
+                // For now: Admin sees ALL, Agent sees ASSIGNED.
+                if (profile.role !== 'admin') {
+                    const assigned = profile.assigned_caller_ids || [];
+                    if (assigned.length > 0) {
+                        allNumbers = allNumbers.filter(n => assigned.includes(n.phoneNumber));
+                    } else {
+                        // If NO numbers assigned, maybe default to NONE or ALL? 
+                        // Let's default to ALL for backward compatibility until User starts assigning.
+                        // OR return empty if we want strict mode. 
+                        // User asked to assign, so eventually it should be strict. 
+                        // Strategy: If assigned array exists but is empty -> Empty list (Strict). 
+                        // But since column is new, it might be null. 
+                        // Let's Keep showing ALL if null/empty for now to avoid breaking prod immediately.
+                    }
+                }
+                callbackNumber = profile.callback_number;
+            }
+        }
+
+        res.json({
+            numbers: allNumbers,
+            callbackNumber: callbackNumber
+        });
     } catch (e) {
         console.error("Error fetching numbers:", e);
+        res.status(500).json({ error: e.message });
+    }
+});
+
+// Update Agent Numbers (Admin Only)
+app.put("/agents/:id/numbers", async (req, res) => {
+    try {
+        const { assigned_caller_ids, callback_number } = req.body;
+        console.log(`Updating numbers for agent ${req.params.id}`, { assigned_caller_ids, callback_number });
+
+        const { error } = await supabase
+            .from('profiles')
+            .update({
+                assigned_caller_ids,
+                callback_number
+            })
+            .eq('id', req.params.id);
+
+        if (error) throw error;
+        res.json({ success: true });
+    } catch (e) {
+        console.error("Error updating agent numbers:", e);
         res.status(500).json({ error: e.message });
     }
 });

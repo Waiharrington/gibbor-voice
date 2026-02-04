@@ -240,6 +240,7 @@ export default function MainDashboard() {
   const [isMuted, setIsMuted] = useState(false);
   const [callStatus, setCallStatus] = useState<string>('Inactivo');
   const [identity, setIdentity] = useState<string>('');
+  const [callbackNumber, setCallbackNumber] = useState<string | null>(null);
 
   // History State
   const [calls, setCalls] = useState<any[]>([]);
@@ -359,11 +360,20 @@ export default function MainDashboard() {
   useEffect(() => {
     async function fetchNumbers() {
       try {
-        const res = await fetch(`${API_BASE_URL}/phone-numbers`);
-        if (res.ok) {
-          const nums = await res.json();
-          setAvailableNumbers(nums);
-          if (nums.length > 0) setSelectedCallerId(nums[0].phoneNumber);
+        if (user?.id) {
+          const res = await fetch(`${API_BASE_URL}/phone-numbers?userId=${user.id}`);
+          if (res.ok) {
+            const data = await res.json();
+            // Handle new object response { numbers: [], callbackNumber: ... }
+            const nums = data.numbers || [];
+            setAvailableNumbers(nums);
+            setCallbackNumber(data.callbackNumber || null);
+
+            // Default to first number if available and not selected
+            if (nums.length > 0 && !localStorage.getItem('gibbor_caller_id')) {
+              setSelectedCallerId(nums[0].phoneNumber);
+            }
+          }
         }
       } catch (_e) {
         console.error("Failed to fetch numbers");
