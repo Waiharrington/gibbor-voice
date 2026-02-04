@@ -80,13 +80,13 @@ app.get("/phone-numbers", async (req, res) => {
     try {
         const { userId } = req.query;
 
-        // 1. Fetch All Available Numbers from Twilio
+        // 1. Fetch All Available Numbers from Twilio (Base Source of Truth)
         const [incoming, verified] = await Promise.all([
             twilioClient.incomingPhoneNumbers.list({ limit: 50 }),
             twilioClient.outgoingCallerIds.list({ limit: 50 })
         ]);
 
-        let allNumbers = [
+        let allTwilioNumbers = [
             ...incoming.map(n => ({
                 phoneNumber: n.phoneNumber,
                 friendlyName: n.friendlyName,
@@ -99,39 +99,53 @@ app.get("/phone-numbers", async (req, res) => {
             }))
         ];
 
-        // 2. Filter by User Assignment (if userId provided)
+        let finalNumbers = allTwilioNumbers;
         let callbackNumber = null;
 
         if (userId) {
+            // Fetch User Profile with Zone Info
             const { data: profile } = await supabase
                 .from('profiles')
-                .select('assigned_caller_ids, callback_number, role')
+                .select(`
+                    id, 
+                    role, 
+                    zone_id,
+                    zones (
+                        id,
+                        name,
+                        callback_number,
+                        zone_numbers (phone_number)
+                    )
+                `)
                 .eq('id', userId)
                 .single();
 
             if (profile) {
-                // If user is Admin, they usually see ALL numbers, but let's stick to assignment if strictly set?
-                // For now: Admin sees ALL, Agent sees ASSIGNED.
-                if (profile.role !== 'admin') {
-                    const assigned = profile.assigned_caller_ids || [];
-                    console.log(`[UserId: ${userId}] Assigned numbers:`, assigned);
-
-                    if (assigned.length > 0) {
-                        // Normalize and filter
-                        const assignedNormalized = assigned.map(n => n.trim());
-                        const initialCount = allNumbers.length;
-
-                        allNumbers = allNumbers.filter(n => assignedNormalized.includes(n.phoneNumber.trim()));
-
-                        console.log(`[UserId: ${userId}] Filtered numbers from ${initialCount} to ${allNumbers.length}`);
-                    }
+                // ADMIN: Sees ALL Twilio Numbers
+                if (profile.role === 'admin') {
+                    // No filtering needed
                 }
-                callbackNumber = profile.callback_number;
+                // AGENT: Sees ONLY Zone Numbers
+                else if (profile.zone_id && profile.zones) {
+                    const zoneNumbers = profile.zones.zone_numbers.map(zn => zn.phone_number);
+
+                    // Filter Twilio numbers that are in the Zone
+                    finalNumbers = allTwilioNumbers.filter(tn => zoneNumbers.includes(tn.phoneNumber));
+
+                    // Set Zone Callback Number
+                    callbackNumber = profile.zones.callback_number;
+
+                    console.log(`[UserId: ${userId}] Zone: ${profile.zones.name}, Numbers: ${finalNumbers.length}`);
+                }
+                // FALLBACK: User has no zone? Return empty or default
+                else {
+                    finalNumbers = [];
+                }
             }
         }
 
         res.json({
-            numbers: allNumbers,
+            numbers: finalNumbers,
             callbackNumber: callbackNumber
         });
     } catch (e) {
@@ -1240,4 +1254,103 @@ const server = app.listen(PORT, () => {
     const address = server.address();
     console.log("Backend running on port", PORT);
     console.log("Server address info:", address);
+});
+// --- ZONE MANAGEMENT ENDPOINTS ---
+
+// GET /zones - List all zones and their number counts
+app.get("/zones", async (req, res) => {
+    try {
+        const { data: zones, error } = await supabase
+            .from('zones')
+            .select(`
+                *,
+                zone_numbers (count)
+            `);
+        if (error) throw error;
+        // Transform for easier frontend consumption
+        const formatted = zones.map(z => ({
+            ...z,
+            numberCount: z.zone_numbers[0]?.count || 0
+        }));
+        res.json(formatted);
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+// POST /zones - Create a new zone
+app.post("/zones", async (req, res) => {
+    try {
+        const { name, callback_number } = req.body;
+        const { data, error } = await supabase
+            .from('zones')
+            .insert({ name, callback_number })
+            .select()
+            .single();
+        if (error) throw error;
+        res.json(data);
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+// POST /zones/:id/numbers - Add numbers to a zone
+app.post("/zones/:id/numbers", async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { numbers } = req.body; // Array of phone numbers (strings)
+
+        if (!numbers || !Array.isArray(numbers)) throw new Error("Invalid numbers array");
+
+        const inserts = numbers.map(num => ({
+            zone_id: id,
+            phone_number: num
+        }));
+
+        const { error } = await supabase
+            .from('zone_numbers')
+            .insert(inserts);
+
+        if (error) throw error;
+        res.json({ success: true, count: numbers.length });
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+// DELETE /zones/:id/numbers - Remove numbers from a zone
+app.delete("/zones/:id/numbers", async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { numbers } = req.body; // Array of numbers to remove
+
+        const { error } = await supabase
+            .from('zone_numbers')
+            .delete()
+            .eq('zone_id', id)
+            .in('phone_number', numbers);
+
+        if (error) throw error;
+        res.json({ success: true });
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+// PUT /users/:id/zone - Assign a zone to a user
+app.put("/users/:id/zone", async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { zone_id } = req.body; // Can be null to unassign
+
+        const { error } = await supabase
+            .from('profiles')
+            .update({ zone_id })
+            .eq('id', id);
+
+        if (error) throw error;
+        res.json({ success: true });
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
 });
