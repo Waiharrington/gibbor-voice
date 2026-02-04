@@ -653,22 +653,23 @@ export default function AdminPage() {
 
                                     {/* NUMBERS GRID */}
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                    {availableTwilioNumbers.map((num) => {
-                                        const isAssigned = selectedZoneNumbers.includes(num.phoneNumber);
-                                        return (
-                                            <div key={num.phoneNumber} onClick={() => toggleNumberInZone(num.phoneNumber)} className={`p-3 rounded-lg border cursor-pointer transition-all flex justify-between items-center ${isAssigned ? 'bg-indigo-50 border-indigo-500' : 'hover:border-indigo-300'}`}>
-                                                <div className="flex items-center">
-                                                    <div className={`w-4 h-4 rounded border flex items-center justify-center mr-3 ${isAssigned ? 'bg-indigo-600 border-indigo-600' : 'border-gray-400'}`}>
-                                                        {isAssigned && <Plus className="w-3 h-3 text-white" />}
-                                                    </div>
-                                                    <div>
-                                                        <p className="font-mono text-sm font-bold">{num.phoneNumber}</p>
-                                                        <p className="text-xs text-gray-500">{num.friendlyName}</p>
+                                        {availableTwilioNumbers.map((num) => {
+                                            const isAssigned = selectedZoneNumbers.includes(num.phoneNumber);
+                                            return (
+                                                <div key={num.phoneNumber} onClick={() => toggleNumberInZone(num.phoneNumber)} className={`p-3 rounded-lg border cursor-pointer transition-all flex justify-between items-center ${isAssigned ? 'bg-indigo-50 border-indigo-500' : 'hover:border-indigo-300'}`}>
+                                                    <div className="flex items-center">
+                                                        <div className={`w-4 h-4 rounded border flex items-center justify-center mr-3 ${isAssigned ? 'bg-indigo-600 border-indigo-600' : 'border-gray-400'}`}>
+                                                            {isAssigned && <Plus className="w-3 h-3 text-white" />}
+                                                        </div>
+                                                        <div>
+                                                            <p className="font-mono text-sm font-bold">{num.phoneNumber}</p>
+                                                            <p className="text-xs text-gray-500">{num.friendlyName}</p>
+                                                        </div>
                                                     </div>
                                                 </div>
-                                            </div>
-                                        );
-                                    })}
+                                            );
+                                        })}
+                                    </div>
                                 </div>
                             )}
                         </div>
@@ -678,37 +679,37 @@ export default function AdminPage() {
                             <button onClick={handleSaveZoneNumbers} disabled={savingZone} className="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">Guardar Cambios</button>
                         </div>
                     </div>
-                    </div>
+                </div>
             )}
 
-                    {/* DEBUG MODAL */}
-                    {isDebugOpen && debugData && (
-                        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[60]">
-                            <div className="bg-white rounded-xl w-full max-w-2xl p-6 shadow-2xl m-4 max-h-[90vh] flex flex-col">
-                                <div className="flex justify-between items-center mb-4">
-                                    <h2 className="text-xl font-bold text-gray-900">Diagnóstico de Usuario</h2>
-                                    <button onClick={() => setIsDebugOpen(false)} className="text-gray-500 hover:text-gray-700">✕</button>
-                                </div>
-                                <div className="flex-1 overflow-auto bg-gray-900 rounded-lg p-4">
-                                    <pre className="text-green-400 font-mono text-xs whitespace-pre-wrap">
-                                        {JSON.stringify(debugData, null, 2)}
-                                    </pre>
-                                </div>
-                                <div className="mt-4 flex justify-end">
-                                    <button
-                                        onClick={() => {
-                                            navigator.clipboard.writeText(JSON.stringify(debugData, null, 2));
-                                            alert("Copiado al portapapeles");
-                                        }}
-                                        className="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 text-sm"
-                                    >
-                                        Copiar JSON
-                                    </button>
-                                </div>
-                            </div>
+            {/* DEBUG MODAL */}
+            {isDebugOpen && debugData && (
+                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[60]">
+                    <div className="bg-white rounded-xl w-full max-w-2xl p-6 shadow-2xl m-4 max-h-[90vh] flex flex-col">
+                        <div className="flex justify-between items-center mb-4">
+                            <h2 className="text-xl font-bold text-gray-900">Diagnóstico de Usuario</h2>
+                            <button onClick={() => setIsDebugOpen(false)} className="text-gray-500 hover:text-gray-700">✕</button>
                         </div>
-                    )}
-
+                        <div className="flex-1 overflow-auto bg-gray-900 rounded-lg p-4">
+                            <pre className="text-green-400 font-mono text-xs whitespace-pre-wrap">
+                                {JSON.stringify(debugData, null, 2)}
+                            </pre>
+                        </div>
+                        <div className="mt-4 flex justify-end">
+                            <button
+                                onClick={() => {
+                                    navigator.clipboard.writeText(JSON.stringify(debugData, null, 2));
+                                    alert("Copiado al portapapeles");
+                                }}
+                                className="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 text-sm"
+                            >
+                                Copiar JSON
+                            </button>
+                        </div>
+                    </div>
                 </div>
-            );
+            )}
+
+        </div>
+    );
 }
