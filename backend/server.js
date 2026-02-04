@@ -1056,75 +1056,24 @@ app.get("/users", async (req, res) => {
                 .eq('user_id', user.id)
                 .gte('created_at', todayISO);
 
-            // B. Calculate Online Time Today (Seconds) with Interval Merging
-            const { data: sessions } = await supabase
-                .from('agent_sessions')
-                .select('*')
-                .eq('user_id', user.id)
-                .gte('started_at', todayISO);
+            // NEW LOGIC: Fetch Last Call Timestamp
+            const { data: lastCall } = await supabase
+                .from('calls')
+                .select('created_at')
+                .or(`user_id.eq.${user.id},from.eq.${user.email},to.eq.${user.email}`) // Check ID or Email for robust matching
+                .order('created_at', { ascending: false })
+                .limit(1)
+                .single();
 
-            let secondsOnline = 0;
-            let firstLoginTime = null;
-            let lastSeen = null;
-            let secondsOffline = 0;
+            // Presence fields removed as requested
 
-            if (sessions && sessions.length > 0) {
-                // 1. Calculate Seconds Online
-                secondsOnline = sessions.reduce((acc, s) => {
-                    let duration = 0;
-                    if (s.duration_seconds) {
-                        duration = s.duration_seconds;
-                    } else if (s.ended_at) {
-                        duration = (new Date(s.ended_at).getTime() - new Date(s.started_at).getTime()) / 1000;
-                    } else {
-                        duration = 0;
-                    }
-                    return acc + duration;
-                }, 0);
-                // C. Get First Login Today (Separate Query for accuracy)
-                const { data: firstSession } = await supabase
-                    .from('agent_sessions')
-                    .select('started_at')
-                    .eq('user_id', user.id)
-                    .gte('started_at', todayISO)
-                    .order('started_at', { ascending: true })
-                    .limit(1)
-                    .single();
-
-                firstLoginTime = firstSession ? firstSession.started_at : null;
-
-                // D. Get Last Seen (Global - Most recent session)
-                const { data: lastSessionGlobal } = await supabase
-                    .from('agent_sessions')
-                    .select('started_at, ended_at')
-                    .eq('user_id', user.id)
-                    .order('started_at', { ascending: false })
-                    .limit(1)
-                    .single();
-
-                if (lastSessionGlobal) {
-                    // If ended_at is null, they are currently online => Last seen is "Now"
-                    // If ended_at is present, that's when they left.
-                    lastSeen = lastSessionGlobal.ended_at ? lastSessionGlobal.ended_at : new Date().toISOString();
-                }
-
-                // E. Calculate Time Offline
-                if (firstLoginTime) {
-                    const now = new Date();
-                    const totalTimeSinceFirstLogin = (now - new Date(firstLoginTime)) / 1000;
-                    secondsOffline = Math.max(0, totalTimeSinceFirstLogin - secondsOnline);
-                }
-
-            }
 
             return {
                 ...user,
                 stats: {
                     callsToday: callsToday || 0,
-                    secondsOnline: Math.floor(secondsOnline),
-                    secondsOffline: Math.floor(secondsOffline),
-                    lastLogin: firstLoginTime,
-                    lastSeen: lastSeen
+                    lastCall: lastCall?.created_at || null
+
                 }
             };
         }));
