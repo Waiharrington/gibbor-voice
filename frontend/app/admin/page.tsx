@@ -142,7 +142,7 @@ export default function AdminPage() {
                 body: JSON.stringify(newAgent)
             });
             if (!res.ok) throw new Error('Failed to create agent');
-            alert('Agent created successfully');
+            alert('Agente creado exitosamente');
             setIsAgentModalOpen(false);
             setNewAgent({ email: '', password: '', fullName: '' });
             fetchStats(); // Refresh list
@@ -200,7 +200,7 @@ export default function AdminPage() {
 
             if (!res.ok) throw new Error("Failed to update numbers");
 
-            alert("Numbers updated successfully!");
+            alert("¡Números actualizados exitosamente!");
             setIsNumberModalOpen(false);
             fetchStats(); // Refresh user list to show updated data if we displayed it
         } catch (e: any) {
@@ -212,14 +212,14 @@ export default function AdminPage() {
 
 
     const handleDeleteAgent = async (agentId: string, agentName: string) => {
-        if (!confirm(`Are you sure you want to delete ${agentName}? This action cannot be undone.`)) return;
+        if (!confirm(`¿Estás seguro de que quieres eliminar a ${agentName}? Esta acción no se puede deshacer.`)) return;
 
         try {
             const res = await fetch(`${API_BASE_URL}/agents/${agentId}`, {
                 method: 'DELETE',
             });
             if (!res.ok) throw new Error('Failed to delete agent');
-            alert('Agent deleted successfully');
+            alert('Agente eliminado exitosamente');
             fetchStats(); // Refresh list
         } catch (err: any) {
             alert('Error deleting agent: ' + err.message);
@@ -238,10 +238,10 @@ export default function AdminPage() {
                 <header className="bg-white border-b border-gray-200 px-8 py-4 flex justify-between items-center shadow-sm z-10">
                     <h1 className="text-2xl font-bold text-gray-800 flex items-center">
                         <Shield className="w-6 h-6 mr-3 text-indigo-600" />
-                        Admin Dashboard
+                        Panel de Administración
                     </h1>
                     <div className="flex items-center gap-4">
-                        <span className="text-sm text-gray-500">Welcome, Admin</span>
+                        <span className="text-sm text-gray-500">Bienvenido, Admin</span>
                         <div className="w-8 h-8 bg-indigo-100 rounded-full flex items-center justify-center text-indigo-700 font-bold border border-indigo-200">
                             A
                         </div>
@@ -255,7 +255,7 @@ export default function AdminPage() {
                         <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
                             <div className="flex justify-between items-start mb-4">
                                 <div>
-                                    <p className="text-sm font-medium text-gray-500">Total Calls (Today)</p>
+                                    <p className="text-sm font-medium text-gray-500">Total Llamadas (Hoy)</p>
                                     <h3 className="text-3xl font-bold text-gray-900 mt-1">{stats.totalCalls}</h3>
                                 </div>
                                 <div className="p-3 bg-blue-50 rounded-lg text-blue-600">
@@ -265,14 +265,14 @@ export default function AdminPage() {
                             <div className="flex items-center text-sm text-green-600">
                                 <ArrowUpRight className="w-4 h-4 mr-1" />
                                 <span className="font-medium">+12%</span>
-                                <span className="text-gray-400 ml-2">from yesterday</span>
+                                <span className="text-gray-400 ml-2">desde ayer</span>
                             </div>
                         </div>
 
                         <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
                             <div className="flex justify-between items-start mb-4">
                                 <div>
-                                    <p className="text-sm font-medium text-gray-500">Total Sales/Leads</p>
+                                    <p className="text-sm font-medium text-gray-500">Total Ventas/Leads</p>
                                     <h3 className="text-3xl font-bold text-gray-900 mt-1">{stats.totalSales}</h3>
                                 </div>
                                 <div className="p-3 bg-green-50 rounded-lg text-green-600">
@@ -282,14 +282,14 @@ export default function AdminPage() {
                             <div className="flex items-center text-sm text-green-600">
                                 <ArrowUpRight className="w-4 h-4 mr-1" />
                                 <span className="font-medium">+5%</span>
-                                <span className="text-gray-400 ml-2">conversion rate</span>
+                                <span className="text-gray-400 ml-2">tasa de conversión</span>
                             </div>
                         </div>
 
                         <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
                             <div className="flex justify-between items-start mb-4">
                                 <div>
-                                    <p className="text-sm font-medium text-gray-500">Active Agents</p>
+                                    <p className="text-sm font-medium text-gray-500">Agentes Activos</p>
                                     <h3 className="text-3xl font-bold text-gray-900 mt-1">{onlineCount}</h3>
                                 </div>
                                 <div className="p-3 bg-purple-50 rounded-lg text-purple-600">
@@ -298,7 +298,7 @@ export default function AdminPage() {
                             </div>
                             <p className="text-sm text-gray-500 mt-2 flex items-center">
                                 <span className="w-2 h-2 bg-green-500 rounded-full mr-2"></span>
-                                {onlineCount} Online Now
+                                {onlineCount} En línea ahora
                             </p>
                         </div>
                     </div>
@@ -313,33 +313,33 @@ export default function AdminPage() {
                         <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50">
                             <h3 className="font-bold text-gray-800 flex items-center">
                                 <Users className="w-5 h-5 mr-2 text-indigo-600" />
-                                Team Members
+                                Miembros del Equipo
                             </h3>
                             <button onClick={() => fetchStats()} className="text-sm text-indigo-600 hover:text-indigo-800 font-medium">
-                                Refresh
+                                Actualizar
                             </button>
                         </div>
                         <div className="overflow-x-auto">
                             <table className="w-full text-sm text-left">
                                 <thead className="bg-gray-50 text-gray-500 font-medium border-b border-gray-200">
                                     <tr>
-                                        <th className="px-6 py-3">Name</th>
+                                        <th className="px-6 py-3">Nombre</th>
                                         <th className="px-6 py-3">Email</th>
-                                        <th className="px-6 py-3">Role</th>
-                                        <th className="px-6 py-3 text-center">Calls Today</th>
-                                        <th className="px-6 py-3 text-center">Time Online</th>
-                                        <th className="px-6 py-3 text-center">Time Offline</th>
-                                        <th className="px-6 py-3">Status</th>
-                                        <th className="px-6 py-3">Last Login</th>
-                                        <th className="px-6 py-3">Last Seen</th>
-                                        <th className="px-6 py-3 text-right">Actions</th>
+                                        <th className="px-6 py-3">Rol</th>
+                                        <th className="px-6 py-3 text-center">Llamadas Hoy</th>
+                                        <th className="px-6 py-3 text-center">Tiempo Online</th>
+                                        <th className="px-6 py-3 text-center">Tiempo Offline</th>
+                                        <th className="px-6 py-3">Estado</th>
+                                        <th className="px-6 py-3">Último Login</th>
+                                        <th className="px-6 py-3">Visto por última vez</th>
+                                        <th className="px-6 py-3 text-right">Acciones</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-gray-100">
                                     {usersList.length === 0 ? (
                                         <tr>
                                             <td colSpan={5} className="px-6 py-8 text-center text-gray-400">
-                                                No users found.
+                                                No se encontraron usuarios.
                                             </td>
                                         </tr>
                                     ) : (
@@ -412,7 +412,7 @@ export default function AdminPage() {
                     <div className="mt-8 mb-8">
                         <h3 className="font-bold text-gray-800 flex items-center mb-4">
                             <UserPlus className="w-5 h-5 mr-2 text-indigo-600" />
-                            User Management
+                            Gestión de Usuarios
                         </h3>
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                             <button
@@ -423,8 +423,8 @@ export default function AdminPage() {
                                     <Plus className="w-6 h-6" />
                                 </div>
                                 <div className="ml-4">
-                                    <h4 className="font-bold text-gray-900">Add New Agent</h4>
-                                    <p className="text-sm text-gray-500 mt-1">Create account for new team member</p>
+                                    <h4 className="font-bold text-gray-900">Agregar Nuevo Agente</h4>
+                                    <p className="text-sm text-gray-500 mt-1">Crear cuenta para nuevo miembro</p>
                                 </div>
                             </button>
                         </div>
@@ -437,11 +437,11 @@ export default function AdminPage() {
             {isAgentModalOpen && (
                 <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
                     <div className="bg-white rounded-2xl w-full max-w-md p-6 shadow-2xl">
-                        <h2 className="text-xl font-bold mb-4">Create New Agent</h2>
+                        <h2 className="text-xl font-bold mb-4 text-gray-900">Crear Nuevo Agente</h2>
                         <form onSubmit={handleCreateAgent}>
                             <div className="space-y-4">
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Nombre Completo</label>
                                     <input
                                         type="text"
                                         placeholder="John Doe"
@@ -477,14 +477,14 @@ export default function AdminPage() {
                             </div>
 
                             <div className="flex justify-end gap-3 mt-6">
-                                <button type="button" onClick={() => setIsAgentModalOpen(false)} className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg">Cancel</button>
+                                <button type="button" onClick={() => setIsAgentModalOpen(false)} className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg">Cancelar</button>
                                 <button
                                     type="submit"
                                     disabled={creating}
                                     className="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50 flex items-center"
                                 >
                                     {creating && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-                                    Create Agent
+                                    Crear Agente
                                 </button>
                             </div>
                         </form>
@@ -497,7 +497,7 @@ export default function AdminPage() {
                 <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
                     <div className="bg-white rounded-2xl w-full max-w-2xl p-6 shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
                         <div className="flex justify-between items-center mb-4">
-                            <h2 className="text-xl font-bold">Manage Numbers for {editingUserName}</h2>
+                            <h2 className="text-xl font-bold text-gray-900">Gestionar Números para {editingUserName}</h2>
                             <button onClick={() => setIsNumberModalOpen(false)} className="text-gray-400 hover:text-gray-600" aria-label="Close Modal">
                                 <Plus className="w-6 h-6 rotate-45" />
                             </button>
@@ -507,7 +507,7 @@ export default function AdminPage() {
                             {/* Callback Number Section */}
                             <div className="mb-6 p-4 bg-blue-50 rounded-xl border border-blue-100">
                                 <label className="block text-xs font-bold text-blue-800 uppercase tracking-wide mb-2">
-                                    Callback Phone Number (Retorno)
+                                    Número de Retorno (Callback)
                                 </label>
                                 <input
                                     type="text"
@@ -517,15 +517,15 @@ export default function AdminPage() {
                                     className="w-full p-2 border border-blue-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm font-mono"
                                 />
                                 <p className="text-xs text-blue-600 mt-2">
-                                    This number will be displayed to the agent as the &quot;Return Call To&quot; number.
+                                    Este número se mostrará al agente como el número de &quot;Retorno de Llamada&quot;.
                                 </p>
                             </div>
 
                             {/* Number Selection Grid */}
-                            <h3 className="text-sm font-bold text-gray-700 uppercase tracking-wide mb-3">Assignable Caller IDs</h3>
+                            <h3 className="text-sm font-bold text-gray-700 uppercase tracking-wide mb-3">Identificadores de Llamada Asignables</h3>
 
                             {availableTwilioNumbers.length === 0 ? (
-                                <p className="text-gray-500 italic">No phone numbers found in Twilio/Server.</p>
+                                <p className="text-gray-500 italic">No se encontraron números en Twilio.</p>
                             ) : (
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                     {availableTwilioNumbers.map((num) => {
@@ -567,7 +567,7 @@ export default function AdminPage() {
                                 onClick={() => setIsNumberModalOpen(false)}
                                 className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg"
                             >
-                                Cancel
+                                Cancelar
                             </button>
                             <button
                                 onClick={handleSaveNumbers}
@@ -575,7 +575,7 @@ export default function AdminPage() {
                                 className="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50 flex items-center font-bold shadow-md active:scale-95 transition-all"
                             >
                                 {savingNumbers && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-                                Save Assignments
+                                Guardar Asignaciones
                             </button>
                         </div>
                     </div>
