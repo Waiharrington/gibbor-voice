@@ -242,7 +242,8 @@ app.post("/incoming-call", async (req, res) => {
                 direction: 'outbound',
                 status: 'ringing',
                 sid: CallSid,
-                user_id: appUserId
+                user_id: appUserId,
+                caller_number: outboundCallerId
             });
         } catch (e) { console.error("Log Outbound Error", e); }
 
@@ -1297,8 +1298,6 @@ app.delete("/zones/:id/numbers", async (req, res) => {
     } catch (e) {
         res.status(500).json({ error: e.message });
     }
-    res.status(500).json({ error: e.message });
-}
 });
 
 // PUT /zones/:id - Update zone details (name, callback_number)
