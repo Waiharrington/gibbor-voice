@@ -1958,6 +1958,18 @@ export default function MainDashboard() {
                 </div>
 
                 <Dialpad onCall={(num) => handleCall(num, selectedCallerId)} />
+
+                {/* AUDIO TEST BUTTON (Now below Keypad) */}
+                <div className="w-full flex justify-center mt-4 mb-2">
+                  <button
+                    onClick={() => handleCall('888888', selectedCallerId)}
+                    className="flex items-center px-3 py-1 text-[10px] font-bold text-blue-300 hover:text-blue-500 transition-colors uppercase tracking-wider hover:bg-blue-50/50 rounded-full"
+                    title="Verificar micrófono y altavoces"
+                  >
+                    <Activity className="w-3 h-3 mr-1.5" />
+                    Prueba de Audio
+                  </button>
+                </div>
               </>
             )}
           </div>
@@ -1965,17 +1977,7 @@ export default function MainDashboard() {
           {/* FOOTER: Fixed Actions (Like Google Voice "Hide Keypad") */}
         </div>
 
-        {/* FOOTER: Transparent Audio Test */}
-        <div className="w-full p-2 flex justify-center mt-auto">
-          <button
-            onClick={() => handleCall('888888', selectedCallerId)}
-            className="flex items-center px-3 py-1.5 text-[10px] font-bold text-blue-400 hover:text-blue-600 transition-colors uppercase tracking-wider"
-            title="Verify microphone and speakers"
-          >
-            <Activity className="w-3 h-3 mr-1.5" />
-            Prueba de Audio
-          </button>
-        </div>
+
       </div>
 
 
