@@ -150,6 +150,7 @@ export default function Sidebar({ currentView, onViewChange, isOpen: externalIsO
                         </li>
                         {isAdmin && (
                             <>
+                                {/* 
                                 <li>
                                     <button
                                         onClick={(e) => handleNav('campaigns', e)}
@@ -160,24 +161,26 @@ export default function Sidebar({ currentView, onViewChange, isOpen: externalIsO
                                     </button>
                                 </li>
                                 <li>
-                                    {/* Auto Dialer Link */}
                                     <Link href="/auto-dialer" className="flex items-center px-4 py-3 text-gray-600 hover:bg-gray-100 transition-colors">
                                         <Activity className="w-5 h-5 mr-3 text-gray-500" />
                                         Auto Dialer
                                     </Link>
                                 </li>
+                                */}
                                 <li>
                                     <Link href="/reports" className="flex items-center px-4 py-3 text-gray-600 hover:bg-gray-100 transition-colors">
                                         <BarChart3 className="w-5 h-5 mr-3 text-gray-500" />
                                         Reports
                                     </Link>
                                 </li>
+                                {/*
                                 <li>
                                     <Link href="/contacts" className="flex items-center px-4 py-3 text-gray-600 hover:bg-gray-100 transition-colors">
                                         <User className="w-5 h-5 mr-3 text-gray-500" />
                                         Contacts
                                     </Link>
                                 </li>
+                                */}
                             </>
                         )}
 

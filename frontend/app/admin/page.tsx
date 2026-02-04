@@ -173,6 +173,7 @@ export default function AdminPage() {
         setAssignedNumbers(user.assigned_caller_ids || []);
         setCallbackNumber(user.callback_number || '');
         setIsNumberModalOpen(true);
+        fetchAvailableNumbers(); // Fetch fresh numbers when opening modal
     };
 
     const toggleNumberAssignment = (phoneNumber: string) => {
