@@ -183,6 +183,21 @@ export default function AdminPage() {
 
     // --- ZONE MGMT ---
 
+    const [zoneCallbackNumber, setZoneCallbackNumber] = useState(''); // New state for modal callback
+
+    const handleDeleteZone = async (id: string, name: string) => {
+        if (!confirm(`¿Estás seguro de eliminar la zona "${name}"? Esto desasignará a los usuarios y números asociados.`)) return;
+
+        try {
+            const res = await fetch(`${API_BASE_URL}/zones/${id}`, { method: 'DELETE' });
+            if (!res.ok) throw new Error('Failed to delete zone');
+            fetchStats(); // Refresh
+        } catch (e) {
+            console.error(e);
+            alert('Error al eliminar zona');
+        }
+    };
+
     const handleCreateZone = async (e: React.FormEvent) => {
         e.preventDefault();
         setCreating(true);
@@ -206,6 +221,7 @@ export default function AdminPage() {
 
     const openZoneNumbersModal = async (zone: any) => {
         setSelectedZone(zone);
+        setZoneCallbackNumber(zone.callback_number || '');
         setSavingZone(true); // Re-using loading state
         try {
             await fetchTwilioNumbers();
@@ -286,7 +302,19 @@ export default function AdminPage() {
                 });
             }
 
-            alert("Números de zona actualizados");
+            // UPDATE CALLBACK NUMBER (PUT)
+            if (zoneCallbackNumber !== selectedZone.callback_number) {
+                await fetch(`${API_BASE_URL}/zones/${selectedZone.id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        name: selectedZone.name,
+                        callback_number: zoneCallbackNumber
+                    })
+                });
+            }
+
+            alert("Zona actualizada (números y callback)");
             setIsZoneNumbersModalOpen(false);
             fetchStats();
         } catch (e: any) {
@@ -391,12 +419,21 @@ export default function AdminPage() {
                                     <div className="text-sm text-gray-500 mb-4 flex items-center gap-1">
                                         <Phone className="w-3 h-3" /> Callback: {zone.callback_number || 'N/A'}
                                     </div>
-                                    <button
-                                        onClick={() => openZoneNumbersModal(zone)}
-                                        className="w-full py-2 bg-indigo-50 text-indigo-600 rounded-lg text-sm font-medium hover:bg-indigo-100"
-                                    >
-                                        Gestionar Números
-                                    </button>
+                                    <div className="flex gap-2">
+                                        <button
+                                            onClick={() => openZoneNumbersModal(zone)}
+                                            className="flex-1 py-2 bg-indigo-50 text-indigo-600 rounded-lg text-sm font-medium hover:bg-indigo-100"
+                                        >
+                                            Gestionar Números
+                                        </button>
+                                        <button
+                                            onClick={() => handleDeleteZone(zone.id, zone.name)}
+                                            className="px-3 py-2 bg-red-50 text-red-600 rounded-lg text-sm font-medium hover:bg-red-100"
+                                            title="Eliminar Zona"
+                                        >
+                                            <Trash2 className="w-4 h-4" />
+                                        </button>
+                                    </div>
                                 </div>
                             ))}
                         </div>
@@ -595,7 +632,27 @@ export default function AdminPage() {
 
                         <div className="flex-1 overflow-y-auto p-2">
                             {savingZone ? <div className="text-center p-10"><Loader2 className="w-8 h-8 animate-spin mx-auto text-indigo-600" /></div> : (
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                <div className="space-y-6">
+                                    {/* CALLBACK NUMBER SECTION */}
+                                    <div className="bg-gray-50 p-4 rounded-xl border border-gray-100">
+                                        <label className="block text-sm font-bold text-gray-700 mb-2">Número de Retorno (Callback) de la Zona</label>
+                                        <select
+                                            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm font-mono text-gray-800 bg-white"
+                                            value={zoneCallbackNumber}
+                                            onChange={(e) => setZoneCallbackNumber(e.target.value)}
+                                        >
+                                            <option value="">-- Sin Callback Configurado --</option>
+                                            {availableTwilioNumbers.map(num => (
+                                                <option key={num.phoneNumber} value={num.phoneNumber}>
+                                                    {num.phoneNumber} ({num.friendlyName || 'Twilio'})
+                                                </option>
+                                            ))}
+                                        </select>
+                                        <p className="text-xs text-gray-500 mt-1">Este es el número que verán los clientes cuando los agentes de esta zona llamen.</p>
+                                    </div>
+
+                                    {/* NUMBERS GRID */}
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                     {availableTwilioNumbers.map((num) => {
                                         const isAssigned = selectedZoneNumbers.includes(num.phoneNumber);
                                         return (
@@ -621,37 +678,37 @@ export default function AdminPage() {
                             <button onClick={handleSaveZoneNumbers} disabled={savingZone} className="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">Guardar Cambios</button>
                         </div>
                     </div>
-                </div>
-            )}
-
-            {/* DEBUG MODAL */}
-            {isDebugOpen && debugData && (
-                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[60]">
-                    <div className="bg-white rounded-xl w-full max-w-2xl p-6 shadow-2xl m-4 max-h-[90vh] flex flex-col">
-                        <div className="flex justify-between items-center mb-4">
-                            <h2 className="text-xl font-bold text-gray-900">Diagnóstico de Usuario</h2>
-                            <button onClick={() => setIsDebugOpen(false)} className="text-gray-500 hover:text-gray-700">✕</button>
-                        </div>
-                        <div className="flex-1 overflow-auto bg-gray-900 rounded-lg p-4">
-                            <pre className="text-green-400 font-mono text-xs whitespace-pre-wrap">
-                                {JSON.stringify(debugData, null, 2)}
-                            </pre>
-                        </div>
-                        <div className="mt-4 flex justify-end">
-                            <button
-                                onClick={() => {
-                                    navigator.clipboard.writeText(JSON.stringify(debugData, null, 2));
-                                    alert("Copiado al portapapeles");
-                                }}
-                                className="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 text-sm"
-                            >
-                                Copiar JSON
-                            </button>
-                        </div>
                     </div>
-                </div>
             )}
 
-        </div>
-    );
+                    {/* DEBUG MODAL */}
+                    {isDebugOpen && debugData && (
+                        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[60]">
+                            <div className="bg-white rounded-xl w-full max-w-2xl p-6 shadow-2xl m-4 max-h-[90vh] flex flex-col">
+                                <div className="flex justify-between items-center mb-4">
+                                    <h2 className="text-xl font-bold text-gray-900">Diagnóstico de Usuario</h2>
+                                    <button onClick={() => setIsDebugOpen(false)} className="text-gray-500 hover:text-gray-700">✕</button>
+                                </div>
+                                <div className="flex-1 overflow-auto bg-gray-900 rounded-lg p-4">
+                                    <pre className="text-green-400 font-mono text-xs whitespace-pre-wrap">
+                                        {JSON.stringify(debugData, null, 2)}
+                                    </pre>
+                                </div>
+                                <div className="mt-4 flex justify-end">
+                                    <button
+                                        onClick={() => {
+                                            navigator.clipboard.writeText(JSON.stringify(debugData, null, 2));
+                                            alert("Copiado al portapapeles");
+                                        }}
+                                        className="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 text-sm"
+                                    >
+                                        Copiar JSON
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                </div>
+            );
 }

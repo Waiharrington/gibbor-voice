@@ -1297,6 +1297,50 @@ app.delete("/zones/:id/numbers", async (req, res) => {
     } catch (e) {
         res.status(500).json({ error: e.message });
     }
+    res.status(500).json({ error: e.message });
+}
+});
+
+// PUT /zones/:id - Update zone details (name, callback_number)
+app.put("/zones/:id", async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { name, callback_number } = req.body;
+
+        const { error } = await supabase
+            .from('zones')
+            .update({ name, callback_number })
+            .eq('id', id);
+
+        if (error) throw error;
+        res.json({ success: true });
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+// DELETE /zones/:id - Delete a zone
+app.delete("/zones/:id", async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        // 1. Unassign users from this zone (optional, but good practice if no cascade)
+        await supabase.from('profiles').update({ zone_id: null }).eq('zone_id', id);
+
+        // 2. Delete Zone Numbers (Cascade usually handles this, but let's be safe)
+        await supabase.from('zone_numbers').delete().eq('zone_id', id);
+
+        // 3. Delete Zone
+        const { error } = await supabase
+            .from('zones')
+            .delete()
+            .eq('id', id);
+
+        if (error) throw error;
+        res.json({ success: true });
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
 });
 
 // PUT /users/:id/zone - Assign a zone to a user
