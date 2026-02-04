@@ -158,6 +158,30 @@ app.get("/phone-numbers", async (req, res) => {
     }
 });
 
+
+// DEBUG ENDPOINT: Check User Profile & Zone Data
+app.get("/debug/user/:id", async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { data: profile, error } = await supabase
+            .from('profiles')
+            .select(`
+                *,
+                zones (
+                    *,
+                    zone_numbers (*)
+                )
+            `)
+            .eq('id', id)
+            .single();
+
+        if (error) throw error;
+        res.json(profile);
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
 // Update Agent Numbers (Admin Only)
 app.put("/agents/:id/numbers", async (req, res) => {
     try {
