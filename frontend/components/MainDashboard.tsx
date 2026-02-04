@@ -1914,26 +1914,27 @@ export default function MainDashboard() {
 
                 {/* Add Caller ID Selection Here - ALWAYS VISIBLE v5.0 */}
                 {/* Add Caller ID Selection Here - ALWAYS VISIBLE v5.0 */}
-                <div className="mb-4 space-y-3">
+                {/* Add Caller ID Selection Here - VISIBILITY: COMPACT MODE */}
+                <div className="mb-2 space-y-2">
                   {/* BOX 1: Designated Callback Number (Read Only) */}
                   <div>
-                    <label className="block text-xs font-bold text-gray-400 uppercase tracking-wide mb-1.5 ml-1">
-                      NÚMERO PARA DEVOLUCIÓN (CALLBACK)
+                    <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wide mb-1 ml-1">
+                      CALLBACK (DEVOLUCIÓN)
                     </label>
-                    <div className="w-full bg-gray-50 border border-gray-200 text-gray-800 py-2 px-3 rounded-lg text-sm font-mono font-medium flex items-center justify-between">
+                    <div className="w-full bg-gray-50 border border-gray-200 text-gray-800 py-1.5 px-2 rounded text-xs font-mono font-medium flex items-center justify-between">
                       <span>{callbackNumber || 'No configurado'}</span>
-                      {callbackNumber && <div className="text-[10px] bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-bold">ACTIVO</div>}
+                      {callbackNumber && <div className="text-[9px] bg-green-100 text-green-700 px-1.5 py-0.5 rounded-full font-bold">ACTIVO</div>}
                     </div>
                   </div>
 
                   {/* BOX 2: Outbound Line Selector */}
                   <div>
-                    <label className="block text-xs font-bold text-gray-400 uppercase tracking-wide mb-1.5 ml-1">
-                      LÍNEA DE SALIDA (CALLER ID)
+                    <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wide mb-1 ml-1">
+                      LÍNEA DE SALIDA
                     </label>
                     {availableNumbers.length > 0 ? (
                       <select
-                        className="w-full bg-white border border-gray-300 text-gray-700 py-2 px-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent text-sm shadow-sm"
+                        className="w-full bg-white border border-gray-300 text-gray-700 py-1.5 px-2 rounded text-xs focus:outline-none focus:ring-1 focus:ring-cyan-500 focus:border-transparent highlight-none"
                         value={selectedCallerId}
                         onChange={(e) => setSelectedCallerId(e.target.value)}
                         aria-label="Select Caller ID"
@@ -1945,15 +1946,12 @@ export default function MainDashboard() {
                     ) : (
                       <div className="relative">
                         <select
-                          className="w-full bg-gray-100 border border-gray-200 text-gray-400 py-2 px-3 rounded-lg cursor-not-allowed text-sm shadow-sm opacity-70"
+                          className="w-full bg-gray-100 border border-gray-200 text-gray-400 py-1.5 px-2 rounded cursor-not-allowed text-xs opacity-70"
                           disabled
                           value=""
                         >
-                          <option value="">Sin números asignados</option>
+                          <option value="">Sin números</option>
                         </select>
-                        <p className="text-[10px] text-red-400 mt-1 ml-1 font-medium">
-                          * Contacta al Admin para asignar una Zona o Números.
-                        </p>
                       </div>
                     )}
                   </div>
@@ -1965,323 +1963,326 @@ export default function MainDashboard() {
           </div>
 
           {/* FOOTER: Fixed Actions (Like Google Voice "Hide Keypad") */}
-          <div className="w-full p-4 flex justify-end border-t border-gray-100 bg-gray-50/50 mt-auto">
-            <button
-              onClick={() => handleCall('888888', selectedCallerId)}
-              className="flex items-center px-3 py-2 text-xs font-medium text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-md transition-all"
-              title="Verify microphone and speakers"
-            >
-              <Activity className="w-4 h-4 mr-2" />
-              Prueba de Audio
-            </button>
-          </div>
         </div>
 
-
-        {/* Removed Duplicate View Content Blocks from here */}
-
-        {/* DIALER MODE LAYOUT */}
-        {dialerMode && (
-          !currentLead ? (
-            <div className="flex-1 flex items-center justify-center bg-gray-50 flex-col">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-cyan-500 mb-4"></div>
-              <p className="text-gray-500 font-medium">Buscando siguiente lead...</p>
-              <button onClick={() => setDialerMode(false)} className="mt-8 text-red-400 hover:text-red-500 text-sm">Cancelar</button>
-            </div>
-          ) : (
-            <div className="flex-1 flex bg-gray-50">
-              {/* CENTER: Lead Info (Editable) */}
-              <div className="flex-1 p-6 overflow-y-auto">
-                <div className="max-w-5xl mx-auto bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-                  {/* Header Info */}
-                  <div className="flex items-start justify-between mb-6">
-                    <div>
-                      <h1 className="text-xl font-bold text-gray-900">{currentLead.name || 'Unknown'}</h1>
-                      <p className="text-lg text-cyan-600 font-mono mt-1 flex items-center font-bold">
-                        <Phone className="w-4 h-4 mr-2" />
-                        {currentLead.phone}
-                      </p>
-                    </div>
-                    <div className="text-right">
-                      <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-700 uppercase tracking-wide">
-                        Power Dialer Activo v2.9
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Grid Fields (Editable) - Single Row Layout */}
-                  <div className="grid grid-cols-4 gap-4 mb-4">
-                    <div className="col-span-1 space-y-1">
-                      <label className="text-xs font-bold text-black uppercase tracking-wider">Referido Por</label>
-                      <input
-                        type="text"
-                        className="w-full p-2 bg-gray-50 border border-gray-200 rounded-lg text-gray-800 font-medium focus:ring-1 focus:ring-cyan-500 focus:border-cyan-500 transition-all text-xs"
-                        value={currentLead.referred_by || ''}
-                        onChange={(e) => setCurrentLead((prev: any) => ({ ...prev, referred_by: e.target.value }))}
-                      />
-                    </div>
-                    <div className="col-span-1 space-y-1">
-                      <label className="text-xs font-bold text-black uppercase tracking-wider">Ciudad</label>
-                      <div className="relative">
-                        <Building className="absolute left-2.5 top-2.5 w-3.5 h-3.5 text-gray-400" />
-                        <input
-                          type="text"
-                          className="w-full pl-8 p-2 bg-gray-50 border border-gray-200 rounded-lg text-gray-800 font-medium focus:ring-1 focus:ring-cyan-500 focus:border-cyan-500 transition-all text-xs"
-                          value={currentLead.city || ''}
-                          onChange={(e) => setCurrentLead((prev: any) => ({ ...prev, city: e.target.value }))}
-                        />
-                      </div>
-                    </div>
-                    <div className="col-span-2 space-y-1">
-                      <label className="text-xs font-bold text-black uppercase tracking-wider">Dirección</label>
-                      <div className="relative">
-                        <MapPin className="absolute left-2.5 top-2.5 w-3.5 h-3.5 text-gray-400" />
-                        <input
-                          type="text"
-                          className="w-full pl-8 p-2 bg-gray-50 border border-gray-200 rounded-lg text-gray-800 font-medium focus:ring-1 focus:ring-cyan-500 focus:border-cyan-500 transition-all text-xs"
-                          value={currentLead.address || ''}
-                          onChange={(e) => setCurrentLead((prev: any) => ({ ...prev, address: e.target.value }))}
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Text Areas */}
-                  <div className="space-y-4">
-                    <div>
-                      <label className="text-xs font-bold text-black uppercase tracking-wider mb-1 block">Info General</label>
-                      <textarea
-                        rows={3}
-                        className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-700 leading-relaxed focus:ring-1 focus:ring-cyan-500 focus:border-cyan-500 transition-all resize-none"
-                        value={currentLead.general_info || ''}
-                        onChange={(e) => setCurrentLead((prev: any) => ({ ...prev, general_info: e.target.value }))}
-                      />
-                    </div>
-
-                    <div>
-                      <label className="text-xs font-bold text-black uppercase tracking-wider mb-1 block">Observaciones del Rep</label>
-                      <textarea
-                        rows={2}
-                        className="w-full p-3 bg-yellow-50 border border-yellow-100 rounded-xl text-gray-700 leading-relaxed focus:ring-1 focus:ring-yellow-400 focus:border-yellow-400 transition-all resize-none"
-                        value={currentLead.rep_notes || ''}
-                        onChange={(e) => setCurrentLead((prev: any) => ({ ...prev, rep_notes: e.target.value }))}
-                      />
-                    </div>
-
-                    <div className="relative group">
-                      <label className="text-xs font-bold text-black uppercase tracking-wider mb-1 block">
-                        Observaciones TLMK (Historial)
-                      </label>
-                      <div className="p-3 bg-blue-50 rounded-xl text-gray-700 text-sm leading-relaxed border border-blue-100 max-h-32 overflow-y-auto w-full">
-                        {currentLead.tlmk_notes || 'No history'}
-                      </div>
-                    </div>
-
-                    {/* NEW COMMENTS FIELD */}
-                    <div>
-                      <label className="text-xs font-bold text-black uppercase tracking-wider mb-1 block flex items-center justify-between">
-                        <span>Comentarios de la Llamada (Actual)</span>
-                        <button onClick={() => {
-                          const noteInput = document.getElementById('current-call-notes') as HTMLTextAreaElement;
-                          if (noteInput) handleCopy(noteInput.value);
-                        }} className="text-cyan-600 hover:text-cyan-700 text-xs font-bold flex items-center" title="Copiar">
-                          <Copy className="w-3 h-3 mr-1" /> Copiar
-                        </button>
-                      </label>
-                      <textarea
-                        id="current-call-notes"
-                        rows={4}
-                        placeholder="Escribe notas para esta llamada..."
-                        className="w-full p-3 bg-white border border-gray-300 rounded-xl text-gray-900 leading-relaxed focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition-all shadow-sm resize-none"
-                        value={currentLead.notes || ''}
-                        onChange={(e) => setCurrentLead((prev: any) => ({ ...prev, notes: e.target.value }))}
-                      />
-                    </div>
-                  </div>
-
-                </div>
-              </div>
-
-              {/* RIGHT: Controls & Status */}
-              <div className="w-80 bg-white border-l border-gray-200 flex flex-col h-full shadow-2xl z-20">
-
-                {/* TOP: Call Controls */}
-                <div className="p-5 border-b border-gray-100 bg-gray-50 flex flex-col items-center">
-
-                  {/* Active Call State or Start Call Button */}
-
-                  {/* --- VICIDIAL STYLE MANUAL CONTROLS (ALWAYS VISIBLE) --- */}
-                  <div className="w-full bg-gray-800 p-2 mb-4 rounded-lg flex items-center justify-between shadow-inner">
-                    <div className="text-[10px] text-green-400 font-mono flex flex-col">
-                      <span>ESTADO: {callStatus}</span>
-                      <span>DISP: {device ? 'READY' : 'NULL'}</span>
-                    </div>
-                    <div className="flex space-x-2">
-                      <button
-                        onClick={() => {
-                          console.log("FORCE ANSWER");
-                          if (device) {
-                            const conns = (device as any).connections;
-                            if (conns && conns.length > 0) {
-                              const active = conns[0];
-                              active.accept();
-                              setActiveCall(active);
-                              setCallStatus("In Call (Forced)");
-                            } else {
-                              alert("No connection found to answer (Force Mode).");
-                            }
-                          }
-                        }}
-                        className="px-3 py-1 bg-green-700 hover:bg-green-600 text-white text-xs font-bold rounded border border-green-500 shadow-sm active:scale-95"
-                      >
-                        FORZAR RESPUESTA
-                      </button>
-                      <button
-                        onClick={() => {
-                          if (device) device.disconnectAll();
-                          setCallStatus("Ready");
-                          setActiveCall(null);
-                        }}
-                        className="px-3 py-1 bg-red-900 hover:bg-red-800 text-white text-xs font-bold rounded border border-red-700 shadow-sm active:scale-95"
-                      >
-                        COLGAR TODO
-                      </button>
-                    </div>
-                  </div>
-                  {/* ------------------------------------------------------- */}
-                  {/* --- CALL CONTROL PANEL (Logic Refactored v4.0) --- */}
-                  {renderCallPanel()}
-
-                </div>
-
-                {/* MIDDLE: Status List (Scrollable) */}
-                <div className="flex-1 overflow-y-auto p-3 bg-gray-50/50">
-                  <label className="text-xs font-bold text-gray-500 uppercase tracking-wider px-1 mb-2 block">Resultado (Selección múltiple)</label>
-                  <div className="space-y-1.5">
-                    {CALL_STATUSES.map(status => {
-                      const isSelected = selectedStatuses.includes(status.id);
-                      return (
-                        <button
-                          key={status.id}
-                          onClick={() => {
-                            const noteInput = document.getElementById('current-call-notes') as HTMLTextAreaElement;
-                            handleLeadDisposition(status.id, noteInput?.value || '');
-                            // Do NOT clear notes on multi-select toggle
-                          }}
-                          className={`w-full text-left px-3 py-2.5 rounded-lg transition-all border text-sm font-bold flex items-center justify-between group shadow-sm ${isSelected ? 'bg-blue-50 border-blue-500 text-blue-900' : 'bg-white border-gray-200 text-gray-900 hover:bg-gray-50 hover:border-gray-300'}`}
-                          style={{ borderLeftWidth: '4px', borderLeftColor: status.color.includes('green') ? '#22c55e' : status.color.includes('red') ? '#ef4444' : status.color.includes('yellow') ? '#eab308' : '#3b82f6' }}
-                        >
-                          <span className="flex-1">{status.label}</span>
-                          {isSelected ? (
-                            <div className="w-5 h-5 rounded-full border-2 border-blue-600 bg-blue-600 flex items-center justify-center text-white">
-                              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="w-3 h-3"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                            </div>
-                          ) : (
-                            <div className="w-5 h-5 rounded-full border-2 border-gray-300 group-hover:border-gray-400 transition-colors"></div>
-                          )}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                {/* BOTTOM: Nav */}
-                <div className="p-3 bg-white border-t border-gray-200 grid grid-cols-3 gap-2">
-                  <button onClick={handleBackLead} className="flex flex-col items-center justify-center p-2 text-gray-500 hover:bg-gray-100 rounded-lg transition-colors">
-                    <ArrowDownLeft className="w-4 h-4 mb-1 rotate-90" />
-                    <span className="text-[10px] uppercase font-bold tracking-wider">Atrás</span>
-                  </button>
-                  <button onClick={handleSkipLead} className="flex flex-col items-center justify-center p-2 text-gray-500 hover:bg-gray-100 rounded-lg transition-colors">
-                    <ArrowDownLeft className="w-4 h-4 mb-1 rotate-[-90deg]" />
-                    <span className="text-[10px] uppercase font-bold tracking-wider">Saltar</span>
-                  </button>
-                  <button onClick={handleNextLead} className="flex flex-col items-center justify-center p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors">
-                    <ArrowDownLeft className="w-4 h-4 mb-1 rotate-[-135deg]" /> {/* Next Icon Proxy */}
-                    <span className="text-[10px] uppercase font-bold tracking-wider">Siguiente</span>
-                  </button>
-                </div>
-              </div>
-            </div>
-          ))}
+        {/* FOOTER: Transparent Audio Test */}
+        <div className="w-full p-2 flex justify-center mt-auto">
+          <button
+            onClick={() => handleCall('888888', selectedCallerId)}
+            className="flex items-center px-3 py-1.5 text-[10px] font-bold text-blue-400 hover:text-blue-600 transition-colors uppercase tracking-wider"
+            title="Verify microphone and speakers"
+          >
+            <Activity className="w-3 h-3 mr-1.5" />
+            Prueba de Audio
+          </button>
+        </div>
       </div>
 
-      {/* MOBILE SIDEBAR OVERLAY */}
-      <AnimatePresence>
-        {isSidebarOpen && (
-          <>
-            {/* Backdrop */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 0.5 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setIsSidebarOpen(false)}
-              className="fixed inset-0 bg-black z-50 2xl:hidden"
-            />
-            {/* Sidebar Drawer */}
-            <motion.div
-              initial={{ x: '-100%' }}
-              animate={{ x: 0 }}
-              exit={{ x: '-100%' }}
-              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-              className="fixed top-0 left-0 bottom-0 w-3/4 max-w-xs bg-white z-50 shadow-2xl flex flex-col 2xl:hidden"
-            >
-              <div className="p-4 border-b border-gray-100 flex items-center justify-between bg-gray-50">
-                <div className="flex items-center gap-3">
-                  <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-bold ${isDeviceReady ? 'bg-purple-600' : 'bg-gray-400'}`}>
-                    {user?.email?.[0].toUpperCase() || 'G'}
-                  </div>
-                  <div className="overflow-hidden">
-                    <p className="text-sm font-bold text-gray-900 truncate max-w-[150px]">{user?.email || 'Guest'}</p>
-                    <p className="text-xs text-green-600 flex items-center">
-                      <span className="w-2 h-2 rounded-full bg-green-500 mr-1"></span> Online
+
+      {/* Removed Duplicate View Content Blocks from here */}
+
+      {/* DIALER MODE LAYOUT */}
+      {dialerMode && (
+        !currentLead ? (
+          <div className="flex-1 flex items-center justify-center bg-gray-50 flex-col">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-cyan-500 mb-4"></div>
+            <p className="text-gray-500 font-medium">Buscando siguiente lead...</p>
+            <button onClick={() => setDialerMode(false)} className="mt-8 text-red-400 hover:text-red-500 text-sm">Cancelar</button>
+          </div>
+        ) : (
+          <div className="flex-1 flex bg-gray-50">
+            {/* CENTER: Lead Info (Editable) */}
+            <div className="flex-1 p-6 overflow-y-auto">
+              <div className="max-w-5xl mx-auto bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+                {/* Header Info */}
+                <div className="flex items-start justify-between mb-6">
+                  <div>
+                    <h1 className="text-xl font-bold text-gray-900">{currentLead.name || 'Unknown'}</h1>
+                    <p className="text-lg text-cyan-600 font-mono mt-1 flex items-center font-bold">
+                      <Phone className="w-4 h-4 mr-2" />
+                      {currentLead.phone}
                     </p>
                   </div>
+                  <div className="text-right">
+                    <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-700 uppercase tracking-wide">
+                      Power Dialer Activo v2.9
+                    </span>
+                  </div>
                 </div>
-                <button onClick={() => setIsSidebarOpen(false)} className="p-2 text-gray-500 hover:bg-gray-200 rounded-full">
-                  <X className="w-6 h-6" />
-                </button>
+
+                {/* Grid Fields (Editable) - Single Row Layout */}
+                <div className="grid grid-cols-4 gap-4 mb-4">
+                  <div className="col-span-1 space-y-1">
+                    <label className="text-xs font-bold text-black uppercase tracking-wider">Referido Por</label>
+                    <input
+                      type="text"
+                      className="w-full p-2 bg-gray-50 border border-gray-200 rounded-lg text-gray-800 font-medium focus:ring-1 focus:ring-cyan-500 focus:border-cyan-500 transition-all text-xs"
+                      value={currentLead.referred_by || ''}
+                      onChange={(e) => setCurrentLead((prev: any) => ({ ...prev, referred_by: e.target.value }))}
+                    />
+                  </div>
+                  <div className="col-span-1 space-y-1">
+                    <label className="text-xs font-bold text-black uppercase tracking-wider">Ciudad</label>
+                    <div className="relative">
+                      <Building className="absolute left-2.5 top-2.5 w-3.5 h-3.5 text-gray-400" />
+                      <input
+                        type="text"
+                        className="w-full pl-8 p-2 bg-gray-50 border border-gray-200 rounded-lg text-gray-800 font-medium focus:ring-1 focus:ring-cyan-500 focus:border-cyan-500 transition-all text-xs"
+                        value={currentLead.city || ''}
+                        onChange={(e) => setCurrentLead((prev: any) => ({ ...prev, city: e.target.value }))}
+                      />
+                    </div>
+                  </div>
+                  <div className="col-span-2 space-y-1">
+                    <label className="text-xs font-bold text-black uppercase tracking-wider">Dirección</label>
+                    <div className="relative">
+                      <MapPin className="absolute left-2.5 top-2.5 w-3.5 h-3.5 text-gray-400" />
+                      <input
+                        type="text"
+                        className="w-full pl-8 p-2 bg-gray-50 border border-gray-200 rounded-lg text-gray-800 font-medium focus:ring-1 focus:ring-cyan-500 focus:border-cyan-500 transition-all text-xs"
+                        value={currentLead.address || ''}
+                        onChange={(e) => setCurrentLead((prev: any) => ({ ...prev, address: e.target.value }))}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Text Areas */}
+                <div className="space-y-4">
+                  <div>
+                    <label className="text-xs font-bold text-black uppercase tracking-wider mb-1 block">Info General</label>
+                    <textarea
+                      rows={3}
+                      className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-700 leading-relaxed focus:ring-1 focus:ring-cyan-500 focus:border-cyan-500 transition-all resize-none"
+                      value={currentLead.general_info || ''}
+                      onChange={(e) => setCurrentLead((prev: any) => ({ ...prev, general_info: e.target.value }))}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-xs font-bold text-black uppercase tracking-wider mb-1 block">Observaciones del Rep</label>
+                    <textarea
+                      rows={2}
+                      className="w-full p-3 bg-yellow-50 border border-yellow-100 rounded-xl text-gray-700 leading-relaxed focus:ring-1 focus:ring-yellow-400 focus:border-yellow-400 transition-all resize-none"
+                      value={currentLead.rep_notes || ''}
+                      onChange={(e) => setCurrentLead((prev: any) => ({ ...prev, rep_notes: e.target.value }))}
+                    />
+                  </div>
+
+                  <div className="relative group">
+                    <label className="text-xs font-bold text-black uppercase tracking-wider mb-1 block">
+                      Observaciones TLMK (Historial)
+                    </label>
+                    <div className="p-3 bg-blue-50 rounded-xl text-gray-700 text-sm leading-relaxed border border-blue-100 max-h-32 overflow-y-auto w-full">
+                      {currentLead.tlmk_notes || 'No history'}
+                    </div>
+                  </div>
+
+                  {/* NEW COMMENTS FIELD */}
+                  <div>
+                    <label className="text-xs font-bold text-black uppercase tracking-wider mb-1 block flex items-center justify-between">
+                      <span>Comentarios de la Llamada (Actual)</span>
+                      <button onClick={() => {
+                        const noteInput = document.getElementById('current-call-notes') as HTMLTextAreaElement;
+                        if (noteInput) handleCopy(noteInput.value);
+                      }} className="text-cyan-600 hover:text-cyan-700 text-xs font-bold flex items-center" title="Copiar">
+                        <Copy className="w-3 h-3 mr-1" /> Copiar
+                      </button>
+                    </label>
+                    <textarea
+                      id="current-call-notes"
+                      rows={4}
+                      placeholder="Escribe notas para esta llamada..."
+                      className="w-full p-3 bg-white border border-gray-300 rounded-xl text-gray-900 leading-relaxed focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition-all shadow-sm resize-none"
+                      value={currentLead.notes || ''}
+                      onChange={(e) => setCurrentLead((prev: any) => ({ ...prev, notes: e.target.value }))}
+                    />
+                  </div>
+                </div>
+
               </div>
+            </div>
 
-              <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
-                <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-4 ml-2">Menú Principal</h3>
+            {/* RIGHT: Controls & Status */}
+            <div className="w-80 bg-white border-l border-gray-200 flex flex-col h-full shadow-2xl z-20">
 
-                <button onClick={() => { handleViewChange('calls'); setActiveMobileTab('calls'); setIsSidebarOpen(false); }} className="w-full flex items-center text-gray-700 hover:bg-blue-50 hover:text-blue-600 p-3 rounded-xl transition-all font-medium">
-                  <Phone className="w-5 h-5 mr-3" /> Llamadas
-                </button>
-                <button onClick={() => { handleViewChange('messages'); setActiveMobileTab('messages'); setIsSidebarOpen(false); }} className="w-full flex items-center text-gray-700 hover:bg-blue-50 hover:text-blue-600 p-3 rounded-xl transition-all font-medium">
-                  <MessageSquare className="w-5 h-5 mr-3" /> Mensajes
-                </button>
-                <button onClick={() => { setActiveMobileTab('voicemail'); setIsSidebarOpen(false); }} className="w-full flex items-center text-gray-700 hover:bg-blue-50 hover:text-blue-600 p-3 rounded-xl transition-all font-medium">
-                  <div className="w-5 h-5 border-b-2 border-l-2 border-current rotate-45 transform mt-[-4px] mr-3"></div> Buzón de voz
-                </button>
+              {/* TOP: Call Controls */}
+              <div className="p-5 border-b border-gray-100 bg-gray-50 flex flex-col items-center">
 
-                {userRole === 'admin' && (
-                  <>
-                    <div className="my-4 border-t border-gray-100"></div>
-                    <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-4 ml-2">Administración</h3>
-                    <button onClick={() => window.location.href = '/admin'} className="w-full flex items-center text-gray-700 hover:bg-blue-50 hover:text-blue-600 p-3 rounded-xl transition-all font-medium">
-                      <Shield className="w-5 h-5 mr-3" /> Admin Panel
+                {/* Active Call State or Start Call Button */}
+
+                {/* --- VICIDIAL STYLE MANUAL CONTROLS (ALWAYS VISIBLE) --- */}
+                <div className="w-full bg-gray-800 p-2 mb-4 rounded-lg flex items-center justify-between shadow-inner">
+                  <div className="text-[10px] text-green-400 font-mono flex flex-col">
+                    <span>ESTADO: {callStatus}</span>
+                    <span>DISP: {device ? 'READY' : 'NULL'}</span>
+                  </div>
+                  <div className="flex space-x-2">
+                    <button
+                      onClick={() => {
+                        console.log("FORCE ANSWER");
+                        if (device) {
+                          const conns = (device as any).connections;
+                          if (conns && conns.length > 0) {
+                            const active = conns[0];
+                            active.accept();
+                            setActiveCall(active);
+                            setCallStatus("In Call (Forced)");
+                          } else {
+                            alert("No connection found to answer (Force Mode).");
+                          }
+                        }
+                      }}
+                      className="px-3 py-1 bg-green-700 hover:bg-green-600 text-white text-xs font-bold rounded border border-green-500 shadow-sm active:scale-95"
+                    >
+                      FORZAR RESPUESTA
                     </button>
-                  </>
-                )}
-              </nav>
+                    <button
+                      onClick={() => {
+                        if (device) device.disconnectAll();
+                        setCallStatus("Ready");
+                        setActiveCall(null);
+                      }}
+                      className="px-3 py-1 bg-red-900 hover:bg-red-800 text-white text-xs font-bold rounded border border-red-700 shadow-sm active:scale-95"
+                    >
+                      COLGAR TODO
+                    </button>
+                  </div>
+                </div>
+                {/* ------------------------------------------------------- */}
+                {/* --- CALL CONTROL PANEL (Logic Refactored v4.0) --- */}
+                {renderCallPanel()}
 
-              <div className="p-4 border-t border-gray-100">
-                <button
-                  onClick={() => {
-                    if (confirm('Cerrar sesión?')) window.location.href = '/login';
-                  }}
-                  className="w-full flex items-center justify-center text-red-500 hover:bg-red-50 p-3 rounded-xl transition-all font-bold"
-                >
-                  <LogOut className="w-5 h-5 mr-2" /> Cerrar Sesión
-                </button>
               </div>
 
-            </motion.div>
-          </>
-        )}
-      </AnimatePresence>
+              {/* MIDDLE: Status List (Scrollable) */}
+              <div className="flex-1 overflow-y-auto p-3 bg-gray-50/50">
+                <label className="text-xs font-bold text-gray-500 uppercase tracking-wider px-1 mb-2 block">Resultado (Selección múltiple)</label>
+                <div className="space-y-1.5">
+                  {CALL_STATUSES.map(status => {
+                    const isSelected = selectedStatuses.includes(status.id);
+                    return (
+                      <button
+                        key={status.id}
+                        onClick={() => {
+                          const noteInput = document.getElementById('current-call-notes') as HTMLTextAreaElement;
+                          handleLeadDisposition(status.id, noteInput?.value || '');
+                          // Do NOT clear notes on multi-select toggle
+                        }}
+                        className={`w-full text-left px-3 py-2.5 rounded-lg transition-all border text-sm font-bold flex items-center justify-between group shadow-sm ${isSelected ? 'bg-blue-50 border-blue-500 text-blue-900' : 'bg-white border-gray-200 text-gray-900 hover:bg-gray-50 hover:border-gray-300'}`}
+                        style={{ borderLeftWidth: '4px', borderLeftColor: status.color.includes('green') ? '#22c55e' : status.color.includes('red') ? '#ef4444' : status.color.includes('yellow') ? '#eab308' : '#3b82f6' }}
+                      >
+                        <span className="flex-1">{status.label}</span>
+                        {isSelected ? (
+                          <div className="w-5 h-5 rounded-full border-2 border-blue-600 bg-blue-600 flex items-center justify-center text-white">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="w-3 h-3"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                          </div>
+                        ) : (
+                          <div className="w-5 h-5 rounded-full border-2 border-gray-300 group-hover:border-gray-400 transition-colors"></div>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
 
+              {/* BOTTOM: Nav */}
+              <div className="p-3 bg-white border-t border-gray-200 grid grid-cols-3 gap-2">
+                <button onClick={handleBackLead} className="flex flex-col items-center justify-center p-2 text-gray-500 hover:bg-gray-100 rounded-lg transition-colors">
+                  <ArrowDownLeft className="w-4 h-4 mb-1 rotate-90" />
+                  <span className="text-[10px] uppercase font-bold tracking-wider">Atrás</span>
+                </button>
+                <button onClick={handleSkipLead} className="flex flex-col items-center justify-center p-2 text-gray-500 hover:bg-gray-100 rounded-lg transition-colors">
+                  <ArrowDownLeft className="w-4 h-4 mb-1 rotate-[-90deg]" />
+                  <span className="text-[10px] uppercase font-bold tracking-wider">Saltar</span>
+                </button>
+                <button onClick={handleNextLead} className="flex flex-col items-center justify-center p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors">
+                  <ArrowDownLeft className="w-4 h-4 mb-1 rotate-[-135deg]" /> {/* Next Icon Proxy */}
+                  <span className="text-[10px] uppercase font-bold tracking-wider">Siguiente</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        ))}
     </div>
+
+      {/* MOBILE SIDEBAR OVERLAY */ }
+  <AnimatePresence>
+    {isSidebarOpen && (
+      <>
+        {/* Backdrop */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 0.5 }}
+          exit={{ opacity: 0 }}
+          onClick={() => setIsSidebarOpen(false)}
+          className="fixed inset-0 bg-black z-50 2xl:hidden"
+        />
+        {/* Sidebar Drawer */}
+        <motion.div
+          initial={{ x: '-100%' }}
+          animate={{ x: 0 }}
+          exit={{ x: '-100%' }}
+          transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+          className="fixed top-0 left-0 bottom-0 w-3/4 max-w-xs bg-white z-50 shadow-2xl flex flex-col 2xl:hidden"
+        >
+          <div className="p-4 border-b border-gray-100 flex items-center justify-between bg-gray-50">
+            <div className="flex items-center gap-3">
+              <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-bold ${isDeviceReady ? 'bg-purple-600' : 'bg-gray-400'}`}>
+                {user?.email?.[0].toUpperCase() || 'G'}
+              </div>
+              <div className="overflow-hidden">
+                <p className="text-sm font-bold text-gray-900 truncate max-w-[150px]">{user?.email || 'Guest'}</p>
+                <p className="text-xs text-green-600 flex items-center">
+                  <span className="w-2 h-2 rounded-full bg-green-500 mr-1"></span> Online
+                </p>
+              </div>
+            </div>
+            <button onClick={() => setIsSidebarOpen(false)} className="p-2 text-gray-500 hover:bg-gray-200 rounded-full">
+              <X className="w-6 h-6" />
+            </button>
+          </div>
+
+          <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
+            <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-4 ml-2">Menú Principal</h3>
+
+            <button onClick={() => { handleViewChange('calls'); setActiveMobileTab('calls'); setIsSidebarOpen(false); }} className="w-full flex items-center text-gray-700 hover:bg-blue-50 hover:text-blue-600 p-3 rounded-xl transition-all font-medium">
+              <Phone className="w-5 h-5 mr-3" /> Llamadas
+            </button>
+            <button onClick={() => { handleViewChange('messages'); setActiveMobileTab('messages'); setIsSidebarOpen(false); }} className="w-full flex items-center text-gray-700 hover:bg-blue-50 hover:text-blue-600 p-3 rounded-xl transition-all font-medium">
+              <MessageSquare className="w-5 h-5 mr-3" /> Mensajes
+            </button>
+            <button onClick={() => { setActiveMobileTab('voicemail'); setIsSidebarOpen(false); }} className="w-full flex items-center text-gray-700 hover:bg-blue-50 hover:text-blue-600 p-3 rounded-xl transition-all font-medium">
+              <div className="w-5 h-5 border-b-2 border-l-2 border-current rotate-45 transform mt-[-4px] mr-3"></div> Buzón de voz
+            </button>
+
+            {userRole === 'admin' && (
+              <>
+                <div className="my-4 border-t border-gray-100"></div>
+                <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-4 ml-2">Administración</h3>
+                <button onClick={() => window.location.href = '/admin'} className="w-full flex items-center text-gray-700 hover:bg-blue-50 hover:text-blue-600 p-3 rounded-xl transition-all font-medium">
+                  <Shield className="w-5 h-5 mr-3" /> Admin Panel
+                </button>
+              </>
+            )}
+          </nav>
+
+          <div className="p-4 border-t border-gray-100">
+            <button
+              onClick={() => {
+                if (confirm('Cerrar sesión?')) window.location.href = '/login';
+              }}
+              className="w-full flex items-center justify-center text-red-500 hover:bg-red-50 p-3 rounded-xl transition-all font-bold"
+            >
+              <LogOut className="w-5 h-5 mr-2" /> Cerrar Sesión
+            </button>
+          </div>
+
+        </motion.div>
+      </>
+    )}
+  </AnimatePresence>
+
+    </div >
   )
 }

@@ -46,16 +46,16 @@ export default function Dialpad({
             </div>
 
             {/* Keypad Grid */}
-            <div className="grid grid-cols-3 w-full gap-y-3 mb-6 place-items-center">
+            <div className="grid grid-cols-3 w-full gap-y-2 mb-4 place-items-center">
                 {digits.map((item) => (
                     <button
                         key={item.digit}
                         onClick={() => handlePress(item.digit)}
-                        className="w-16 h-16 rounded-full hover:bg-gray-100 flex flex-col items-center justify-center transition-colors focus:outline-none active:bg-gray-200"
+                        className="w-12 h-12 rounded-full hover:bg-gray-100 flex flex-col items-center justify-center transition-colors focus:outline-none active:bg-gray-200"
                     >
-                        <span className="text-2xl text-gray-700 font-normal">{item.digit}</span>
+                        <span className="text-xl text-gray-700 font-normal">{item.digit}</span>
                         {item.letters && (
-                            <span className="text-[10px] text-gray-400 font-medium tracking-widest mt-[-2px]">{item.letters}</span>
+                            <span className="text-[9px] text-gray-400 font-medium tracking-widest mt-[-2px]">{item.letters}</span>
                         )}
                     </button>
                 ))}
@@ -66,11 +66,11 @@ export default function Dialpad({
                 <button
                     onClick={handleCall}
                     disabled={!number}
-                    className="w-16 h-16 rounded-full bg-blue-600 hover:bg-blue-700 text-white flex items-center justify-center shadow-md transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="w-14 h-14 rounded-full bg-blue-600 hover:bg-blue-700 text-white flex items-center justify-center shadow-md transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
                     title="Call"
                     aria-label="Call"
                 >
-                    <Phone className="w-7 h-7 fill-current" />
+                    <Phone className="w-6 h-6 fill-current" />
                 </button>
             </div>
 
