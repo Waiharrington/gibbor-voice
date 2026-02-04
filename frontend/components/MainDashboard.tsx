@@ -647,10 +647,18 @@ export default function MainDashboard() {
     if (!token) return;
 
     console.log("Initializing Twilio Device (v1.6)...");
-    const newDevice = new Device(token, { logLevel: 1 });
+    // OPTIMIZATION: Prioritize Ashburn (US East) > Rochester > Sao Paulo, and Opus codec
+    const deviceOptions = {
+      logLevel: 1,
+      codecPreferences: ['opus', 'pcmu'],
+      edge: ['ashburn', 'rochester', 'sao-paulo']
+    } as any; // Type casting for edge support if types are old
+
+    console.log("Initializing Twilio Device (v1.6 Optimized)...", deviceOptions);
+    const newDevice = new Device(token, deviceOptions);
 
     newDevice.on('registered', () => {
-      console.log('Twilio Device Registered');
+      console.log('Twilio Device Registered via edge:', (newDevice as any).edge);
       setCallStatus('Disponible');
       setIsDeviceReady(true);
     });
@@ -658,10 +666,24 @@ export default function MainDashboard() {
     newDevice.on('error', (error: any) => {
       console.error('Twilio Device Error:', error);
 
+      // Silent Reconnect for Network Errors (1000 - 1006, 31000s)
+      const isNetworkError = [31000, 31005, 31009, 1000, 1006].includes(error.code);
+
+      if (isNetworkError) {
+        console.warn("Network breakdown detected. Attempting silent reconnect...");
+        setCallStatus('Reconectando...');
+        // Small delay then re-register
+        setTimeout(() => {
+          if (newDevice && newDevice.state === 'Unregistered') {
+            newDevice.register();
+          }
+        }, 2000);
+        return;
+      }
+
       let msg = error.message;
       if (error.code === 31009 || error.code === 31000 || error.code === 31005) {
-        msg = "Red bloqueada. Por favor deshabilite VPN/Firewall y refresque.";
-        alert("ERROR CRÍTICO DE RED: Su conexión a internet está bloqueando llamadas. \n\n1. Desactive cualquier VPN/Firewall.\n2. Conéctese a otra red WiFi si es posible.\n3. Recargue la página.");
+        msg = "Red inestable/bloqueada. Reintentando...";
       }
 
       setCallStatus('Error: ' + msg);
