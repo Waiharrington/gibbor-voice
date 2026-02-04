@@ -2204,84 +2204,83 @@ export default function MainDashboard() {
             </div>
           </div>
         ))}
-    </div>
 
-      {/* MOBILE SIDEBAR OVERLAY */ }
-  <AnimatePresence>
-    {isSidebarOpen && (
-      <>
-        {/* Backdrop */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 0.5 }}
-          exit={{ opacity: 0 }}
-          onClick={() => setIsSidebarOpen(false)}
-          className="fixed inset-0 bg-black z-50 2xl:hidden"
-        />
-        {/* Sidebar Drawer */}
-        <motion.div
-          initial={{ x: '-100%' }}
-          animate={{ x: 0 }}
-          exit={{ x: '-100%' }}
-          transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-          className="fixed top-0 left-0 bottom-0 w-3/4 max-w-xs bg-white z-50 shadow-2xl flex flex-col 2xl:hidden"
-        >
-          <div className="p-4 border-b border-gray-100 flex items-center justify-between bg-gray-50">
-            <div className="flex items-center gap-3">
-              <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-bold ${isDeviceReady ? 'bg-purple-600' : 'bg-gray-400'}`}>
-                {user?.email?.[0].toUpperCase() || 'G'}
-              </div>
-              <div className="overflow-hidden">
-                <p className="text-sm font-bold text-gray-900 truncate max-w-[150px]">{user?.email || 'Guest'}</p>
-                <p className="text-xs text-green-600 flex items-center">
-                  <span className="w-2 h-2 rounded-full bg-green-500 mr-1"></span> Online
-                </p>
-              </div>
-            </div>
-            <button onClick={() => setIsSidebarOpen(false)} className="p-2 text-gray-500 hover:bg-gray-200 rounded-full">
-              <X className="w-6 h-6" />
-            </button>
-          </div>
-
-          <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
-            <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-4 ml-2">Menú Principal</h3>
-
-            <button onClick={() => { handleViewChange('calls'); setActiveMobileTab('calls'); setIsSidebarOpen(false); }} className="w-full flex items-center text-gray-700 hover:bg-blue-50 hover:text-blue-600 p-3 rounded-xl transition-all font-medium">
-              <Phone className="w-5 h-5 mr-3" /> Llamadas
-            </button>
-            <button onClick={() => { handleViewChange('messages'); setActiveMobileTab('messages'); setIsSidebarOpen(false); }} className="w-full flex items-center text-gray-700 hover:bg-blue-50 hover:text-blue-600 p-3 rounded-xl transition-all font-medium">
-              <MessageSquare className="w-5 h-5 mr-3" /> Mensajes
-            </button>
-            <button onClick={() => { setActiveMobileTab('voicemail'); setIsSidebarOpen(false); }} className="w-full flex items-center text-gray-700 hover:bg-blue-50 hover:text-blue-600 p-3 rounded-xl transition-all font-medium">
-              <div className="w-5 h-5 border-b-2 border-l-2 border-current rotate-45 transform mt-[-4px] mr-3"></div> Buzón de voz
-            </button>
-
-            {userRole === 'admin' && (
-              <>
-                <div className="my-4 border-t border-gray-100"></div>
-                <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-4 ml-2">Administración</h3>
-                <button onClick={() => window.location.href = '/admin'} className="w-full flex items-center text-gray-700 hover:bg-blue-50 hover:text-blue-600 p-3 rounded-xl transition-all font-medium">
-                  <Shield className="w-5 h-5 mr-3" /> Admin Panel
-                </button>
-              </>
-            )}
-          </nav>
-
-          <div className="p-4 border-t border-gray-100">
-            <button
-              onClick={() => {
-                if (confirm('Cerrar sesión?')) window.location.href = '/login';
-              }}
-              className="w-full flex items-center justify-center text-red-500 hover:bg-red-50 p-3 rounded-xl transition-all font-bold"
+      {/* MOBILE SIDEBAR OVERLAY */}
+      <AnimatePresence>
+        {isSidebarOpen && (
+          <>
+            {/* Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 0.5 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsSidebarOpen(false)}
+              className="fixed inset-0 bg-black z-50 2xl:hidden"
+            />
+            {/* Sidebar Drawer */}
+            <motion.div
+              initial={{ x: '-100%' }}
+              animate={{ x: 0 }}
+              exit={{ x: '-100%' }}
+              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+              className="fixed top-0 left-0 bottom-0 w-3/4 max-w-xs bg-white z-50 shadow-2xl flex flex-col 2xl:hidden"
             >
-              <LogOut className="w-5 h-5 mr-2" /> Cerrar Sesión
-            </button>
-          </div>
+              <div className="p-4 border-b border-gray-100 flex items-center justify-between bg-gray-50">
+                <div className="flex items-center gap-3">
+                  <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-bold ${isDeviceReady ? 'bg-purple-600' : 'bg-gray-400'}`}>
+                    {user?.email?.[0].toUpperCase() || 'G'}
+                  </div>
+                  <div className="overflow-hidden">
+                    <p className="text-sm font-bold text-gray-900 truncate max-w-[150px]">{user?.email || 'Guest'}</p>
+                    <p className="text-xs text-green-600 flex items-center">
+                      <span className="w-2 h-2 rounded-full bg-green-500 mr-1"></span> Online
+                    </p>
+                  </div>
+                </div>
+                <button onClick={() => setIsSidebarOpen(false)} className="p-2 text-gray-500 hover:bg-gray-200 rounded-full">
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
 
-        </motion.div>
-      </>
-    )}
-  </AnimatePresence>
+              <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
+                <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-4 ml-2">Menú Principal</h3>
+
+                <button onClick={() => { handleViewChange('calls'); setActiveMobileTab('calls'); setIsSidebarOpen(false); }} className="w-full flex items-center text-gray-700 hover:bg-blue-50 hover:text-blue-600 p-3 rounded-xl transition-all font-medium">
+                  <Phone className="w-5 h-5 mr-3" /> Llamadas
+                </button>
+                <button onClick={() => { handleViewChange('messages'); setActiveMobileTab('messages'); setIsSidebarOpen(false); }} className="w-full flex items-center text-gray-700 hover:bg-blue-50 hover:text-blue-600 p-3 rounded-xl transition-all font-medium">
+                  <MessageSquare className="w-5 h-5 mr-3" /> Mensajes
+                </button>
+                <button onClick={() => { setActiveMobileTab('voicemail'); setIsSidebarOpen(false); }} className="w-full flex items-center text-gray-700 hover:bg-blue-50 hover:text-blue-600 p-3 rounded-xl transition-all font-medium">
+                  <div className="w-5 h-5 border-b-2 border-l-2 border-current rotate-45 transform mt-[-4px] mr-3"></div> Buzón de voz
+                </button>
+
+                {userRole === 'admin' && (
+                  <>
+                    <div className="my-4 border-t border-gray-100"></div>
+                    <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-4 ml-2">Administración</h3>
+                    <button onClick={() => window.location.href = '/admin'} className="w-full flex items-center text-gray-700 hover:bg-blue-50 hover:text-blue-600 p-3 rounded-xl transition-all font-medium">
+                      <Shield className="w-5 h-5 mr-3" /> Admin Panel
+                    </button>
+                  </>
+                )}
+              </nav>
+
+              <div className="p-4 border-t border-gray-100">
+                <button
+                  onClick={() => {
+                    if (confirm('Cerrar sesión?')) window.location.href = '/login';
+                  }}
+                  className="w-full flex items-center justify-center text-red-500 hover:bg-red-50 p-3 rounded-xl transition-all font-bold"
+                >
+                  <LogOut className="w-5 h-5 mr-2" /> Cerrar Sesión
+                </button>
+              </div>
+
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
 
     </div >
   )
