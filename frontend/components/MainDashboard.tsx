@@ -1913,35 +1913,50 @@ export default function MainDashboard() {
                 </div>
 
                 {/* Add Caller ID Selection Here - ALWAYS VISIBLE v5.0 */}
-                <div className="mb-4">
-                  <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1.5 ml-1">
-                    NÚMERO DE SALIDA (CALLBACK):
-                  </label>
-                  {availableNumbers.length > 0 ? (
-                    <select
-                      className="w-full bg-white border border-gray-300 text-gray-700 py-2 px-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent text-sm shadow-sm"
-                      value={selectedCallerId}
-                      onChange={(e) => setSelectedCallerId(e.target.value)}
-                      aria-label="Select Caller ID"
-                    >
-                      {availableNumbers.map(num => (
-                        <option key={num.phoneNumber} value={num.phoneNumber}>{num.phoneNumber} {num.friendlyName ? `(${num.friendlyName})` : ''}</option>
-                      ))}
-                    </select>
-                  ) : (
-                    <div className="relative">
-                      <select
-                        className="w-full bg-gray-100 border border-gray-200 text-gray-400 py-2 px-3 rounded-lg cursor-not-allowed text-sm shadow-sm opacity-70"
-                        disabled
-                        value=""
-                      >
-                        <option value="">Sin números asignados</option>
-                      </select>
-                      <p className="text-[10px] text-red-400 mt-1 ml-1 font-medium">
-                        * Contacta al Admin para asignar una Zona o Números.
-                      </p>
+                {/* Add Caller ID Selection Here - ALWAYS VISIBLE v5.0 */}
+                <div className="mb-4 space-y-3">
+                  {/* BOX 1: Designated Callback Number (Read Only) */}
+                  <div>
+                    <label className="block text-xs font-bold text-gray-400 uppercase tracking-wide mb-1.5 ml-1">
+                      NÚMERO PARA DEVOLUCIÓN (CALLBACK)
+                    </label>
+                    <div className="w-full bg-gray-50 border border-gray-200 text-gray-800 py-2 px-3 rounded-lg text-sm font-mono font-medium flex items-center justify-between">
+                      <span>{callbackNumber || 'No configurado'}</span>
+                      {callbackNumber && <div className="text-[10px] bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-bold">ACTIVO</div>}
                     </div>
-                  )}
+                  </div>
+
+                  {/* BOX 2: Outbound Line Selector */}
+                  <div>
+                    <label className="block text-xs font-bold text-gray-400 uppercase tracking-wide mb-1.5 ml-1">
+                      LÍNEA DE SALIDA (CALLER ID)
+                    </label>
+                    {availableNumbers.length > 0 ? (
+                      <select
+                        className="w-full bg-white border border-gray-300 text-gray-700 py-2 px-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent text-sm shadow-sm"
+                        value={selectedCallerId}
+                        onChange={(e) => setSelectedCallerId(e.target.value)}
+                        aria-label="Select Caller ID"
+                      >
+                        {availableNumbers.map(num => (
+                          <option key={num.phoneNumber} value={num.phoneNumber}>{num.phoneNumber} {num.friendlyName ? `(${num.friendlyName})` : ''}</option>
+                        ))}
+                      </select>
+                    ) : (
+                      <div className="relative">
+                        <select
+                          className="w-full bg-gray-100 border border-gray-200 text-gray-400 py-2 px-3 rounded-lg cursor-not-allowed text-sm shadow-sm opacity-70"
+                          disabled
+                          value=""
+                        >
+                          <option value="">Sin números asignados</option>
+                        </select>
+                        <p className="text-[10px] text-red-400 mt-1 ml-1 font-medium">
+                          * Contacta al Admin para asignar una Zona o Números.
+                        </p>
+                      </div>
+                    )}
+                  </div>
                 </div>
 
                 <Dialpad onCall={(num) => handleCall(num, selectedCallerId)} />
