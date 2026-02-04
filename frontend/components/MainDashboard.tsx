@@ -369,9 +369,13 @@ export default function MainDashboard() {
             setAvailableNumbers(nums);
             setCallbackNumber(data.callbackNumber || null);
 
-            // Default to first number if available and not selected
-            if (nums.length > 0 && !localStorage.getItem('gibbor_caller_id')) {
-              setSelectedCallerId(nums[0].phoneNumber);
+            // Default to callbackNumber if available, otherwise first number
+            if (!localStorage.getItem('gibbor_caller_id')) {
+              if (data.callbackNumber && nums.some((n: any) => n.phoneNumber === data.callbackNumber)) {
+                setSelectedCallerId(data.callbackNumber);
+              } else if (nums.length > 0) {
+                setSelectedCallerId(nums[0].phoneNumber);
+              }
             }
           }
         }
@@ -1911,7 +1915,7 @@ export default function MainDashboard() {
                 {/* Add Caller ID Selection Here - ALWAYS VISIBLE v5.0 */}
                 <div className="mb-4">
                   <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1.5 ml-1">
-                    Llamar Desde:
+                    NÚMERO DE SALIDA (CALLBACK):
                   </label>
                   {availableNumbers.length > 0 ? (
                     <select
