@@ -295,10 +295,10 @@ app.post("/incoming-call", async (req, res) => {
                 .limit(1)
                 .single();
 
-            let targetClient = 'admin@gibborcenter.com'; // Default fallback
+            let targetClients = [];
 
+            // 1. Priority: Sticky Agent (Last person who called THIS customer using THIS number)
             if (lastCall && lastCall.user_id) {
-                // Fetch Agent Identity (Must match Frontend: email OR user_{id})
                 const { data: profile } = await supabase
                     .from('profiles')
                     .select('id, email')
@@ -306,16 +306,49 @@ app.post("/incoming-call", async (req, res) => {
                     .single();
 
                 if (profile) {
-                    targetClient = profile.email || `user_${profile.id}`;
-                    console.log(`Smart Routing: Redirecting ${From} to last agent ${targetClient} (ID: ${profile.id})`);
+                    const identity = profile.email || `user_${profile.id}`;
+                    targetClients.push(identity);
+                    console.log(`Routing: Sticky to ${identity}`);
                 }
             }
 
+            // 2. Fallback: Zone Simulring (Ring all agents in the Zone owning this number)
+            if (targetClients.length === 0) {
+                // Find which zone owns this number 'To'
+                const { data: zoneNum } = await supabase
+                    .from('zone_numbers')
+                    .select('zone_id')
+                    .eq('phone_number', To)
+                    .single();
+
+                if (zoneNum && zoneNum.zone_id) {
+                    // Get all agents in this zone
+                    const { data: agents } = await supabase
+                        .from('profiles')
+                        .select('id, email')
+                        .eq('zone_id', zoneNum.zone_id);
+
+                    if (agents && agents.length > 0) {
+                        targetClients = agents.map(a => a.email || `user_${a.id}`);
+                        console.log(`Routing: Zone Simulring to [${targetClients.join(', ')}]`);
+                    }
+                }
+            }
+
+            // 3. Ultimate Fallback: Admin
+            if (targetClients.length === 0) {
+                targetClients.push('admin@gibborcenter.com');
+                console.log(`Routing: Fallback to Admin`);
+            }
+
             const dial = twiml.dial({
-                callerId: From, // Show customer number to agent
-                timeout: 60 // Increased to 60s (1 minute)
+                callerId: From,
+                timeout: 60,
+                answerOnBridge: true
             });
-            dial.client(targetClient);
+
+            // Ring everyone identified
+            targetClients.forEach(client => dial.client(client));
 
             // Fallback: If agent doesn't answer (Dial ends), take a message
             twiml.say({ voice: 'alice', language: 'es-MX' }, "El agente no está disponible en este momento. Por favor deje un mensaje después del tono.");
