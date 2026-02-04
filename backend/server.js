@@ -1285,23 +1285,24 @@ app.put("/users/:id/zone", async (req, res) => {
     } catch (e) {
         res.status(500).json({ error: e.message });
     }
-    // PUT /users/:id/zone - Assign a zone to a user
-    app.put("/users/:id/zone", async (req, res) => {
-        try {
-            const { id } = req.params;
-            const { zone_id } = req.body; // Can be null to unassign
+});
+// PUT /users/:id/zone - Assign a zone to a user
+app.put("/users/:id/zone", async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { zone_id } = req.body; // Can be null to unassign
 
-            console.log(`Assigning Zone ${zone_id} to User ${id}`);
+        console.log(`Assigning Zone ${zone_id} to User ${id}`);
 
-            const { error } = await supabase
-                .from('profiles')
-                .update({ zone_id })
-                .eq('id', id);
+        const { error } = await supabase
+            .from('profiles')
+            .update({ zone_id })
+            .eq('id', id);
 
-            if (error) throw error;
-            res.json({ success: true });
-        } catch (e) {
-            console.error("Error assigning zone:", e);
-            res.status(500).json({ error: e.message });
-        }
-    });
+        if (error) throw error;
+        res.json({ success: true });
+    } catch (e) {
+        console.error("Error assigning zone:", e);
+        res.status(500).json({ error: e.message });
+    }
+});
