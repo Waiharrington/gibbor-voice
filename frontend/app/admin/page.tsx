@@ -128,6 +128,21 @@ export default function AdminPage() {
         }
     };
 
+    // --- DEBUG / DIAGNOSTIC ---
+    const [debugData, setDebugData] = useState<any>(null);
+    const [isDebugOpen, setIsDebugOpen] = useState(false);
+
+    const handleDiagnose = async (userId: string) => {
+        try {
+            const res = await fetch(`${API_BASE_URL}/debug/user/${userId}`);
+            const data = await res.json();
+            setDebugData(data);
+            setIsDebugOpen(true);
+        } catch (e) {
+            alert("Error running diagnosis");
+        }
+    };
+
     const fetchTwilioNumbers = async () => {
         try {
             const res = await fetch(`${API_BASE_URL}/phone-numbers`);
@@ -473,9 +488,16 @@ export default function AdminPage() {
                                                     <button
                                                         onClick={() => handleDeleteAgent(u.id, u.full_name || u.email)}
                                                         className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                                                        title="Delete User"
+                                                        title="Eliminar Usuario"
                                                     >
                                                         <Trash2 className="w-4 h-4" />
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleDiagnose(u.id)}
+                                                        className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors ml-1"
+                                                        title="Diagnosticar"
+                                                    >
+                                                        <div className="w-4 h-4 font-mono text-[10px] border border-current rounded flex items-center justify-center">?</div>
                                                     </button>
                                                 </td>
                                             </tr>
@@ -601,6 +623,35 @@ export default function AdminPage() {
                     </div>
                 </div>
             )}
+
+            {/* DEBUG MODAL */}
+            {isDebugOpen && debugData && (
+                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[60]">
+                    <div className="bg-white rounded-xl w-full max-w-2xl p-6 shadow-2xl m-4 max-h-[90vh] flex flex-col">
+                        <div className="flex justify-between items-center mb-4">
+                            <h2 className="text-xl font-bold text-gray-900">Diagnóstico de Usuario</h2>
+                            <button onClick={() => setIsDebugOpen(false)} className="text-gray-500 hover:text-gray-700">✕</button>
+                        </div>
+                        <div className="flex-1 overflow-auto bg-gray-900 rounded-lg p-4">
+                            <pre className="text-green-400 font-mono text-xs whitespace-pre-wrap">
+                                {JSON.stringify(debugData, null, 2)}
+                            </pre>
+                        </div>
+                        <div className="mt-4 flex justify-end">
+                            <button
+                                onClick={() => {
+                                    navigator.clipboard.writeText(JSON.stringify(debugData, null, 2));
+                                    alert("Copiado al portapapeles");
+                                }}
+                                className="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 text-sm"
+                            >
+                                Copiar JSON
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
         </div>
     );
 }
