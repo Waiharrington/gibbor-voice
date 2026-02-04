@@ -674,7 +674,7 @@ export default function MainDashboard() {
         setCallStatus('Reconectando...');
         // Small delay then re-register
         setTimeout(() => {
-          if (newDevice && newDevice.state === 'Unregistered') {
+          if (newDevice && (newDevice.state as any) === 'Unregistered') {
             newDevice.register();
           }
         }, 2000);
