@@ -283,57 +283,58 @@ app.post("/incoming-call", async (req, res) => {
         } catch (e) { console.error("Log Inbound Error", e); }
 
         // Smart Routing (Sticky Routing)
-        // Logic: Find the last agent who called THIS customer (From) using THIS number (To) via outbound.
-        const { data: lastCall } = await supabase
-            .from('calls')
-            .select('user_id')
-            .eq('to', From) // Who we called (Customer)
-            .eq('direction', 'outbound')
-            .eq('caller_number', To) // CRITICAL: The number we used to call them must match the number they are calling back
-            .order('created_at', { ascending: false })
-            .limit(1)
-            .single();
-
-        let targetClient = 'admin@gibborcenter.com'; // Default fallback
-
-        if (lastCall && lastCall.user_id) {
-            // Fetch Agent Identity (Must match Frontend: email OR user_{id})
-            const { data: profile } = await supabase
-                .from('profiles')
-                .select('id, email')
-                .eq('id', lastCall.user_id)
+        try {
+            // Logic: Find the last agent who called THIS customer (From) using THIS number (To) via outbound.
+            const { data: lastCall } = await supabase
+                .from('calls')
+                .select('user_id')
+                .eq('to', From) // Who we called (Customer)
+                .eq('direction', 'outbound')
+                .eq('caller_number', To) // CRITICAL: The number we used to call them must match the number they are calling back
+                .order('created_at', { ascending: false })
+                .limit(1)
                 .single();
 
-            if (profile) {
-                targetClient = profile.email || `user_${profile.id}`;
-                console.log(`Smart Routing: Redirecting ${From} to last agent ${targetClient} (ID: ${profile.id})`);
+            let targetClient = 'admin@gibborcenter.com'; // Default fallback
+
+            if (lastCall && lastCall.user_id) {
+                // Fetch Agent Identity (Must match Frontend: email OR user_{id})
+                const { data: profile } = await supabase
+                    .from('profiles')
+                    .select('id, email')
+                    .eq('id', lastCall.user_id)
+                    .single();
+
+                if (profile) {
+                    targetClient = profile.email || `user_${profile.id}`;
+                    console.log(`Smart Routing: Redirecting ${From} to last agent ${targetClient} (ID: ${profile.id})`);
+                }
             }
+
+            const dial = twiml.dial({
+                callerId: From, // Show customer number to agent
+                timeout: 60 // Increased to 60s (1 minute)
+            });
+            dial.client(targetClient);
+
+            // Fallback: If agent doesn't answer (Dial ends), take a message
+            twiml.say({ voice: 'alice', language: 'es-MX' }, "El agente no está disponible en este momento. Por favor deje un mensaje después del tono.");
+            twiml.record({
+                action: `${baseUrl}/recording-status`,
+                transcribe: false,
+                playBeep: true
+            });
+
+        } catch (err) {
+            console.error("Smart Routing Error:", err);
+            // Fallback
+            const dial = twiml.dial();
+            dial.client('admin@gibborcenter.com');
         }
-
-        const dial = twiml.dial({
-            callerId: From, // Show customer number to agent
-            timeout: 60 // Increased to 60s (1 minute)
-        });
-        dial.client(targetClient);
-
-        // Fallback: If agent doesn't answer (Dial ends), take a message
-        twiml.say({ voice: 'alice', language: 'es-MX' }, "El agente no está disponible en este momento. Por favor deje un mensaje después del tono.");
-        twiml.record({
-            action: `${baseUrl}/recording-status`,
-            transcribe: false,
-            playBeep: true
-        });
-
-    } catch (err) {
-        console.error("Smart Routing Error:", err);
-        // Fallback
-        const dial = twiml.dial();
-        dial.client('admin@gibborcenter.com');
     }
-}
 
     res.type("text/xml");
-res.send(twiml.toString());
+    res.send(twiml.toString());
 });
 
 // Generic Call Status Handler
