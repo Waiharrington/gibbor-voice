@@ -1031,7 +1031,6 @@ app.get("/users", async (req, res) => {
         // 1. Get Profiles
         const { data: profiles, error } = await supabase
             .from('profiles')
-            .from('profiles')
             .select('*') // Includes zone_id
             .order('created_at', { ascending: false });
 
@@ -1274,25 +1273,6 @@ app.put("/users/:id/zone", async (req, res) => {
     try {
         const { id } = req.params;
         const { zone_id } = req.body; // Can be null to unassign
-
-        const { error } = await supabase
-            .from('profiles')
-            .update({ zone_id })
-            .eq('id', id);
-
-        if (error) throw error;
-        res.json({ success: true });
-    } catch (e) {
-        res.status(500).json({ error: e.message });
-    }
-});
-// PUT /users/:id/zone - Assign a zone to a user
-app.put("/users/:id/zone", async (req, res) => {
-    try {
-        const { id } = req.params;
-        const { zone_id } = req.body; // Can be null to unassign
-
-        console.log(`Assigning Zone ${zone_id} to User ${id}`);
 
         const { error } = await supabase
             .from('profiles')
