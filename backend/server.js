@@ -265,6 +265,14 @@ app.post("/incoming-call", async (req, res) => {
             });
             dial.client(targetClient);
 
+            // Fallback: If agent doesn't answer (Dial ends), take a message
+            twiml.say({ voice: 'alice', language: 'es-MX' }, "El agente no está disponible en este momento. Por favor deje un mensaje después del tono.");
+            twiml.record({
+                action: `${baseUrl}/recording-status`,
+                transcribe: false,
+                playBeep: true
+            });
+
         } catch (err) {
             console.error("Smart Routing Error:", err);
             // Fallback
