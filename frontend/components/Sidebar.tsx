@@ -44,8 +44,8 @@ export default function Sidebar({ currentView, onViewChange, isOpen: externalIsO
         }
     };
 
-    // Broadcast Presence
-    usePresence(user);
+    // Broadcast Presence - Removed for optimization
+    // usePresence(user);
 
     const checkUserRole = async () => {
         const { data: { user } } = await supabase.auth.getUser();

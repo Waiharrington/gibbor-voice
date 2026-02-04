@@ -2161,7 +2161,7 @@ export default function MainDashboard() {
               animate={{ opacity: 0.5 }}
               exit={{ opacity: 0 }}
               onClick={() => setIsSidebarOpen(false)}
-              className="fixed inset-0 bg-black z-50 lg:hidden"
+              className="fixed inset-0 bg-black z-50 2xl:hidden"
             />
             {/* Sidebar Drawer */}
             <motion.div
@@ -2169,7 +2169,7 @@ export default function MainDashboard() {
               animate={{ x: 0 }}
               exit={{ x: '-100%' }}
               transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-              className="fixed top-0 left-0 bottom-0 w-3/4 max-w-xs bg-white z-50 shadow-2xl flex flex-col lg:hidden"
+              className="fixed top-0 left-0 bottom-0 w-3/4 max-w-xs bg-white z-50 shadow-2xl flex flex-col 2xl:hidden"
             >
               <div className="p-4 border-b border-gray-100 flex items-center justify-between bg-gray-50">
                 <div className="flex items-center gap-3">
