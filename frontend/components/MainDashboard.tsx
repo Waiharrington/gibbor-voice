@@ -1908,12 +1908,12 @@ export default function MainDashboard() {
                   </button>
                 </div>
 
-                {/* Add Caller ID Selection Here */}
-                {availableNumbers.length > 0 && (
-                  <div className="mb-4">
-                    <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1.5 ml-1">
-                      Llamar Desde:
-                    </label>
+                {/* Add Caller ID Selection Here - ALWAYS VISIBLE v5.0 */}
+                <div className="mb-4">
+                  <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1.5 ml-1">
+                    Llamar Desde:
+                  </label>
+                  {availableNumbers.length > 0 ? (
                     <select
                       className="w-full bg-white border border-gray-300 text-gray-700 py-2 px-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent text-sm shadow-sm"
                       value={selectedCallerId}
@@ -1924,8 +1924,21 @@ export default function MainDashboard() {
                         <option key={num.phoneNumber} value={num.phoneNumber}>{num.phoneNumber} {num.friendlyName ? `(${num.friendlyName})` : ''}</option>
                       ))}
                     </select>
-                  </div>
-                )}
+                  ) : (
+                    <div className="relative">
+                      <select
+                        className="w-full bg-gray-100 border border-gray-200 text-gray-400 py-2 px-3 rounded-lg cursor-not-allowed text-sm shadow-sm opacity-70"
+                        disabled
+                        value=""
+                      >
+                        <option value="">Sin números asignados</option>
+                      </select>
+                      <p className="text-[10px] text-red-400 mt-1 ml-1 font-medium">
+                        * Contacta al Admin para asignar una Zona o Números.
+                      </p>
+                    </div>
+                  )}
+                </div>
 
                 <Dialpad onCall={(num) => handleCall(num, selectedCallerId)} />
               </>
