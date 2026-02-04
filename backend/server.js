@@ -261,7 +261,7 @@ app.post("/incoming-call", async (req, res) => {
 
             const dial = twiml.dial({
                 callerId: From, // Show customer number to agent
-                timeout: 30
+                timeout: 60 // Increased to 60s (1 minute)
             });
             dial.client(targetClient);
 
