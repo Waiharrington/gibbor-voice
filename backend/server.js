@@ -82,8 +82,8 @@ app.get("/phone-numbers", async (req, res) => {
 
         // 1. Fetch All Available Numbers from Twilio (Base Source of Truth)
         const [incoming, verified] = await Promise.all([
-            twilioClient.incomingPhoneNumbers.list({ limit: 50 }),
-            twilioClient.outgoingCallerIds.list({ limit: 50 })
+            twilioClient.incomingPhoneNumbers.list({ limit: 100 }), // Increased limit
+            twilioClient.outgoingCallerIds.list({ limit: 100 })
         ]);
 
         let allTwilioNumbers = [
@@ -129,8 +129,12 @@ app.get("/phone-numbers", async (req, res) => {
                 else if (profile.zone_id && profile.zones) {
                     const zoneNumbers = profile.zones.zone_numbers.map(zn => zn.phone_number);
 
-                    // Filter Twilio numbers that are in the Zone
-                    finalNumbers = allTwilioNumbers.filter(tn => zoneNumbers.includes(tn.phoneNumber));
+                    // Filter Twilio numbers that are in the Zone OR use DB numbers if not found in fetch
+                    // This ensures even if Twilio pagination misses it, we still show the number
+                    finalNumbers = zoneNumbers.map(zNum => {
+                        const twilioMatch = allTwilioNumbers.find(t => t.phoneNumber === zNum);
+                        return twilioMatch || { phoneNumber: zNum, friendlyName: '', type: 'Twilio' };
+                    });
 
                     // Set Zone Callback Number
                     callbackNumber = profile.zones.callback_number;
@@ -1174,29 +1178,7 @@ app.get("/", (req, res) => {
     console.log("Health check hit! - Force Update");
     res.send("Gibbor Voice Backend is running!");
 });
-// Helper to get Twilio Numbers
-app.get('/incoming-phone-numbers', async (req, res) => {
-    try {
-        const incoming = await twilioClient.incomingPhoneNumbers.list({ limit: 20 });
-        const formattedIncoming = incoming.map(n => ({
-            phoneNumber: n.phoneNumber,
-            friendlyName: n.friendlyName,
-            type: 'Twilio'
-        }));
 
-        const verified = await twilioClient.outgoingCallerIds.list({ limit: 20 });
-        const formattedVerified = verified.map(n => ({
-            phoneNumber: n.phoneNumber,
-            friendlyName: n.friendlyName,
-            type: 'Verified'
-        }));
-
-        res.json([...formattedIncoming, ...formattedVerified]);
-    } catch (e) {
-        console.error("Error fetching numbers", e);
-        res.status(500).json({ error: e.message });
-    }
-});
 
 const PORT = process.env.PORT || 3001;
 const server = app.listen(PORT, () => {
