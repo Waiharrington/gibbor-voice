@@ -177,116 +177,150 @@ app.post("/incoming-call", async (req, res) => {
 
     console.log("Webhook hit. To:", To, "UserID:", appUserId);
 
-    // Determine direction based on caller
-    // If From starts with 'client:', it's an outbound call FROM the browser.
-    const isClientOutbound = From.startsWith('client:');
-    const direction = isClientOutbound ? 'outbound' : 'inbound';
-
-    // Log incoming call to Supabase
+    // Logic for Smart Routing (Sticky Routing)
+    // 1. Check who called this number last
     try {
-        const payload = {
-            from: From,
-            to: To,
-            direction: direction,
-            status: 'ringing',
-            sid: CallSid
-        };
-        if (appUserId) payload.user_id = appUserId;
+        const { data: lastCall } = await supabase
+            .from('calls')
+            .select('user_id')
+            .eq('to', From) // "to" in DB was the customer number for outbound calls
+            .eq('direction', 'outbound')
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .single();
 
-        await supabase.from('calls').insert(payload);
-    } catch (e) {
-        console.error("Error logging incoming call:", e);
-    }
+        let targetClient = 'admin@gibborcenter.com'; // Default fallback
 
-    const baseUrl = process.env.BASE_URL || 'https://gibbor-voice-production.up.railway.app';
-    const outboundCallerId = appCallerId || process.env.TWILIO_PHONE_NUMBER;
-
-    if (To === process.env.TWILIO_PHONE_NUMBER) {
-        twiml.say("Conectando con el equipo.");
-        const dial = twiml.dial({
-            record: 'record-from-ringing',
-            recordingStatusCallback: `${baseUrl}/recording-status`,
-            recordingStatusCallbackEvent: ['completed'],
-            action: `${baseUrl}/call-status`,
-            method: 'POST'
-        });
-
-
-
-        // --- STICKY AGENT ROUTING (VICIDIAL STYLE) ---
-        let routed = false;
-        try {
-            console.log(`Checking Sticky Agent for caller: ${From}`);
-            // Find the last agent who called THIS number (From)
-            const { data: lastCall } = await supabase
-                .from('calls')
-                .select('user_id, created_at')
-                .eq('to', From) // Customer number
-                .eq('direction', 'outbound')
-                .neq('user_id', null)
-                .order('created_at', { ascending: false })
-                .limit(1)
+        if (lastCall && lastCall.user_id) {
+            // 2. Fetch Agent Email (Identity)
+            const { data: profile } = await supabase
+                .from('profiles')
+                .select('email')
+                .eq('id', lastCall.user_id)
                 .single();
 
-            if (lastCall && lastCall.user_id) {
-                console.log(`Found previous interaction from user_id: ${lastCall.user_id} at ${lastCall.created_at}`);
-                // Get Agent Identity
-                const { data: profile } = await supabase
-                    .from('profiles')
-                    .select('email')
-                    .eq('id', lastCall.user_id)
-                    .single();
-
-                if (profile && profile.email) {
-                    console.log(`🎯 STICKY ROUTE: Routing to ${profile.email}`);
-                    dial.client(profile.email);
-                    routed = true;
-                }
-            }
-        } catch (stickyErr) {
-            console.error("Sticky Routing Error:", stickyErr);
-        }
-
-        if (!routed) {
-            // Fallback: Backend Simulring to ALL agents
-            const { data: agents } = await supabase.from('profiles').select('email').neq('email', null);
-
-            if (agents && agents.length > 0) {
-                console.log(`Fallback: Simulring to ${agents.length} agents:`, agents.map(a => a.email));
-                agents.forEach(agent => {
-                    if (agent.email) dial.client(agent.email);
-                });
-            } else {
-                console.log("No agents found. Dialing default 'agent'.");
-                dial.client("agent");
+            if (profile && profile.email) {
+                targetClient = profile.email;
+                console.log(`Smart Routing: Redirecting ${From} to last agent ${targetClient}`);
             }
         }
-    }
-    else if (To === '888888') { // ECHO TEST SERVICE
-        console.log("Audio Test Requested (Echo)");
-        twiml.say({ voice: 'alice', language: 'es-MX' }, "Prueba de audio Gibbor Voice. Hable después del tono y escuchará su eco.");
-        twiml.pause({ length: 1 });
-        twiml.echo();
-    }
-    else if (To) {
-        // Outbound calls from browser (TwiML App default URL)
+
+        // 3. Dial the Agent
         const dial = twiml.dial({
-            callerId: outboundCallerId,
-            record: 'record-from-ringing',
-            recordingStatusCallback: `${baseUrl}/recording-status`,
-            recordingStatusCallbackEvent: ['completed'],
-            action: `${baseUrl}/call-status`,
-            method: 'POST',
-            answerOnBridge: true
+            callerId: To, // Show the business number they called to the agent? Or show Customer's number?
+            // Usually we show Customer's number (From) so agent knows who it is.
+            // But Twilio requires callerId to be a verified number OR the incoming number (From).
+            // Actually for <Client>, callerId is just what shows up on the Agent's screen.
+            // Let's use 'From' (Customer Number) so Agent sees who is calling.
+            callerId: From,
+            timeout: 20 // Ring for 20s
         });
-        dial.number(To);
-    }
-    else {
-        twiml.say("Bienvenido a Gibbor Voice.");
+        dial.client(targetClient);
+
+        // Fallback: If agent doesn't answer, maybe go to voicemail?
+        // twiml.say("The agent is currently unavailable. Please leave a message.");
+        // twiml.record(); 
+
+    } catch (err) {
+        console.error("Smart Routing Error:", err);
+        // Fallback to Admin
+        const dial = twiml.dial();
+        dial.client('admin@gibborcenter.com');
     }
 
     res.type("text/xml");
     res.send(twiml.toString());
+});
+
+const baseUrl = process.env.BASE_URL || 'https://gibbor-voice-production.up.railway.app';
+const outboundCallerId = appCallerId || process.env.TWILIO_PHONE_NUMBER;
+
+if (To === process.env.TWILIO_PHONE_NUMBER) {
+    twiml.say("Conectando con el equipo.");
+    const dial = twiml.dial({
+        record: 'record-from-ringing',
+        recordingStatusCallback: `${baseUrl}/recording-status`,
+        recordingStatusCallbackEvent: ['completed'],
+        action: `${baseUrl}/call-status`,
+        method: 'POST'
+    });
+
+
+
+    // --- STICKY AGENT ROUTING (VICIDIAL STYLE) ---
+    let routed = false;
+    try {
+        console.log(`Checking Sticky Agent for caller: ${From}`);
+        // Find the last agent who called THIS number (From)
+        const { data: lastCall } = await supabase
+            .from('calls')
+            .select('user_id, created_at')
+            .eq('to', From) // Customer number
+            .eq('direction', 'outbound')
+            .neq('user_id', null)
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .single();
+
+        if (lastCall && lastCall.user_id) {
+            console.log(`Found previous interaction from user_id: ${lastCall.user_id} at ${lastCall.created_at}`);
+            // Get Agent Identity
+            const { data: profile } = await supabase
+                .from('profiles')
+                .select('email')
+                .eq('id', lastCall.user_id)
+                .single();
+
+            if (profile && profile.email) {
+                console.log(`🎯 STICKY ROUTE: Routing to ${profile.email}`);
+                dial.client(profile.email);
+                routed = true;
+            }
+        }
+    } catch (stickyErr) {
+        console.error("Sticky Routing Error:", stickyErr);
+    }
+
+    if (!routed) {
+        // Fallback: Backend Simulring to ALL agents
+        const { data: agents } = await supabase.from('profiles').select('email').neq('email', null);
+
+        if (agents && agents.length > 0) {
+            console.log(`Fallback: Simulring to ${agents.length} agents:`, agents.map(a => a.email));
+            agents.forEach(agent => {
+                if (agent.email) dial.client(agent.email);
+            });
+        } else {
+            console.log("No agents found. Dialing default 'agent'.");
+            dial.client("agent");
+        }
+    }
+}
+else if (To === '888888') { // ECHO TEST SERVICE
+    console.log("Audio Test Requested (Echo)");
+    twiml.say({ voice: 'alice', language: 'es-MX' }, "Prueba de audio Gibbor Voice. Hable después del tono y escuchará su eco.");
+    twiml.pause({ length: 1 });
+    twiml.echo();
+}
+else if (To) {
+    // Outbound calls from browser (TwiML App default URL)
+    const dial = twiml.dial({
+        callerId: outboundCallerId,
+        record: 'record-from-ringing',
+        recordingStatusCallback: `${baseUrl}/recording-status`,
+        recordingStatusCallbackEvent: ['completed'],
+        action: `${baseUrl}/call-status`,
+        method: 'POST',
+        answerOnBridge: true
+    });
+    dial.number(To);
+}
+else {
+    twiml.say("Bienvenido a Gibbor Voice.");
+}
+
+res.type("text/xml");
+res.send(twiml.toString());
 });
 
 // Generic Call Status Handler
