@@ -27,12 +27,12 @@ export default function Dialpad({
     return (
         <div className="w-full flex flex-col items-center">
             {/* Display */}
-            <div className="w-full mb-4 relative flex items-center justify-center min-h-[48px]">
+            <div className="w-full mb-2 relative flex items-center justify-center min-h-[40px]">
                 <input
                     type="text"
                     value={number}
                     onChange={(e) => setNumber(e.target.value)}
-                    className="w-full text-3xl text-center text-gray-800 bg-transparent outline-none font-normal tracking-wide"
+                    className="w-full text-xl text-center text-gray-800 bg-transparent outline-none font-normal tracking-wide"
                     placeholder="Ingresar número"
                 />
                 {number && (
