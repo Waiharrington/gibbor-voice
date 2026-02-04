@@ -246,22 +246,22 @@ app.post("/incoming-call", async (req, res) => {
             let targetClient = 'admin@gibborcenter.com'; // Default fallback
 
             if (lastCall && lastCall.user_id) {
-                // Fetch Agent Email
+                // Fetch Agent Identity (Must match Frontend: email OR user_{id})
                 const { data: profile } = await supabase
                     .from('profiles')
-                    .select('email')
+                    .select('id, email')
                     .eq('id', lastCall.user_id)
                     .single();
 
-                if (profile && profile.email) {
-                    targetClient = profile.email;
-                    console.log(`Smart Routing: Redirecting ${From} to last agent ${targetClient}`);
+                if (profile) {
+                    targetClient = profile.email || `user_${profile.id}`;
+                    console.log(`Smart Routing: Redirecting ${From} to last agent ${targetClient} (ID: ${profile.id})`);
                 }
             }
 
             const dial = twiml.dial({
                 callerId: From, // Show customer number to agent
-                timeout: 20
+                timeout: 30
             });
             dial.client(targetClient);
 
