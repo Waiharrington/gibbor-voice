@@ -121,10 +121,13 @@ export default function MessagesPanel({ initialConversationId, userId, userRole,
         }).sort((a, b) => b.timestamp - a.timestamp);
     }, [messages]);
 
-    // Active Conversation Messages
+    // Active Conversation Messages (Sorted Chronologically)
     const activeMessages = useMemo(() => {
         if (!selectedConversationId) return [];
-        return messages.filter(m => getConversationId(m) === selectedConversationId);
+
+        return messages
+            .filter(m => getConversationId(m) === selectedConversationId)
+            .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
     }, [messages, selectedConversationId]);
 
     // Handlers
