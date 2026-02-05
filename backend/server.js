@@ -503,10 +503,12 @@ app.post("/incoming-message", async (req, res) => {
     // Logic to inherit User ID from previous conversation
     let attachedUserId = null;
     try {
+        const cleanFrom = From.replace('+1', ''); // US specific matching
+
         const { data: lastOutbound } = await supabase
             .from('messages')
             .select('user_id')
-            .eq('to', From) // Messages SENT TO this number
+            .or(`to.eq.${From},to.eq.${cleanFrom}`) // Match +1845... OR 845...
             .eq('direction', 'outbound')
             .order('created_at', { ascending: false })
             .limit(1)
