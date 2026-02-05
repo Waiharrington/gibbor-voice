@@ -1,16 +1,19 @@
 'use client';
 
 import { useState, useEffect, useMemo, useRef } from 'react';
-import { Send, Image as ImageIcon, Phone, MoreVertical, Search, Info, ArrowLeft } from 'lucide-react';
-import { supabase } from '@/utils/supabaseClient';
-
 // Helper to normalize phone numbers for grouping
 const normalizePhoneNumber = (phone: string) => {
     if (!phone) return '';
-    const clean = phone.replace(/\D/g, '');
-    if (clean.length === 10) return `+1${clean}`;
-    if (clean.length > 10 && !phone.startsWith('+')) return `+${clean}`;
-    return phone.startsWith('+') ? phone : `+${clean}`; // Ensure + prefix
+    // Strip everything that is not a digit
+    const digits = phone.replace(/\D/g, '');
+
+    // US Number (10 digits) -> Add +1
+    if (digits.length === 10) return `+1${digits}`;
+
+    // already has country code (11+ digits) -> Add +
+    if (digits.length > 10) return `+${digits}`;
+
+    return phone; // Fallback for short codes or weird numbers
 };
 
 // Helper to group messages into conversations
