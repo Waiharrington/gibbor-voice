@@ -1,6 +1,8 @@
 'use client';
 
 import { useState, useEffect, useMemo, useRef } from 'react';
+import { Send, Image as ImageIcon, Phone, MoreVertical, Search, Info, ArrowLeft } from 'lucide-react';
+import { supabase } from '@/utils/supabaseClient';
 // Helper to normalize phone numbers for grouping
 const normalizePhoneNumber = (phone: string) => {
     if (!phone) return '';
