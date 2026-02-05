@@ -4,9 +4,19 @@ import { useState, useEffect, useMemo, useRef } from 'react';
 import { Send, Image as ImageIcon, Phone, MoreVertical, Search, Info, ArrowLeft } from 'lucide-react';
 import { supabase } from '@/utils/supabaseClient';
 
+// Helper to normalize phone numbers for grouping
+const normalizePhoneNumber = (phone: string) => {
+    if (!phone) return '';
+    const clean = phone.replace(/\D/g, '');
+    if (clean.length === 10) return `+1${clean}`;
+    if (clean.length > 10 && !phone.startsWith('+')) return `+${clean}`;
+    return phone.startsWith('+') ? phone : `+${clean}`; // Ensure + prefix
+};
+
 // Helper to group messages into conversations
 const getConversationId = (msg: any) => {
-    return msg.direction === 'outbound' ? msg.to : msg.from;
+    const rawId = msg.direction === 'outbound' ? msg.to : msg.from;
+    return normalizePhoneNumber(rawId);
 };
 
 interface MessagesPanelProps {
