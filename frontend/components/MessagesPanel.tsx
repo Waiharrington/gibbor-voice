@@ -82,7 +82,7 @@ export default function MessagesPanel({ initialConversationId, userId, userRole,
 
         // Realtime Subscription
         const channel = supabase
-            .channel('messages-realtime')
+            .channel('messages-realtime-panel')
             .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, (payload) => {
                 const newMsg = payload.new;
                 setMessages((prev) => [...prev, newMsg]);
