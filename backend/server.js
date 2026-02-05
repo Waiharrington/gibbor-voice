@@ -449,13 +449,23 @@ app.post("/messages", async (req, res) => {
         if (!sender) sender = process.env.TWILIO_PHONE_NUMBER;
 
         // Check if userId is passed (from frontend)
+        // Check if userId is passed (from frontend)
         const userId = req.body.userId || null;
 
+        // Normalization (E.164 for US)
+        let formattedTo = to.replace(/\D/g, ''); // Remove non-digits
+        if (formattedTo.length === 10) {
+            formattedTo = `+1${formattedTo}`;
+        } else if (formattedTo.length > 10 && !to.startsWith('+')) {
+            formattedTo = `+${formattedTo}`;
+        } else if (to.startsWith('+')) {
+            formattedTo = to; // Keep as is if already has +
+        }
 
         const messageOptions = {
             body: body,
             from: sender,
-            to: to
+            to: formattedTo
         };
 
         if (mediaUrl) {
@@ -466,7 +476,7 @@ app.post("/messages", async (req, res) => {
 
         await supabase.from('messages').insert({
             from: sender,
-            to: to,
+            to: formattedTo,
             body: body,
             media_url: mediaUrl || null,
             direction: 'outbound',
