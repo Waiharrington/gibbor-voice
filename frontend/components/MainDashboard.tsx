@@ -316,9 +316,25 @@ export default function MainDashboard() {
   // Messages State (Lifted from MessagesPanel)
   const [messages, setMessages] = useState<any[]>([]);
 
+  // Helper to normalize phone numbers for grouping
+  const normalizePhoneNumber = (phone: string) => {
+    if (!phone) return '';
+    // Strip everything that is not a digit
+    const digits = phone.replace(/\D/g, '');
+
+    // US Number (10 digits) -> Add +1
+    if (digits.length === 10) return `+1${digits}`;
+
+    // already has country code (11+ digits) -> Add +
+    if (digits.length > 10) return `+${digits}`;
+
+    return phone; // Fallback for short codes or weird numbers
+  };
+
   // Helper to group messages into conversations
   const getConversationId = (msg: any) => {
-    return msg.direction === 'outbound' ? msg.to : msg.from;
+    const rawId = msg.direction === 'outbound' ? msg.to : msg.from;
+    return normalizePhoneNumber(rawId);
   };
 
   // Derived State: Grouped Conversations
