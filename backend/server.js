@@ -253,6 +253,18 @@ app.post("/incoming-call", async (req, res) => {
             twiml.say({ voice: 'alice', language: 'es-MX' }, "Prueba de audio. Hable después del tono.");
             twiml.echo();
         } else if (To) {
+            // E.164 Normalization for Voice
+            let formattedTo = To.replace(/\D/g, '');
+            if (formattedTo.length === 10) {
+                formattedTo = `+1${formattedTo}`;
+            } else if (formattedTo.length > 10 && !To.startsWith('+')) {
+                formattedTo = `+${formattedTo}`;
+            } else if (To.startsWith('+')) {
+                formattedTo = To;
+            }
+
+            console.log(`Dialing Outbound: ${formattedTo} (Original: ${To}) via ${outboundCallerId}`);
+
             const dial = twiml.dial({
                 callerId: outboundCallerId,
                 record: 'record-from-ringing',
@@ -262,7 +274,7 @@ app.post("/incoming-call", async (req, res) => {
                 method: 'POST',
                 answerOnBridge: true
             });
-            dial.number(To);
+            dial.number(formattedTo);
         } else {
             twiml.say("Número inválido.");
         }
