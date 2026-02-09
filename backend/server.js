@@ -55,9 +55,12 @@ app.get("/token", async (req, res) => {
             incomingAllow: true
         });
 
-        process.env.TWILIO_API_KEY,
+        const token = new AccessToken(
+            process.env.TWILIO_ACCOUNT_SID,
+            process.env.TWILIO_API_KEY,
             process.env.TWILIO_API_SECRET,
             { identity: identity, ttl: 86400 } // 24 Hour Token TTL
+        );
 
         token.addGrant(voiceGrant);
 
