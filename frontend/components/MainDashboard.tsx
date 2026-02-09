@@ -667,10 +667,10 @@ export default function MainDashboard() {
     if (!token) return;
 
     console.log("Initializing Twilio Device (v1.6)...");
-    // OPTIMIZATION: Prioritize Ashburn (US East) > Rochester > Sao Paulo, and Opus codec
+    // OPTIMIZATION: Prioritize Ashburn (US East) > Rochester > Sao Paulo, and PCMU (G.711) for stability
     const deviceOptions = {
       logLevel: 1,
-      codecPreferences: ['opus', 'pcmu'],
+      codecPreferences: ['pcmu', 'opus'],
       edge: ['ashburn', 'rochester', 'sao-paulo']
     } as any; // Type casting for edge support if types are old
 
