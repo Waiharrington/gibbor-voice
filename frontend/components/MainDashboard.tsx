@@ -614,6 +614,23 @@ export default function MainDashboard() {
   }, [token, user?.email]); // DEPEND ONLY ON TOKEN
 
 
+  // SAFETY: Ensure Ringback stops if call is Open
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    if (activeCall) {
+      interval = setInterval(() => {
+        try {
+          if (activeCall.status() === 'open') {
+            // Check if ringback is still running (heuristic: oscillators exist)
+            // We can just call stopRingback() safely, it's idempotent-ish
+            stopRingback();
+          }
+        } catch (e) { }
+      }, 1000);
+    }
+    return () => clearInterval(interval);
+  }, [activeCall]);
+
   // --- CONNECTION HEARTBEAT & AUTO-RECONNECT ---
   // Fixes "Zombie Tab" issue where Chrome sleeps the socket
   useEffect(() => {
