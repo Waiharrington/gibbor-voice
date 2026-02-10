@@ -1229,19 +1229,31 @@ app.post("/agents", async (req, res) => {
 });
 
 // Admin: Delete Agent Endpoint
+// Admin: Delete Agent Endpoint
 app.delete("/agents/:id", async (req, res) => {
     try {
         const userId = req.params.id;
         console.log(`Deleting agent: ${userId}`);
 
+        // 0. Unlink dependencies (Calls & Messages) to avoid FK Constraint errors
+        // We set user_id to NULL to preserve the history of the calls/messages
+        const { error: callsError } = await supabase
+            .from('calls')
+            .update({ user_id: null })
+            .eq('user_id', userId);
+        if (callsError) console.error("Error unlinking calls:", callsError);
+
+        const { error: msgsError } = await supabase
+            .from('messages')
+            .update({ user_id: null })
+            .eq('user_id', userId);
+        if (msgsError) console.error("Error unlinking messages:", msgsError);
+
         // 1. Delete from Auth (This invalidates session)
         const { error: authError } = await supabase.auth.admin.deleteUser(userId);
         if (authError) throw authError;
 
-        // 2. Cascade delete from Profiles/etc is usually handled by DB Foreign Keys (ON DELETE CASCADE)
-        // If not, we might need to manually clean up 'profiles', 'agent_sessions', etc.
-        // Assuming Supabase RLS policies and FKs handle this or allow orphans. 
-        // Best practice: Delete profile manually if no Cascade.
+        // 2. Cleanup Profile (if not cascaded)
         const { error: profileError } = await supabase
             .from('profiles')
             .delete()
