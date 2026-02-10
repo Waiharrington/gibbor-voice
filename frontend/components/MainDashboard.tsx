@@ -375,12 +375,15 @@ export default function MainDashboard() {
             setCallbackNumber(data.callbackNumber || null);
 
             // Default to callbackNumber if available, otherwise first number
-            if (!localStorage.getItem('gibbor_caller_id')) {
-              if (data.callbackNumber && nums.some((n: any) => n.phoneNumber === data.callbackNumber)) {
-                setSelectedCallerId(data.callbackNumber);
-              } else if (nums.length > 0) {
-                setSelectedCallerId(nums[0].phoneNumber);
-              }
+            const stored = localStorage.getItem('gibbor_caller_id');
+            const isValidStored = stored && nums.some((n: any) => n.phoneNumber === stored);
+
+            if (isValidStored) {
+              setSelectedCallerId(stored!);
+            } else if (data.callbackNumber && nums.some((n: any) => n.phoneNumber === data.callbackNumber)) {
+              setSelectedCallerId(data.callbackNumber);
+            } else if (nums.length > 0) {
+              setSelectedCallerId(nums[0].phoneNumber);
             }
           }
         }
