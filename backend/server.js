@@ -396,6 +396,31 @@ app.post("/call-status", async (req, res) => {
             if (finalDuration) updateData.duration = parseInt(finalDuration);
             if (DialCallSid) updateData.child_sid = DialCallSid; // Link Child SID
 
+            // Fetch Quality Metrics (MOS) if completed
+            if (finalStatus === 'completed') {
+                // Wait for Voice Insights to be ready (approx 5-10s delay usually needed for full summary)
+                setTimeout(async () => {
+                    try {
+                        // Note: Requires Voice Insights enabled on Twilio Console
+                        const summary = await twilioClient.insights.v1.calls(CallSid).summary().fetch();
+                        if (summary && summary.qualityScore) {
+                            console.log(`Call Quality (MOS) for ${CallSid}: ${summary.qualityScore}`);
+                            await supabase
+                                .from('calls')
+                                .update({
+                                    quality_score: summary.qualityScore,
+                                    // If MOS < 3.5, flag network warning
+                                    network_warning: summary.qualityScore < 3.5
+                                })
+                                .eq('sid', CallSid);
+                        }
+                    } catch (err) {
+                        // Suppress error if insights not available immediately
+                        // console.log("Insights fetch/update skipped:", err.message);
+                    }
+                }, 10000); // 10s delay
+            }
+
             await supabase
                 .from('calls')
                 .update(updateData)
@@ -747,169 +772,7 @@ app.get("/reports/agents", async (req, res) => {
     }
 });
 
-app.get("/campaigns", async (req, res) => {
-    try {
-        const { data, error } = await supabase
-            .from('campaigns')
-            .select('*')
-            .order('created_at', { ascending: false });
-
-        if (error) throw error;
-        res.json(data);
-    } catch (e) {
-        res.status(500).json({ error: e.message });
-    }
-});
-
-app.post("/campaigns", async (req, res) => {
-    try {
-        const { name } = req.body;
-        const { data, error } = await supabase
-            .from('campaigns')
-            .insert({ name })
-            .select()
-            .single();
-        if (error) throw error;
-        res.json(data);
-    } catch (e) {
-        res.status(500).json({ error: e.message });
-    }
-});
-
-app.delete("/campaigns/:id", async (req, res) => {
-    try {
-        const { error } = await supabase
-            .from('campaigns')
-            .delete()
-            .eq('id', req.params.id);
-
-        if (error) throw error;
-        res.json({ success: true });
-    } catch (e) {
-        res.status(500).json({ error: e.message });
-    }
-});
-
-app.post("/campaigns/:id/upload", upload.single('file'), async (req, res) => {
-    const campaignId = req.params.id;
-    const results = [];
-
-    // Parse mapping from FormData
-    // It comes as a JSON string, e.g. {"phone":"Celular", "name":"Cliente"}
-    let mapping = {};
-    try {
-        if (req.body.mapping) {
-            mapping = JSON.parse(req.body.mapping);
-        }
-    } catch (e) {
-        console.error("Error parsing mapping JSON", e);
-    }
-
-    // Helper to get value from row using mapping OR fuzzy search
-    const getValue = (row, fieldKey, keywords) => {
-        // 1. Try explicit mapping
-        if (mapping[fieldKey] && row[mapping[fieldKey]] !== undefined) {
-            return row[mapping[fieldKey]];
-        }
-        // 2. Fallback to fuzzy search (Smart Match)
-        const foundKey = Object.keys(row).find(k => keywords.some(w => k.toLowerCase().includes(w)));
-        return foundKey ? row[foundKey] : null;
-    };
-
-    fs.createReadStream(req.file.path)
-        .pipe(csv())
-        .on('data', (data) => results.push(data))
-        .on('end', async () => {
-            const leads = results.map(row => {
-                const phone = getValue(row, 'phone', ['phone', 'tel', 'cel', 'mobile', 'cell']);
-                const name = getValue(row, 'name', ['name', 'nombre', 'cliente']);
-                const referred_by = getValue(row, 'referred_by', ['refer', 'ref']);
-                const address = getValue(row, 'address', ['address', 'direccion', 'dirección', 'addr']);
-                const city = getValue(row, 'city', ['city', 'ciudad', 'town']);
-                const general_info = getValue(row, 'general_info', ['info', 'desc']);
-                const rep_notes = getValue(row, 'rep_notes', ['rep', 'representante']);
-                const tlmk_notes = getValue(row, 'tlmk_notes', ['tlmk', 'telemarketing']);
-                const notes = getValue(row, 'notes', ['note', 'nota', 'comment', 'comentario']);
-
-                return {
-                    campaign_id: campaignId,
-                    phone: phone,
-                    name: name,
-                    referred_by: referred_by,
-                    address: address,
-                    city: city,
-                    general_info: general_info,
-                    rep_notes: rep_notes,
-                    tlmk_notes: tlmk_notes,
-                    notes: notes,
-                    status: 'pending'
-                };
-            }).filter(l => l.phone);
-
-            if (leads.length > 0) {
-                const { error } = await supabase.from('leads').insert(leads);
-                if (error) console.error("Error inserting leads", error);
-            }
-            fs.unlinkSync(req.file.path);
-            res.json({ message: `Uploaded ${leads.length} leads` });
-        });
-});
-
-app.get("/campaigns/:id/next-lead", async (req, res) => {
-    try {
-        const { exclude_id } = req.query;
-        console.log(`GET /next-lead campaign=${req.params.id} exclude=${exclude_id}`);
-
-        let query = supabase
-            .from('leads')
-            .select('*')
-            .eq('campaign_id', req.params.id)
-            .eq('status', 'pending');
-
-        // Support multiple excluded IDs (comma separated or single)
-        if (exclude_id) {
-            const ids = exclude_id.split(',');
-            query = query.not('id', 'in', `(${ids.join(',')})`);
-        }
-
-        const { data, error } = await query
-            .limit(1)
-            .maybeSingle();
-
-        if (error) throw error;
-        if (!data) return res.json(null);
-        res.json(data);
-    } catch (e) {
-        console.error("Error fetching next lead:", e);
-        res.status(500).json({ error: e.message });
-    }
-});
-
-app.post("/leads/:id/update", async (req, res) => {
-    try {
-        console.log(`POST /leads/${req.params.id}/update called`, req.body);
-        const { status, notes } = req.body;
-
-        // Fix: Use last_call_at instead of updated_at (column doesn't exist)
-        const updateData = { status, last_call_at: new Date() };
-        if (notes) updateData.notes = notes;
-
-        const { error } = await supabase
-            .from('leads')
-            .update(updateData)
-            .eq('id', req.params.id);
-
-        if (error) {
-            console.error("Supabase update error:", error);
-            throw error;
-        }
-        console.log("Update success for", req.params.id, updateData);
-        res.json({ success: true });
-    } catch (e) {
-        console.error("Endpoint error:", e);
-        res.status(500).json({ error: e.message });
-    }
-});
+// [REMOVED] Campaigns & Leads Endpoints (Cleanup)
 
 // Auto Dialer Endpoints
 app.post("/auto-dialer/start", async (req, res) => {
@@ -1231,11 +1094,7 @@ app.delete("/agents/:id", async (req, res) => {
 });
 
 // Auto Dialer Status Callback (Optional for now, good for debugging)
-app.post("/auto-dialer/status", (req, res) => {
-    const { CallSid, CallStatus, AnsweredBy } = req.body;
-    console.log(`Auto Dialer Status: ${CallSid} is ${CallStatus}. AnsweredBy: ${AnsweredBy}`);
-    res.sendStatus(200);
-});
+// [REMOVED] Auto Dialer Status Callback
 
 // Health check
 app.get("/", (req, res) => {
