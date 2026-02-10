@@ -8,7 +8,7 @@ import Dialpad from '@/components/Dialpad';
 import MessagesPanel from '@/components/MessagesPanel';
 // [REMOVED] CampaignManager Import
 import { Device } from '@twilio/voice-sdk';
-import { Phone, PhoneOff, Mic, MicOff, Search, ArrowDownLeft, MoreVertical, Download, MessageSquare, Copy, MapPin, Clock, X, Activity, Plus, LogOut, Shield, Menu } from 'lucide-react';
+import { Phone, PhoneOff, Mic, MicOff, Search, ArrowDownLeft, ArrowUpRight, MoreVertical, Download, MessageSquare, Copy, MapPin, Clock, X, Activity, Plus, LogOut, Shield, Menu } from 'lucide-react';
 import { format } from 'date-fns';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '@/utils/supabaseClient';
