@@ -1263,7 +1263,7 @@ export default function MainDashboard() {
             <Search className="w-5 h-5 text-gray-500 mr-3" />
             <input
               type="text"
-              placeholder="Buscar en Gibbor Voice"
+              placeholder="Buscar en Alta-Voz"
               className="bg-transparent border-none outline-none text-gray-700 w-full placeholder-gray-500 font-medium text-base"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
@@ -1408,7 +1408,7 @@ export default function MainDashboard() {
           <Search className="w-4 h-4 text-gray-400 mr-2" />
           <input
             type="text"
-            placeholder="Buscar en Voice"
+            placeholder="Buscar en Alta-Voz"
             className="bg-transparent border-none focus:outline-none text-sm text-white w-full placeholder-gray-400"
           />
         </div>
