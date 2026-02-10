@@ -1190,15 +1190,7 @@ export default function MainDashboard() {
             onClick={() => handleViewChange('messages')}
             expanded={isSidebarExpanded}
           />
-          {userRole === 'admin' && (
-            <NavIcon
-              icon={<BarChart3 className="w-6 h-6" />}
-              label="Reportes"
-              active={currentView === 'reports'}
-              onClick={() => handleViewChange('reports')}
-              expanded={isSidebarExpanded}
-            />
-          )}
+
           {userRole === 'admin' && (
             <NavIcon
               icon={<Shield className="w-6 h-6" />}
