@@ -1249,13 +1249,6 @@ app.delete("/agents/:id", async (req, res) => {
             .eq('user_id', userId);
         if (msgsError) console.error("Error unlinking messages:", msgsError);
 
-        // 0.1 Clean up Agent Sessions (Delete them)
-        const { error: sessionsError } = await supabase
-            .from('agent_sessions')
-            .delete()
-            .eq('user_id', userId);
-        if (sessionsError) console.error("Error cleaning sessions:", sessionsError);
-
         // 1. Delete from Auth (This invalidates session)
         const { error: authError } = await supabase.auth.admin.deleteUser(userId);
         if (authError) throw authError;
