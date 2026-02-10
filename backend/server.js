@@ -702,62 +702,24 @@ app.get("/reports", async (req, res) => {
 app.get("/reports/agents", async (req, res) => {
     try {
         const { startDate, endDate } = req.query;
-        // Default to today if not provided? Or all time? 
-        // User asked for "by days" but typically reports default to today or range.
-        // Let's support optional filters.
 
         const { data: profiles } = await supabase.from('profiles').select('id, email, full_name');
 
-        let sessionQuery = supabase.from('agent_sessions').select('*');
         let callQuery = supabase.from('calls').select('*');
 
         if (startDate) {
-            sessionQuery = sessionQuery.gte('started_at', startDate);
             callQuery = callQuery.gte('created_at', startDate);
         }
         if (endDate) {
-            sessionQuery = sessionQuery.lte('started_at', endDate);
             callQuery = callQuery.lte('created_at', endDate);
         }
 
-        const { data: sessions } = await sessionQuery;
         const { data: calls } = await callQuery;
 
         const report = profiles.map(agent => {
-            const agentSessions = sessions ? sessions.filter(s => s.user_id === agent.id) : [];
-            const totalOnlineSeconds = agentSessions.reduce((acc, s) => {
-                let duration = 0;
-                if (s.duration_seconds) {
-                    duration = s.duration_seconds;
-                } else if (s.started_at) {
-                    // Active session or Zombie session
-                    // If no valid ended_at, user is still online OR session crashed.
-                    // We must calculate duration up to the Report's EndDate (if historical) or Now (if current).
-
-                    const now = new Date();
-                    const sessionStart = new Date(s.started_at);
-
-                    // Determine effective end time
-                    let effectiveEnd = now;
-                    if (endDate) {
-                        const queryEnd = new Date(endDate);
-                        if (queryEnd < now) {
-                            effectiveEnd = queryEnd;
-                        }
-                    }
-
-                    const diff = Math.floor((effectiveEnd - sessionStart) / 1000);
-                    duration = diff > 0 ? diff : 0;
-                }
-                return acc + duration;
-            }, 0);
-
-            const agentCalls = calls ? calls.filter(c => c.user_id === agent.id) : []; // Note: calls might not have user_id populated yet if not updated in other flow
-            // Fallback for calls: we need to ensure calls have user_id. 
-            // In auto-dialer logic, we didn't insert user_id yet. 
-            // FIX: We need to rely on 'agent_sessions' mostly for time. 
-            // For calls, we might need to match by something else if user_id is missing? 
-            // Or just rely on user_id and assume it will be fixed.
+            // Filter calls for this agent
+            // Note: calls might not have user_id populated yet if not updated in other flow
+            const agentCalls = calls ? calls.filter(c => c.user_id === agent.id) : [];
 
             const totalCalls = agentCalls.length;
             const totalTalkTime = agentCalls.reduce((acc, c) => acc + (c.duration || 0), 0);
@@ -771,7 +733,7 @@ app.get("/reports/agents", async (req, res) => {
             return {
                 agent_name: agent.full_name || agent.email,
                 email: agent.email,
-                total_online_seconds: totalOnlineSeconds,
+                total_online_seconds: 0, // Deprecated
                 total_calls: totalCalls,
                 total_talk_seconds: totalTalkTime,
                 dispositions
