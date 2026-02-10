@@ -14,7 +14,7 @@ interface SidebarProps {
     userRole: string;
 }
 
-const APP_VERSION = "v1.9.3 (Alta-Voz)";
+const APP_VERSION = "v1.9.4 (Hotfix)";
 
 export default function Sidebar({ currentView, onViewChange, isOpen: externalIsOpen, onClose, userRole }: SidebarProps) {
     const router = useRouter();
