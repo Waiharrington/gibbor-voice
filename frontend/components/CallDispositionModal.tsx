@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Save, PhoneOff, X } from 'lucide-react';
+import { Save, PhoneOff } from 'lucide-react';
 
 interface CallDispositionModalProps {
     isOpen: boolean;
@@ -20,7 +20,7 @@ const DISPOSITIONS = [
     'No Answer / No contesta'
 ];
 
-export default function CallDispositionModal({ isOpen, onClose, callSid, leadId }: CallDispositionModalProps) {
+export default function CallDispositionModal({ isOpen, onClose, callSid }: CallDispositionModalProps) {
     const [disposition, setDisposition] = useState('');
     const [notes, setNotes] = useState('');
     const [submitting, setSubmitting] = useState(false);
@@ -41,14 +41,7 @@ export default function CallDispositionModal({ isOpen, onClose, callSid, leadId 
                 });
             }
 
-            // 2. Update Lead (if applicable)
-            if (leadId && leadId !== 'unknown') {
-                await fetch(`https://gibbor-voice-production.up.railway.app/leads/${leadId}/update`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ status: disposition, notes: notes })
-                });
-            }
+
 
             // Success
             onClose();
@@ -82,6 +75,7 @@ export default function CallDispositionModal({ isOpen, onClose, callSid, leadId 
                             value={disposition}
                             onChange={(e) => setDisposition(e.target.value)}
                             className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-indigo-500 outline-none bg-white text-gray-800"
+                            title="Select Outcome"
                             required
                         >
                             <option value="">Select Outcome...</option>

@@ -6,9 +6,9 @@ import { useState, useEffect, useRef, useMemo } from 'react';
 import Sidebar from '@/components/Sidebar';
 import Dialpad from '@/components/Dialpad';
 import MessagesPanel from '@/components/MessagesPanel';
-import CampaignManager from '@/components/CampaignManager';
+// [REMOVED] CampaignManager Import
 import { Device } from '@twilio/voice-sdk';
-import { Phone, PhoneOff, Mic, MicOff, Search, ArrowUpRight, ArrowDownLeft, MoreVertical, Download, MessageSquare, Copy, MapPin, Building, Info, FileText, Send, Clock, X, Activity, Menu, BarChart3, Plus, LogOut, Shield } from 'lucide-react';
+import { Phone, PhoneOff, Mic, MicOff, Search, ArrowDownLeft, MoreVertical, Download, MessageSquare, Copy, MapPin, Clock, X, Activity, Plus, LogOut, Shield } from 'lucide-react';
 import { format } from 'date-fns';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '@/utils/supabaseClient';
@@ -255,23 +255,13 @@ export default function MainDashboard() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Campaigns & Dialer State
-  const [activeCampaignId, setActiveCampaignId] = useState<string | null>(null);
-  const [currentLead, setCurrentLead] = useState<any | null>(null);
-  const [dialerMode, setDialerMode] = useState(false);
+  // UI State
+  const [isDialerVisible, setIsDialerVisible] = useState(false);
 
   // --- API Configuration ---
   const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://gibbor-voice-production.up.railway.app';
 
-  // Reset selected statuses when currentLead changes
-  useEffect(() => {
-    if (currentLead?.status) {
-      // If the backend stores multiple as comma-separated
-      setSelectedStatuses(currentLead.status.split(',').map((s: string) => s.trim()));
-    } else {
-      setSelectedStatuses([]);
-    }
-  }, [currentLead?.id]); // Only reset when ID changes
+  // [REMOVED] Status Reset Logic (Cleanup)
 
   // View Navigation State (Persistent Call)
   const [currentView, setCurrentView] = useState<'calls' | 'messages' | 'campaigns' | 'contacts' | 'voicemail' | 'history' | 'reports'>('calls');
@@ -310,8 +300,7 @@ export default function MainDashboard() {
     checkAuth();
   }, [router]);
 
-  // History Stack for Back functionality
-  const [leadHistory, setLeadHistory] = useState<any[]>([]);
+  // [REMOVED] Lead History State (Cleanup)
 
   // Messages State (Lifted from MessagesPanel)
   const [messages, setMessages] = useState<any[]>([]);
@@ -417,152 +406,7 @@ export default function MainDashboard() {
   // State to track if message detail is open on mobile
   const [isMessageDetailOpen, setIsMessageDetailOpen] = useState(false);
 
-  // --- Campaign & Dialer Logic ---
-
-  const fetchNextLead = async (campaignId: string, excludeId?: string, leadToArchive?: any) => {
-    setIsLoading(true);
-    try {
-      const leadToPush = leadToArchive || currentLead;
-
-      // Calculate new history to use for exclusion logic
-      let updatedHistory = [...leadHistory];
-      if (leadToPush) {
-        updatedHistory.push(leadToPush);
-        setLeadHistory(prev => [...prev, leadToPush]);
-      }
-
-      setCurrentLead(null);
-
-      // Collect ALL IDs to exclude: history + current explicit exclude
-      const excludeIds = updatedHistory.map(l => l.id);
-      if (excludeId) excludeIds.push(excludeId);
-
-      // Unique IDs
-      const uniqueExcludes = Array.from(new Set(excludeIds));
-      const excludeParam = uniqueExcludes.length > 0 ? uniqueExcludes.join(',') : '';
-
-      const url = excludeParam
-        ? `${API_BASE_URL}/campaigns/${campaignId}/next-lead?exclude_id=${excludeParam}`
-        : `${API_BASE_URL}/campaigns/${campaignId}/next-lead`;
-
-      const res = await fetch(url);
-      if (!res.ok) throw new Error("Failed to fetch next lead");
-
-      const lead = await res.json();
-      if (lead) {
-        // Double check against exclusions (though backend does it)
-        if (uniqueExcludes.includes(lead.id)) {
-          alert("Warning: Backend returned a visited lead. Retrying logic might be needed.");
-        }
-
-        setCurrentLead(lead);
-        if (lead.phone) setDialedNumber(lead.phone);
-        setSelectedStatuses([]);
-      } else {
-        setCurrentLead(null);
-        alert("No more pending leads in this campaign.");
-        setDialerMode(false);
-      }
-
-    } catch (err) {
-      console.error("Error fetching lead:", err);
-      alert("Error fetching next lead. Please check connection.");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleStartDialer = (campaignId: string) => {
-    setActiveCampaignId(campaignId);
-    setDialerMode(true);
-    // Fetch first lead
-    fetchNextLead(campaignId);
-  };
-
-  const handleLeadDisposition = async (statusId: string, notes?: string) => {
-    if (!currentLead) return;
-
-    // Toggle Selection
-    let newStatuses;
-    if (selectedStatuses.includes(statusId)) {
-      newStatuses = selectedStatuses.filter(id => id !== statusId);
-    } else {
-      newStatuses = [...selectedStatuses, statusId];
-    }
-    setSelectedStatuses(newStatuses);
-
-    const statusString = newStatuses.join(', ');
-
-    // Optimistic update / Log disposition
-    try {
-      // Update local state immediately for UI responsiveness
-      setCurrentLead((prev: any) => prev ? { ...prev, status: statusString } : null);
-
-      await fetch(`${API_BASE_URL}/leads/${currentLead.id}/update`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: statusString, notes })
-      });
-
-      // Auto-fetch next lead (User request: Advance automatically)
-      // Auto-fetch next lead (User request: Advance automatically)
-      // Auto-fetch next lead (User request: Advance automatically)
-      if (activeCampaignId) {
-        // Create the updated object explicitly to save to history
-        const leadToArchive = { ...currentLead, status: statusString, notes: notes || currentLead.notes };
-
-        // Pass currentLead.id to ensure we don't fetch the same one
-        fetchNextLead(activeCampaignId, currentLead.id, leadToArchive);
-      }
-    } catch (err) {
-      console.error("Error updating lead:", err);
-      // Revert on error (optional, skipping for simplicity)
-      alert("Failed to update lead status status.");
-    }
-  };
-
-  const handleCopy = (text: string) => {
-    navigator.clipboard.writeText(text);
-    // You might want to add a toast notification here
-  };
-
-  const handleNextLead = () => {
-    if (activeCampaignId) {
-      // Pass currentLead.id to ensure we don't fetch the same one, even if status update lags
-      fetchNextLead(activeCampaignId, currentLead?.id);
-    } else {
-      alert("Error: No Active Campaign ID found. Please refresh.");
-      console.error("handleNextLead called but activeCampaignId is null");
-    }
-  };
-
-  const handleSkipLead = () => {
-    // Skip implies same action as next for now, but explicitly skipping
-    handleNextLead();
-  };
-
-  const handleBackLead = async () => {
-    if (leadHistory.length === 0) {
-      alert("No previous leads in history.");
-      return;
-    }
-
-    const prevLead = leadHistory[leadHistory.length - 1]; // Get last
-    const newHistory = leadHistory.slice(0, -1); // Remove last
-
-    setLeadHistory(newHistory);
-    setCurrentLead(prevLead);
-
-    // Optionally refetch freshest data for this lead from backend
-    // to ensure we see the correct status if we just updated it.
-    try {
-      const res = await fetch(`https://gibbor-voice-production.up.railway.app/leads/${prevLead.id}`);
-      if (res.ok) {
-        const freshLead = await res.json();
-        if (freshLead) setCurrentLead(freshLead);
-      }
-    } catch (_e) { console.error("Error refreshing back lead"); }
-  };
+  // [REMOVED] Campaign & Dialer Logic Methods
 
   // Fetch token & History
   useEffect(() => {
@@ -1095,7 +939,7 @@ export default function MainDashboard() {
   }, [selectedCall]);
 
   const toggleDialer = () => {
-    setDialerMode(!dialerMode);
+    setIsDialerVisible(!isDialerVisible);
   };
 
   // Refactored Render Function for Logic Clarity
@@ -1189,7 +1033,7 @@ export default function MainDashboard() {
                 {[...Array(9)].map((_, i) => <div key={i} className={`w-0.5 h-0.5 rounded-full ${isKeypadOpen ? 'bg-white' : 'bg-gray-400'}`} />)}
               </div>
             </button>
-            <button onClick={handleHangup} className="col-span-1 flex flex-col items-center justify-center h-14 rounded-xl bg-red-500 text-white hover:bg-red-600 shadow-md transition-all active:scale-95">
+            <button onClick={handleHangup} className="col-span-1 flex flex-col items-center justify-center h-14 rounded-xl bg-red-500 text-white hover:bg-red-600 shadow-md transition-all active:scale-95" title="Hangup">
               <PhoneOff className="w-6 h-6" />
             </button>
           </div>
@@ -1211,7 +1055,7 @@ export default function MainDashboard() {
       );
     }
 
-    // 4. Default: Dialer
+    // 4. Default: Manual Dialpad
     return (
       <div className="w-full">
         <div className="w-full space-y-3">
@@ -1221,6 +1065,7 @@ export default function MainDashboard() {
               className="w-full p-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 outline-none focus:ring-2 focus:ring-cyan-500"
               value={selectedCallerId}
               onChange={(e) => setSelectedCallerId(e.target.value)}
+              title="Select Caller ID"
             >
               {availableNumbers.length > 0 ? (
                 availableNumbers.map(num => (
@@ -1235,13 +1080,9 @@ export default function MainDashboard() {
             </select>
           </div>
 
-          <button
-            onClick={() => handleCall(currentLead.phone, selectedCallerId)}
-            className="w-full py-4 bg-green-500 text-white rounded-xl font-bold text-lg shadow-lg hover:bg-green-600 hover:shadow-xl hover:-translate-y-0.5 transition-all flex items-center justify-center active:scale-95 transform"
-          >
-            <Phone className="w-5 h-5 mr-2" />
-            Call Lead
-          </button>
+          <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
+            <Dialpad onCall={(number) => handleCall(number, selectedCallerId)} />
+          </div>
 
           <button
             onClick={() => handleCall('888888', selectedCallerId)}
@@ -1328,6 +1169,8 @@ export default function MainDashboard() {
         <button
           onClick={() => setIsSidebarExpanded(!isSidebarExpanded)}
           className="p-3 mb-6 hover:bg-gray-200 rounded-full transition-colors text-gray-600 self-center"
+          title="Toggle Sidebar"
+          aria-label="Toggle Sidebar"
         >
           <Menu className="w-6 h-6" />
         </button>
@@ -1420,7 +1263,7 @@ export default function MainDashboard() {
       {/* 2. SECONDARY COLUMN (List View & Search) */}
       {/* Hide on mobile if showing details or dialer/active call */}
       <div className={`w-full md:w-96 flex flex-col bg-white border-r border-gray-200 shrink-0 relative
-          ${(activeCall || dialerMode || (isMobile && activeMobileTab === 'details')) ? 'hidden md:flex' : 'flex'}
+          ${(activeCall || isDialerVisible || (isMobile && activeMobileTab === 'details')) ? 'hidden md:flex' : 'flex'}
       `}>
         {/* Search Header */}
         <div className="h-20 flex items-center px-6 border-b border-gray-100 flex-shrink-0">
@@ -1587,7 +1430,7 @@ export default function MainDashboard() {
       <div className="flex-1 flex flex-col md:flex-row pt-16 lg:pt-0 h-full">
 
         {/* Mobile Bottom Nav (Google Voice Style) - Hidden during Call/Dialpad/MessageDetail */}
-        <div className={`2xl:hidden fixed bottom-0 left-0 right-0 h-20 bg-[#1e1e1e] border-t border-gray-800 z-50 flex justify-around items-center pb-2 text-gray-400 ${(dialerMode || activeCall || isMessageDetailOpen) ? 'hidden' : ''}`}>
+        <div className={`2xl:hidden fixed bottom-0 left-0 right-0 h-20 bg-[#1e1e1e] border-t border-gray-800 z-50 flex justify-around items-center pb-2 text-gray-400 ${(isDialerVisible || activeCall || isMessageDetailOpen) ? 'hidden' : ''}`}>
           <button
             onClick={() => { setActiveMobileTab('calls'); handleViewChange('calls'); }}
             className={`flex flex-col items-center justify-center w-full h-full ${activeMobileTab === 'calls' ? 'text-blue-400' : ''}`}
@@ -1636,14 +1479,14 @@ export default function MainDashboard() {
           animate={{ scale: 1, opacity: 1 }}
           whileHover={{ scale: 1.1, rotate: 90 }}
           whileTap={{ scale: 0.9 }}
-          onClick={() => setDialerMode(true)}
+          onClick={() => setIsDialerVisible(true)}
           className="2xl:hidden fixed bottom-24 right-4 w-16 h-16 bg-cyan-600 rounded-2xl shadow-xl flex items-center justify-center text-white z-50 hover:bg-cyan-500 transition-colors"
         >
           <Plus className="w-8 h-8" />
         </motion.button>
 
         {/* Existing Content Rendering Logic (Modified to fit new container) */}
-        {(currentView === 'calls' || currentView === 'history' || currentView === 'contacts') && !dialerMode && (
+        {(currentView === 'calls' || currentView === 'history' || currentView === 'contacts') && !isDialerVisible && (
           <>
             {/* 2. Call List (Left) - Adjusted for Mobile */}
             {/* 2. Call List (Removed - Moved to Secondary Column) */}
@@ -1793,30 +1636,16 @@ export default function MainDashboard() {
           </div>
         )}
 
-        {currentView === 'campaigns' && (
-          <div style={{ minWidth: 0, flexGrow: 1 }} className="flex-1 flex-col bg-white border-r border-gray-200 min-w-0">
-            <CampaignManager onStartDialer={handleStartDialer} />
-          </div>
-        )}
+        {/* [REMOVED] CampaignManager JSX */}
 
-        {currentView === 'reports' && (
-          <div style={{ minWidth: 0, flexGrow: 1 }} className="flex-1 flex flex-col bg-white border-r border-gray-200 min-w-0 p-10 items-center justify-center">
-            <div className="w-24 h-24 bg-blue-50 rounded-full flex items-center justify-center mb-6">
-              <BarChart3 className="w-12 h-12 text-blue-500" />
-            </div>
-            <h2 className="text-2xl font-bold text-gray-800 mb-2">Panel de Reportes</h2>
-            <p className="text-gray-500 text-center max-w-md">
-              Las métricas avanzadas y reportes administrativos estarán disponibles pronto en esta sección.
-            </p>
-          </div>
-        )}
+        {/* [REMOVED] Reports Mode UI */}
 
         {/* 4. Dialpad (Right) */}
         <div
           style={{ flexShrink: 0 }}
           className={`
               w-full md:w-96 border-l border-gray-200 bg-gray-50 flex-col shrink-0 h-full overflow-hidden
-              ${(dialerMode || activeCall) ? 'flex absolute inset-0 z-40 bg-white md:static md:bg-gray-50 md:z-auto' : 'hidden md:flex'}
+              ${(isDialerVisible || activeCall) ? 'flex absolute inset-0 z-40 bg-white md:static md:bg-gray-50 md:z-auto' : 'hidden md:flex'}
            `}>
 
           {/* PROMINENT CONNECTION STATUS BAR */}
@@ -1923,7 +1752,7 @@ export default function MainDashboard() {
                   </div>
 
                   {/* Close Button for Mobile (Next to Status) */}
-                  <button onClick={() => setDialerMode(false)} className="p-1.5 bg-gray-100 rounded-full md:hidden text-gray-500 hover:text-gray-700 hover:bg-gray-200" title="Close Dialpad">
+                  <button onClick={() => setIsDialerVisible(false)} className="p-1.5 bg-gray-100 rounded-full md:hidden text-gray-500 hover:text-gray-700 hover:bg-gray-200" title="Close Dialpad">
                     <X className="w-4 h-4" />
                   </button>
                 </div>
@@ -2000,228 +1829,7 @@ export default function MainDashboard() {
       {/* Removed Duplicate View Content Blocks from here */}
 
       {/* DIALER MODE LAYOUT */}
-      {dialerMode && (
-        !currentLead ? (
-          <div className="flex-1 flex items-center justify-center bg-gray-50 flex-col">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-cyan-500 mb-4"></div>
-            <p className="text-gray-500 font-medium">Buscando siguiente lead...</p>
-            <button onClick={() => setDialerMode(false)} className="mt-8 text-red-400 hover:text-red-500 text-sm">Cancelar</button>
-          </div>
-        ) : (
-          <div className="flex-1 flex bg-gray-50">
-            {/* CENTER: Lead Info (Editable) */}
-            <div className="flex-1 p-6 overflow-y-auto">
-              <div className="max-w-5xl mx-auto bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-                {/* Header Info */}
-                <div className="flex items-start justify-between mb-6">
-                  <div>
-                    <h1 className="text-xl font-bold text-gray-900">{currentLead.name || 'Unknown'}</h1>
-                    <p className="text-lg text-cyan-600 font-mono mt-1 flex items-center font-bold">
-                      <Phone className="w-4 h-4 mr-2" />
-                      {currentLead.phone}
-                    </p>
-                  </div>
-                  <div className="text-right">
-                    <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-700 uppercase tracking-wide">
-                      Power Dialer Activo v2.9
-                    </span>
-                  </div>
-                </div>
-
-                {/* Grid Fields (Editable) - Single Row Layout */}
-                <div className="grid grid-cols-4 gap-4 mb-4">
-                  <div className="col-span-1 space-y-1">
-                    <label className="text-xs font-bold text-black uppercase tracking-wider">Referido Por</label>
-                    <input
-                      type="text"
-                      className="w-full p-2 bg-gray-50 border border-gray-200 rounded-lg text-gray-800 font-medium focus:ring-1 focus:ring-cyan-500 focus:border-cyan-500 transition-all text-xs"
-                      value={currentLead.referred_by || ''}
-                      onChange={(e) => setCurrentLead((prev: any) => ({ ...prev, referred_by: e.target.value }))}
-                    />
-                  </div>
-                  <div className="col-span-1 space-y-1">
-                    <label className="text-xs font-bold text-black uppercase tracking-wider">Ciudad</label>
-                    <div className="relative">
-                      <Building className="absolute left-2.5 top-2.5 w-3.5 h-3.5 text-gray-400" />
-                      <input
-                        type="text"
-                        className="w-full pl-8 p-2 bg-gray-50 border border-gray-200 rounded-lg text-gray-800 font-medium focus:ring-1 focus:ring-cyan-500 focus:border-cyan-500 transition-all text-xs"
-                        value={currentLead.city || ''}
-                        onChange={(e) => setCurrentLead((prev: any) => ({ ...prev, city: e.target.value }))}
-                      />
-                    </div>
-                  </div>
-                  <div className="col-span-2 space-y-1">
-                    <label className="text-xs font-bold text-black uppercase tracking-wider">Dirección</label>
-                    <div className="relative">
-                      <MapPin className="absolute left-2.5 top-2.5 w-3.5 h-3.5 text-gray-400" />
-                      <input
-                        type="text"
-                        className="w-full pl-8 p-2 bg-gray-50 border border-gray-200 rounded-lg text-gray-800 font-medium focus:ring-1 focus:ring-cyan-500 focus:border-cyan-500 transition-all text-xs"
-                        value={currentLead.address || ''}
-                        onChange={(e) => setCurrentLead((prev: any) => ({ ...prev, address: e.target.value }))}
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Text Areas */}
-                <div className="space-y-4">
-                  <div>
-                    <label className="text-xs font-bold text-black uppercase tracking-wider mb-1 block">Info General</label>
-                    <textarea
-                      rows={3}
-                      className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-700 leading-relaxed focus:ring-1 focus:ring-cyan-500 focus:border-cyan-500 transition-all resize-none"
-                      value={currentLead.general_info || ''}
-                      onChange={(e) => setCurrentLead((prev: any) => ({ ...prev, general_info: e.target.value }))}
-                    />
-                  </div>
-
-                  <div>
-                    <label className="text-xs font-bold text-black uppercase tracking-wider mb-1 block">Observaciones del Rep</label>
-                    <textarea
-                      rows={2}
-                      className="w-full p-3 bg-yellow-50 border border-yellow-100 rounded-xl text-gray-700 leading-relaxed focus:ring-1 focus:ring-yellow-400 focus:border-yellow-400 transition-all resize-none"
-                      value={currentLead.rep_notes || ''}
-                      onChange={(e) => setCurrentLead((prev: any) => ({ ...prev, rep_notes: e.target.value }))}
-                    />
-                  </div>
-
-                  <div className="relative group">
-                    <label className="text-xs font-bold text-black uppercase tracking-wider mb-1 block">
-                      Observaciones TLMK (Historial)
-                    </label>
-                    <div className="p-3 bg-blue-50 rounded-xl text-gray-700 text-sm leading-relaxed border border-blue-100 max-h-32 overflow-y-auto w-full">
-                      {currentLead.tlmk_notes || 'No history'}
-                    </div>
-                  </div>
-
-                  {/* NEW COMMENTS FIELD */}
-                  <div>
-                    <label className="text-xs font-bold text-black uppercase tracking-wider mb-1 block flex items-center justify-between">
-                      <span>Comentarios de la Llamada (Actual)</span>
-                      <button onClick={() => {
-                        const noteInput = document.getElementById('current-call-notes') as HTMLTextAreaElement;
-                        if (noteInput) handleCopy(noteInput.value);
-                      }} className="text-cyan-600 hover:text-cyan-700 text-xs font-bold flex items-center" title="Copiar">
-                        <Copy className="w-3 h-3 mr-1" /> Copiar
-                      </button>
-                    </label>
-                    <textarea
-                      id="current-call-notes"
-                      rows={4}
-                      placeholder="Escribe notas para esta llamada..."
-                      className="w-full p-3 bg-white border border-gray-300 rounded-xl text-gray-900 leading-relaxed focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition-all shadow-sm resize-none"
-                      value={currentLead.notes || ''}
-                      onChange={(e) => setCurrentLead((prev: any) => ({ ...prev, notes: e.target.value }))}
-                    />
-                  </div>
-                </div>
-
-              </div>
-            </div>
-
-            {/* RIGHT: Controls & Status */}
-            <div className="w-80 bg-white border-l border-gray-200 flex flex-col h-full shadow-2xl z-20">
-
-              {/* TOP: Call Controls */}
-              <div className="p-5 border-b border-gray-100 bg-gray-50 flex flex-col items-center">
-
-                {/* Active Call State or Start Call Button */}
-
-                {/* --- VICIDIAL STYLE MANUAL CONTROLS (ALWAYS VISIBLE) --- */}
-                <div className="w-full bg-gray-800 p-2 mb-4 rounded-lg flex items-center justify-between shadow-inner">
-                  <div className="text-[10px] text-green-400 font-mono flex flex-col">
-                    <span>ESTADO: {callStatus}</span>
-                    <span>DISP: {device ? 'READY' : 'NULL'}</span>
-                  </div>
-                  <div className="flex space-x-2">
-                    <button
-                      onClick={() => {
-                        console.log("FORCE ANSWER");
-                        if (device) {
-                          const conns = (device as any).connections;
-                          if (conns && conns.length > 0) {
-                            const active = conns[0];
-                            active.accept();
-                            setActiveCall(active);
-                            setCallStatus("In Call (Forced)");
-                          } else {
-                            alert("No connection found to answer (Force Mode).");
-                          }
-                        }
-                      }}
-                      className="px-3 py-1 bg-green-700 hover:bg-green-600 text-white text-xs font-bold rounded border border-green-500 shadow-sm active:scale-95"
-                    >
-                      FORZAR RESPUESTA
-                    </button>
-                    <button
-                      onClick={() => {
-                        if (device) device.disconnectAll();
-                        setCallStatus("Ready");
-                        setActiveCall(null);
-                      }}
-                      className="px-3 py-1 bg-red-900 hover:bg-red-800 text-white text-xs font-bold rounded border border-red-700 shadow-sm active:scale-95"
-                    >
-                      COLGAR TODO
-                    </button>
-                  </div>
-                </div>
-                {/* ------------------------------------------------------- */}
-                {/* --- CALL CONTROL PANEL (Logic Refactored v4.0) --- */}
-                {renderCallPanel()}
-
-              </div>
-
-              {/* MIDDLE: Status List (Scrollable) */}
-              <div className="flex-1 overflow-y-auto p-3 bg-gray-50/50">
-                <label className="text-xs font-bold text-gray-500 uppercase tracking-wider px-1 mb-2 block">Resultado (Selección múltiple)</label>
-                <div className="space-y-1.5">
-                  {CALL_STATUSES.map(status => {
-                    const isSelected = selectedStatuses.includes(status.id);
-                    return (
-                      <button
-                        key={status.id}
-                        onClick={() => {
-                          const noteInput = document.getElementById('current-call-notes') as HTMLTextAreaElement;
-                          handleLeadDisposition(status.id, noteInput?.value || '');
-                          // Do NOT clear notes on multi-select toggle
-                        }}
-                        className={`w-full text-left px-3 py-2.5 rounded-lg transition-all border text-sm font-bold flex items-center justify-between group shadow-sm ${isSelected ? 'bg-blue-50 border-blue-500 text-blue-900' : 'bg-white border-gray-200 text-gray-900 hover:bg-gray-50 hover:border-gray-300'}`}
-                        style={{ borderLeftWidth: '4px', borderLeftColor: status.color.includes('green') ? '#22c55e' : status.color.includes('red') ? '#ef4444' : status.color.includes('yellow') ? '#eab308' : '#3b82f6' }}
-                      >
-                        <span className="flex-1">{status.label}</span>
-                        {isSelected ? (
-                          <div className="w-5 h-5 rounded-full border-2 border-blue-600 bg-blue-600 flex items-center justify-center text-white">
-                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="w-3 h-3"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                          </div>
-                        ) : (
-                          <div className="w-5 h-5 rounded-full border-2 border-gray-300 group-hover:border-gray-400 transition-colors"></div>
-                        )}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* BOTTOM: Nav */}
-              <div className="p-3 bg-white border-t border-gray-200 grid grid-cols-3 gap-2">
-                <button onClick={handleBackLead} className="flex flex-col items-center justify-center p-2 text-gray-500 hover:bg-gray-100 rounded-lg transition-colors">
-                  <ArrowDownLeft className="w-4 h-4 mb-1 rotate-90" />
-                  <span className="text-[10px] uppercase font-bold tracking-wider">Atrás</span>
-                </button>
-                <button onClick={handleSkipLead} className="flex flex-col items-center justify-center p-2 text-gray-500 hover:bg-gray-100 rounded-lg transition-colors">
-                  <ArrowDownLeft className="w-4 h-4 mb-1 rotate-[-90deg]" />
-                  <span className="text-[10px] uppercase font-bold tracking-wider">Saltar</span>
-                </button>
-                <button onClick={handleNextLead} className="flex flex-col items-center justify-center p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors">
-                  <ArrowDownLeft className="w-4 h-4 mb-1 rotate-[-135deg]" /> {/* Next Icon Proxy */}
-                  <span className="text-[10px] uppercase font-bold tracking-wider">Siguiente</span>
-                </button>
-              </div>
-            </div>
-          </div>
-        ))}
+      {/* [REMOVED] Dialer Mode UI */}
 
       {/* MOBILE SIDEBAR OVERLAY */}
       <AnimatePresence>

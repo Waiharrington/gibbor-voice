@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Sidebar from '@/components/Sidebar';
-import { Shield, Users, Phone, BarChart3, ArrowUpRight, UserPlus, Loader2, Plus, Trash2, Edit, Globe, MapPin } from 'lucide-react';
+import { Shield, Users, Phone, Loader2, Plus, Trash2, Globe, UserPlus } from 'lucide-react';
 import { supabase } from '@/utils/supabaseClient';
 import { useAgentStatus } from '@/providers/AgentStatusContext';
 
@@ -88,16 +88,12 @@ export default function AdminPage() {
                 setZones(await zonesRes.json());
             }
 
-            // 3. Fetch General Reports
-            const res = await fetch(`${API_BASE_URL}/reports`);
-            if (res.ok) {
-                const data = await res.json();
-                setStats({
-                    totalCalls: calculatedTotalCalls,
-                    totalSales: (data.status_counts['Sale'] || 0) + (data.status_counts['Venta'] || 0) + (data.status_counts['Cita'] || 0),
-                    activeAgents: onlineUsers.length
-                });
-            }
+            // 3. General Stats (from local usersList)
+            setStats(prev => ({
+                ...prev,
+                totalCalls: calculatedTotalCalls,
+                activeAgents: onlineUsers.length
+            }));
         } catch (error) {
             console.error("Error fetching admin stats:", error);
         } finally {
@@ -363,17 +359,7 @@ export default function AdminPage() {
                             </div>
                         </div>
 
-                        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-                            <div className="flex justify-between items-start mb-4">
-                                <div>
-                                    <p className="text-sm font-medium text-gray-500">Total Ventas/Leads</p>
-                                    <h3 className="text-3xl font-bold text-gray-900 mt-1">{stats.totalSales}</h3>
-                                </div>
-                                <div className="p-3 bg-green-50 rounded-lg text-green-600">
-                                    <BarChart3 className="w-6 h-6" />
-                                </div>
-                            </div>
-                        </div>
+
 
                         <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
                             <div className="flex justify-between items-start mb-4">
@@ -526,6 +512,7 @@ export default function AdminPage() {
                                                         onClick={() => handleDeleteAgent(u.id, u.full_name || u.email)}
                                                         className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                                                         title="Eliminar Usuario"
+                                                        aria-label="Delete Agent"
                                                     >
                                                         <Trash2 className="w-4 h-4" />
                                                     </button>

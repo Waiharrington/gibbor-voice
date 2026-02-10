@@ -3,10 +3,8 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
-import { Phone, Clock, MessageSquare, Settings, User, BarChart3, Activity, LogOut, Shield } from 'lucide-react';
+import { Phone, Clock, MessageSquare, Settings, LogOut, Shield } from 'lucide-react';
 import { supabase } from '@/utils/supabaseClient';
-
-import { usePresence } from '@/hooks/usePresence';
 
 interface SidebarProps {
     currentView?: string;
@@ -148,41 +146,7 @@ export default function Sidebar({ currentView, onViewChange, isOpen: externalIsO
                                 Messages
                             </button>
                         </li>
-                        {isAdmin && (
-                            <>
-                                {/* 
-                                <li>
-                                    <button
-                                        onClick={(e) => handleNav('campaigns', e)}
-                                        className={`w-full flex items-center px-4 py-3 cursor-pointer transition-colors ${currentView === 'campaigns' ? 'bg-gray-200 text-gray-900 font-medium' : 'text-gray-600 hover:bg-gray-100'}`}
-                                    >
-                                        <BarChart3 className="w-5 h-5 mr-3 text-gray-500" />
-                                        Campaigns
-                                    </button>
-                                </li>
-                                <li>
-                                    <Link href="/auto-dialer" className="flex items-center px-4 py-3 text-gray-600 hover:bg-gray-100 transition-colors">
-                                        <Activity className="w-5 h-5 mr-3 text-gray-500" />
-                                        Auto Dialer
-                                    </Link>
-                                </li>
-                                */}
-                                <li>
-                                    <Link href="/reports" className="flex items-center px-4 py-3 text-gray-600 hover:bg-gray-100 transition-colors">
-                                        <BarChart3 className="w-5 h-5 mr-3 text-gray-500" />
-                                        Reports
-                                    </Link>
-                                </li>
-                                {/*
-                                <li>
-                                    <Link href="/contacts" className="flex items-center px-4 py-3 text-gray-600 hover:bg-gray-100 transition-colors">
-                                        <User className="w-5 h-5 mr-3 text-gray-500" />
-                                        Contacts
-                                    </Link>
-                                </li>
-                                */}
-                            </>
-                        )}
+                        {/* [REMOVED] Legacy Links (Reports, Campaigns, Auto-Dialer) */}
 
                         <li>
                             <Link href="/history" className="flex items-center px-4 py-3 text-gray-600 hover:bg-gray-100 transition-colors">
