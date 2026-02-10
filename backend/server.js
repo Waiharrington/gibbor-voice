@@ -767,13 +767,12 @@ app.post("/agents", async (req, res) => {
 });
 
 // Admin: Delete Agent Endpoint
-// Admin: Delete Agent Endpoint
 app.delete("/agents/:id", async (req, res) => {
     try {
         const userId = req.params.id;
         console.log(`Deleting agent: ${userId}`);
 
-        // 0. Unlink dependencies (Calls & Messages) to avoid FK Constraint errors
+        // 1. Unlink dependencies (Calls & Messages) to avoid FK Constraint errors
         // We set user_id to NULL to preserve the history of the calls/messages
         const { error: callsError } = await supabase
             .from('calls')
@@ -787,17 +786,38 @@ app.delete("/agents/:id", async (req, res) => {
             .eq('user_id', userId);
         if (msgsError) console.error("Error unlinking messages:", msgsError);
 
-        // 1. Delete from Auth (This invalidates session)
-        const { error: authError } = await supabase.auth.admin.deleteUser(userId);
-        if (authError) throw authError;
+        // 2. Proactively cleanup agent_sessions if they exist
+        // This avoids errors if the table still exists and references the user
+        try {
+            const { error: sessionError } = await supabase
+                .from('agent_sessions')
+                .delete()
+                .eq('user_id', userId);
+            if (sessionError && !sessionError.message.includes('not found')) {
+                console.error("Error deleting sessions:", sessionError);
+            }
+        } catch (sessionEx) {
+            // Table might not exist, that's fine
+            console.log("agent_sessions table likely gone or error:", sessionEx.message);
+        }
 
-        // 2. Cleanup Profile (if not cascaded)
+        // 3. Delete from Profiles first (if it references Auth)
         const { error: profileError } = await supabase
             .from('profiles')
             .delete()
             .eq('id', userId);
 
-        if (profileError) console.error("Error deleting profile (might be cascaded):", profileError);
+        if (profileError) {
+            console.error("Error deleting profile:", profileError);
+            // We don't throw here yet, try to delete from Auth anyway
+        }
+
+        // 4. Delete from Auth (Final step)
+        const { error: authError } = await supabase.auth.admin.deleteUser(userId);
+        if (authError) {
+            console.error("Error deleting from auth:", authError);
+            throw new Error(`Auth cleanup failed: ${authError.message}`);
+        }
 
         res.json({ message: "Agent deleted successfully" });
     } catch (e) {
