@@ -737,7 +737,23 @@ export default function MainDashboard() {
 
   const [dialedNumber, setDialedNumber] = useState<string>('');
 
+  // Anti-double-click lock
+  const isDialingLock = useRef(false);
+
   const handleCall = async (number: string, callerId?: string) => {
+    // 1. Connection Lock Check (Prevents double-click "Call Already Active" error)
+    if (isDialingLock.current) {
+      console.warn("Dialing lock active. Ignoring double-click.");
+      return;
+    }
+
+    // 2. Active Call Check
+    if (activeCall) {
+      console.warn("Call already active. Ignoring new dial request.");
+      alert("Ya hay una llamada en curso.");
+      return;
+    }
+
     if (!device) {
       alert("El teléfono se está iniciando... Espere 3 segundos.");
       return;
@@ -756,6 +772,10 @@ export default function MainDashboard() {
     }
 
     setDialedNumber(number); // Store for display
+
+    // ENGAGE LOCK
+    isDialingLock.current = true;
+
     try {
       setCallStatus('Llamando a ' + number + '...');
       // IMPORTANT: Explicitly cast to any to allow custom params
@@ -865,9 +885,17 @@ export default function MainDashboard() {
         alert("Por favor permita el acceso al micrófono para realizar llamadas.");
       } else {
         const errMsg = error.message || 'Unknown Connection Error';
-        setCallStatus(`Error: ${errMsg}`);
-        alert(`Llamada fallida: ${errMsg}`); // Also alert for visibility
+        // Suppress "A Call is already active" alert if we caught it too late
+        if (!errMsg.includes('already active')) {
+          setCallStatus(`Error: ${errMsg}`);
+          alert(`Llamada fallida: ${errMsg}`);
+        }
       }
+    } finally {
+      // Release lock after a delay to prevent immediate re-dial
+      setTimeout(() => {
+        isDialingLock.current = false;
+      }, 1500);
     }
   };
 
