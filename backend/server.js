@@ -430,6 +430,33 @@ app.post("/call-status", async (req, res) => {
         }
     }
 
+    // Metric persistence endpoint from Client
+    app.post("/calls/:sid/metrics", async (req, res) => {
+        const { sid } = req.params;
+        const { mos, jitter, rtt } = req.body;
+        console.log(`Received Client Metrics for ${sid}: MOS=${mos}, Jitter=${jitter}, RTT=${rtt}`);
+
+        try {
+            const { error } = await supabase
+                .from('calls')
+                .update({
+                    mos_client: mos,
+                    jitter_client: jitter,
+                    rtt_client: rtt,
+                    network_warning: mos < 3.5
+                })
+                .eq('sid', sid);
+
+            if (error) {
+                // If columns don't exist, this might fail. We log but don't crash.
+                console.error("Error updating metrics (Columns might be missing):", error.message);
+            }
+        } catch (e) {
+            console.error("Metrics update exception:", e.message);
+        }
+        res.sendStatus(200);
+    });
+
     const twiml = new twilio.twiml.VoiceResponse();
     res.type("text/xml");
     res.send(twiml.toString());
