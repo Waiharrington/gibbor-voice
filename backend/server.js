@@ -433,8 +433,8 @@ app.post("/call-status", async (req, res) => {
     // Metric persistence endpoint from Client
     app.post("/calls/:sid/metrics", async (req, res) => {
         const { sid } = req.params;
-        const { mos, jitter, rtt, hangup_source } = req.body;
-        console.log(`Received Client Metrics for ${sid}: MOS=${mos}, Jitter=${jitter}, RTT=${rtt}, HangupSource=${hangup_source}`);
+        const { mos, jitter, rtt, hangup_source, min_mos, max_jitter, avg_mos } = req.body;
+        console.log(`Received Client Metrics for ${sid}: MOS=${mos}, Jitter=${jitter}, RTT=${rtt}, HangupSource=${hangup_source}, MinMOS=${min_mos}, MaxJitter=${max_jitter}, AvgMOS=${avg_mos}`);
 
         try {
             const { error } = await supabase
@@ -444,7 +444,10 @@ app.post("/call-status", async (req, res) => {
                     jitter_client: jitter,
                     rtt_client: rtt,
                     hangup_source: hangup_source,
-                    network_warning: mos < 3.5
+                    min_mos_client: min_mos,
+                    max_jitter_client: max_jitter,
+                    avg_mos_client: avg_mos,
+                    network_warning: (mos < 3.5 || (min_mos && min_mos < 3.0))
                 })
                 .eq('sid', sid);
 

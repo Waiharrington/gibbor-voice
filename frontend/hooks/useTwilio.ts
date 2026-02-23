@@ -246,13 +246,28 @@ export function useTwilio({ token, identity, onTokenExpired, onStatusChange }: U
             setActiveCall(call);
 
             call.on('sample', (sample: any) => {
-                const metrics = {
-                    mos: sample.mos || 0,
-                    jitter: sample.values?.jitter || 0,
-                    rtt: sample.values?.rtt || 0
-                };
+                const mos = sample.mos || 0;
+                const jitter = sample.values?.jitter || 0;
+                const rtt = sample.values?.rtt || 0;
+
+                const metrics = { mos, jitter, rtt };
                 setNetworkQuality(metrics);
-                (call as any)._lastMetrics = metrics; // Store for disconnect report
+
+                // Extended metrics tracking
+                const current = (call as any)._extendedMetrics || {
+                    minMos: mos,
+                    maxJitter: jitter,
+                    sumMos: 0,
+                    count: 0
+                };
+
+                (call as any)._extendedMetrics = {
+                    minMos: Math.min(current.minMos, mos),
+                    maxJitter: Math.max(current.maxJitter, jitter),
+                    sumMos: current.sumMos + mos,
+                    count: current.count + 1,
+                    lastMetrics: metrics
+                };
             });
 
             call.on('accept', () => {
@@ -262,17 +277,23 @@ export function useTwilio({ token, identity, onTokenExpired, onStatusChange }: U
             });
 
             call.on('disconnect', () => {
-                const metrics = (call as any)._lastMetrics || {};
+                const ext = (call as any)._extendedMetrics || {};
+                const metrics = ext.lastMetrics || {};
                 const sid = call.parameters.CallSid || (call as any).sid;
                 const hangupSource = agentHangup.current ? 'agent' : 'customer';
 
                 if (sid) {
+                    const avgMos = ext.count > 0 ? ext.sumMos / ext.count : null;
                     const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'https://gibbor-voice-production.up.railway.app';
+
                     fetch(`${baseUrl}/calls/${sid}/metrics`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
                             ...metrics,
+                            min_mos: ext.minMos,
+                            max_jitter: ext.maxJitter,
+                            avg_mos: avgMos,
                             hangup_source: hangupSource
                         })
                     }).catch(() => { }); // Fire and forget
