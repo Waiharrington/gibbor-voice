@@ -303,8 +303,11 @@ export function useTwilio({ token, identity, onTokenExpired, onStatusChange }: U
         }
     }, [device, isDeviceReady, stopRingback]);
 
+    const agentHangup = useRef(false);
+
     const handleHangup = useCallback(() => {
         stopRingback();
+        agentHangup.current = true;
         if (activeCall) {
             activeCall.disconnect();
         } else if (device) {
@@ -324,6 +327,12 @@ export function useTwilio({ token, identity, onTokenExpired, onStatusChange }: U
         }
     }, [activeCall, isMuted]);
 
+    const sendDTMF = useCallback((digit: string) => {
+        if (activeCall) {
+            activeCall.sendDigits(digit);
+        }
+    }, [activeCall]);
+
     return {
         device,
         activeCall,
@@ -335,8 +344,9 @@ export function useTwilio({ token, identity, onTokenExpired, onStatusChange }: U
         handleCall,
         handleHangup,
         toggleMute,
+        sendDTMF,
         stopRingback,
         mapStatusToSpanish,
         isTonePlaying: toneManager.isTonePlaying
     };
-}
+};
