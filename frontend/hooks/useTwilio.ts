@@ -239,6 +239,7 @@ export function useTwilio({ token, identity, onTokenExpired, onStatusChange }: U
         };
 
         toneManager.startRingback();
+        agentHangup.current = false; // Reset for new call
         try {
             const call = await device.connect({ params });
             setCallStatus('Marcando...');
@@ -261,15 +262,19 @@ export function useTwilio({ token, identity, onTokenExpired, onStatusChange }: U
             });
 
             call.on('disconnect', () => {
-                const metrics = (call as any)._lastMetrics;
+                const metrics = (call as any)._lastMetrics || {};
                 const sid = call.parameters.CallSid || (call as any).sid;
+                const hangupSource = agentHangup.current ? 'agent' : 'customer';
 
-                if (sid && metrics) {
+                if (sid) {
                     const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'https://gibbor-voice-production.up.railway.app';
                     fetch(`${baseUrl}/calls/${sid}/metrics`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(metrics)
+                        body: JSON.stringify({
+                            ...metrics,
+                            hangup_source: hangupSource
+                        })
                     }).catch(() => { }); // Fire and forget
                 }
 
