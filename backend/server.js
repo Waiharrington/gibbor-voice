@@ -81,11 +81,10 @@ app.get("/phone-numbers", async (req, res) => {
         const { userId } = req.query;
 
         // 1. Fetch All Available Numbers from Twilio (Base Source of Truth)
-        // 1. Fetch All Available Numbers from Twilio (Base Source of Truth)
         let allTwilioNumbers = [];
         try {
             const [incoming, verified] = await Promise.all([
-                twilioClient.incomingPhoneNumbers.list({ limit: 100 }), // Increased limit
+                twilioClient.incomingPhoneNumbers.list({ limit: 100 }),
                 twilioClient.outgoingCallerIds.list({ limit: 100 })
             ]);
 
@@ -103,14 +102,12 @@ app.get("/phone-numbers", async (req, res) => {
             ];
         } catch (twilioError) {
             console.error("Twilio API Error (Non-critical):", twilioError.message);
-            // Proceed with empty list - local DB numbers will be used as fallback
         }
 
         let finalNumbers = allTwilioNumbers;
         let callbackNumber = null;
 
         if (userId) {
-            // Fetch User Profile with Zone Info
             const { data: profile } = await supabase
                 .from('profiles')
                 .select(`
@@ -121,46 +118,71 @@ app.get("/phone-numbers", async (req, res) => {
                         id,
                         name,
                         callback_number,
-                        zone_numbers (phone_number)
+                        zone_numbers (phone_number, reputation_status)
                     )
                 `)
                 .eq('id', userId)
                 .single();
 
-            if (profile) {
-                // ADMIN: Sees ALL Twilio Numbers
-                if (profile.role === 'admin') {
-                    // No filtering needed
-                }
-                // AGENT: Sees ONLY Zone Numbers
-                else if (profile.zone_id && profile.zones) {
-                    const zoneNumbers = profile.zones.zone_numbers.map(zn => zn.phone_number);
-
-                    // Filter Twilio numbers that are in the Zone OR use DB numbers if not found in fetch
-                    // This ensures even if Twilio pagination misses it, we still show the number
-                    finalNumbers = zoneNumbers.map(zNum => {
-                        const twilioMatch = allTwilioNumbers.find(t => t.phoneNumber === zNum);
-                        return twilioMatch || { phoneNumber: zNum, friendlyName: '', type: 'Twilio' };
-                    });
-
-                    // Set Zone Callback Number
-                    callbackNumber = profile.zones.callback_number;
-
-                    console.log(`[UserId: ${userId}] Zone: ${profile.zones.name}, Numbers: ${finalNumbers.length}`);
-                }
-                // FALLBACK: User has no zone? Return empty or default
-                else {
-                    finalNumbers = [];
-                }
+            if (profile && profile.zone_id && profile.zones && profile.role !== 'admin') {
+                const zoneNumbers = profile.zones.zone_numbers;
+                finalNumbers = zoneNumbers.map(zn => {
+                    const twilioMatch = allTwilioNumbers.find(t => t.phoneNumber === zn.phone_number);
+                    return {
+                        phoneNumber: zn.phone_number,
+                        friendlyName: twilioMatch?.friendlyName || '',
+                        type: twilioMatch?.type || 'Twilio',
+                        reputation: zn.reputation_status
+                    };
+                });
+                callbackNumber = profile.zones.callback_number;
             }
         }
 
-        res.json({
-            numbers: finalNumbers,
-            callbackNumber: callbackNumber
-        });
+        res.json({ numbers: finalNumbers, callbackNumber });
     } catch (e) {
-        console.error("Error fetching numbers:", e);
+        res.status(500).json({ error: e.message });
+    }
+});
+
+// GET Reputation Status (with caching)
+app.get("/reputation/:phone", async (req, res) => {
+    try {
+        const { phone } = req.params;
+        const normalized = phone.startsWith('+') ? phone : `+1${phone.replace(/\D/g, '')}`;
+
+        // 1. Check Cache in Supabase
+        const { data: existing } = await supabase
+            .from('zone_numbers')
+            .select('reputation_status, last_reputation_check')
+            .eq('phone_number', normalized)
+            .single();
+
+        const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+        if (existing && existing.last_reputation_check && new Date(existing.last_reputation_check) > oneDayAgo) {
+            return res.json({ status: existing.reputation_status, cached: true });
+        }
+
+        // 2. Fetch from Twilio Lookup v2
+        console.log(`Checking reputation for ${normalized}...`);
+        const lookup = await twilioClient.lookups.v2.phoneNumbers(normalized)
+            .fetch({ fields: 'reputation' });
+
+        const rep = lookup.reputation || {};
+        const status = rep.status === 'flagged' ? 'Spam Risk' : 'Healthy';
+
+        // 3. Update Cache
+        await supabase
+            .from('zone_numbers')
+            .update({
+                reputation_status: status,
+                last_reputation_check: new Date().toISOString()
+            })
+            .eq('phone_number', normalized);
+
+        res.json({ status, cached: false });
+    } catch (e) {
+        console.error("Reputation check error:", e.message);
         res.status(500).json({ error: e.message });
     }
 });

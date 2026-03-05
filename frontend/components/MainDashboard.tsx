@@ -242,17 +242,25 @@ export default function MainDashboard() {
               <span className="text-[10px] bg-blue-100 text-blue-700 font-bold px-2 py-0.5 rounded-full">{VERSION}</span>
             </div>
             <select
-              className="w-full bg-gray-50 border border-gray-200 rounded-2xl px-4 py-3 text-sm font-bold text-gray-700 outline-none focus:ring-2 focus:ring-blue-100 transition-all appearance-none cursor-pointer"
+              className={`w-full bg-gray-50 border border-gray-200 rounded-2xl px-4 py-3 text-sm font-bold outline-none focus:ring-2 focus:ring-blue-100 transition-all appearance-none cursor-pointer ${availableNumbers.find(n => n.phoneNumber === selectedCallerId)?.reputation === 'Spam Risk'
+                  ? 'text-rose-600 border-rose-200 bg-rose-50'
+                  : 'text-gray-700'
+                }`}
               value={selectedCallerId}
               onChange={(e) => selectCallerId(e.target.value)}
             >
               {availableNumbers.map(n => (
                 <option key={n.phoneNumber} value={n.phoneNumber}>
-                  {n.phoneNumber} ({n.friendlyName})
+                  {n.reputation === 'Spam Risk' ? '🔴' : '🟢'} {n.phoneNumber} ({n.friendlyName || n.reputation || 'Healthy'})
                 </option>
               ))}
               <option value="client:agent">Testing (Agent)</option>
             </select>
+            {availableNumbers.find(n => n.phoneNumber === selectedCallerId)?.reputation === 'Spam Risk' && (
+              <p className="mt-2 text-[10px] font-bold text-rose-500 flex items-center gap-1 animate-pulse">
+                <Shield className="w-3 h-3" /> ATENCIÓN: Este número aparece como Spam.
+              </p>
+            )}
           </div>
 
           <div className="flex-1 overflow-y-auto p-6 flex flex-col items-center justify-center bg-white lg:bg-transparent">

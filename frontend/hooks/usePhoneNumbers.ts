@@ -8,8 +8,15 @@ export interface UsePhoneNumbersProps {
     apiBaseUrl: string;
 }
 
+export interface PhoneNumberInfo {
+    phoneNumber: string;
+    friendlyName: string;
+    type: string;
+    reputation?: string;
+}
+
 export function usePhoneNumbers({ userId, apiBaseUrl }: UsePhoneNumbersProps) {
-    const [availableNumbers, setAvailableNumbers] = useState<any[]>([]);
+    const [availableNumbers, setAvailableNumbers] = useState<PhoneNumberInfo[]>([]);
     const [selectedCallerId, setSelectedCallerId] = useState<string>('');
     const [callbackNumber, setCallbackNumber] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(false);
