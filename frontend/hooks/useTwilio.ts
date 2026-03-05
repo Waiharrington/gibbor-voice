@@ -3,6 +3,7 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Device } from '@twilio/voice-sdk';
+import { supabase } from '@/utils/supabaseClient';
 
 // --- Robust Audio & Ringback Manager ---
 class AudioToneManager {
@@ -128,6 +129,32 @@ export function useTwilio({ token, identity, onTokenExpired, onStatusChange }: U
 
     // --- Audio Handlers ---
     const stopRingback = useCallback(() => toneManager.stopAll(), []);
+
+    // --- AMD Detection Listener ---
+    useEffect(() => {
+        if (!activeCall) return;
+        const sid = activeCall.parameters?.CallSid || (activeCall as any).sid;
+        if (!sid) return;
+
+        const channel = supabase
+            .channel(`call-amd-${sid}`)
+            .on('postgres_changes', {
+                event: 'UPDATE',
+                schema: 'public',
+                table: 'calls',
+                filter: `sid=eq.${sid}`
+            }, (payload) => {
+                const answeredBy = payload.new.answered_by;
+                if (answeredBy && (answeredBy.toLowerCase().includes('machine') || answeredBy.toLowerCase().includes('fax'))) {
+                    setCallStatus('Buzón Detectado');
+                }
+            })
+            .subscribe();
+
+        return () => {
+            supabase.removeChannel(channel);
+        };
+    }, [activeCall]);
 
     // --- Call Timer ---
     useEffect(() => {

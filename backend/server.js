@@ -296,11 +296,14 @@ app.post("/incoming-call", async (req, res) => {
                 method: 'POST',
                 answerOnBridge: true
             });
-            dial.number(formattedTo);
+            dial.number({
+                machineDetection: 'Enable',
+                amdStatusCallback: `${baseUrl}/amd-status`,
+                amdStatusCallbackMethod: 'POST'
+            }, formattedTo);
         } else {
             twiml.say("Número inválido.");
         }
-
     } else {
         // --- INBOUND CALL LOGIC (Customer Calling Back) ---
         console.log("Direction: Inbound (Potential Smart Routing)");
@@ -451,6 +454,23 @@ app.post("/call-status", async (req, res) => {
             console.error("Error updating call status:", e);
         }
     }
+
+    // Metric persistence endpoint from Client
+    app.post("/amd-status", async (req, res) => {
+        const { CallSid, AnsweredBy } = req.body;
+        console.log(`AMD Status: ${CallSid} -> ${AnsweredBy}`);
+
+        try {
+            await supabase
+                .from('calls')
+                .update({ answered_by: AnsweredBy })
+                .eq('sid', CallSid);
+        } catch (e) {
+            console.error("AMD Update Error:", e.message);
+        }
+
+        res.sendStatus(200);
+    });
 
     // Metric persistence endpoint from Client
     app.post("/calls/:sid/metrics", async (req, res) => {
