@@ -407,6 +407,16 @@ app.post("/incoming-call", async (req, res) => {
     res.send(twiml.toString());
 });
 
+// MEGA FACIL: Simple AI Testing Route
+app.post("/incoming-call-simple", (req, res) => {
+    const twiml = new twilio.twiml.VoiceResponse();
+    const dial = twiml.dial({ answerOnBridge: true });
+    dial.client("tester");
+    res.type("text/xml");
+    res.send(twiml.toString());
+});
+
+
 // Generic Call Status Handler
 app.post("/call-status", async (req, res) => {
     const { CallSid, CallStatus, CallDuration, DialCallStatus, DialCallDuration, DialCallSid } = req.body;
