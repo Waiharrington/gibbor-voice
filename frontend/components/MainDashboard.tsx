@@ -20,7 +20,7 @@ import HistoryPanel from '@/components/dashboard/HistoryPanel';
 import MessagingPanel from '@/components/dashboard/MessagingPanel';
 import CallDispositionModal from '@/components/CallDispositionModal';
 
-const VERSION = 'v2.0.2-MODULAR';
+const VERSION = 'v2.1.0-SIMULATOR';
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://gibbor-voice-production.up.railway.app';
 
 function NavIcon({ icon, label, active, onClick, expanded }: { icon: any, label: string, active: boolean, onClick: () => void, expanded?: boolean }) {
@@ -239,12 +239,15 @@ export default function MainDashboard() {
           <div className="p-6 border-b border-gray-200 bg-white">
             <div className="flex items-center justify-between mb-4">
               <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Caller ID</label>
-              <span className="text-[10px] bg-blue-100 text-blue-700 font-bold px-2 py-0.5 rounded-full">{VERSION}</span>
+              <div className="flex flex-col items-end">
+                <span className="text-[10px] bg-blue-100 text-blue-700 font-bold px-2 py-0.5 rounded-full">{VERSION}</span>
+                <span className="text-[8px] font-bold text-emerald-600 mt-1 uppercase tracking-tighter animate-pulse">● Simulator Hub</span>
+              </div>
             </div>
             <select
               className={`w-full bg-gray-50 border border-gray-200 rounded-2xl px-4 py-3 text-sm font-bold outline-none focus:ring-2 focus:ring-blue-100 transition-all appearance-none cursor-pointer ${availableNumbers.find(n => n.phoneNumber === selectedCallerId)?.reputation === 'Spam Risk'
-                  ? 'text-rose-600 border-rose-200 bg-rose-50'
-                  : 'text-gray-700'
+                ? 'text-rose-600 border-rose-200 bg-rose-50'
+                : 'text-gray-700'
                 }`}
               value={selectedCallerId}
               onChange={(e) => selectCallerId(e.target.value)}
